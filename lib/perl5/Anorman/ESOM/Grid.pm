@@ -1,0 +1,622 @@
+package Anorman::ESOM::Grid;
+
+use strict;
+
+use Anorman::Common qw(trace_error);
+use Anorman::Math::DistanceFactory;
+use Math::Random::MT::Auto qw(gaussian);
+
+sub new {
+	my $class = shift;
+
+	$class->_error("Wrong number of arguments") if (@_ != 0 && @_ != 2);
+
+	my $self = {};
+
+	bless ( $self, ref $class || $class );
+	
+	if (@_ == 2) {
+		$self->{'_size'} = $_[0];
+		$self->{'_dim'}  = $_[1];
+	}
+	
+	$self->{'_distance_function'} = Anorman::Math::DistanceFactory->get_function( SPACE => 'euclidean', PACKED => 1 );
+
+	return $self;
+}
+
+sub dim {
+	my $self = shift;
+
+	if (defined $_[0]) { 
+		$self->{'_dim'} = $_[0];
+	} else {
+		return $self->{'_dim'};
+	}
+}
+
+sub size {
+	my $self = shift;
+
+	if (defined $_[0]) { 
+		$self->{'_size'} = $_[0];
+	} else {
+		return $self->{'_size'};
+	}
+}
+
+sub distance_function {
+	my $self = shift;
+	my $func = shift;
+
+	if (defined $func) {
+		$self->_error("Not a valid distance function") unless (ref $func) =~ m/::Math::Distance::/;
+		$self->{'_distance_function'} = $func;
+	}
+	return $self->{'_distance_function'};
+}
+
+sub init {
+	my $self = shift;
+	my $desc = shift;
+	my $dim  = $self->dim;
+	my $size = $self->size;  
+
+	# generate random vectors based on gaussian distribution [ mean ± 2stdevs ]of input data descriptives
+	my $j = -1;
+	while (++$j < $self->dim) {
+		my $sd   = 2 * $desc->stdevs->[ $j ];
+		my $mean = $desc->means->[ $j ];
+		my $i = $size;
+                my $vals = [];
+
+		# another optimization. Whole column is generated and the assigned to the matrix
+		# this causes a significant speedup compared to using set_quick on individual data cells
+		# cells. This, however, requires the data to be stored in a matrix NOTE: I guess we'll always use matrices
+		while (--$i >= 0) {
+			$vals->[ $i ] =  gaussian( $sd, $mean ); 
+		}
+                $self->get_weights->view_column( $j )->assign( $vals );
+	}
+}
+
+sub transform_radius {
+	return $_[1];
+}
+
+sub _error {
+	shift;
+	trace_error(@_);
+}
+
+1;
+
+package Anorman::ESOM::Grid::Matrix;
+
+# grid data is stored in a packed dense Matrix. Indivdual neurons of size dim are stored as rows in the matrix
+# inheriting classes must define the arrangement and retrieval of neurons
+
+use parent -norequire,'Anorman::ESOM::Grid';
+use Anorman::Data::Matrix::DensePacked;
+use Anorman::Data::LinAlg::Property qw( is_matrix );
+
+sub new {
+	my $class       = shift;
+	$class->error("Wrong number of arguments") if (@_ != 0 && @_ != 2);
+
+	my $self; 
+
+	if (@_ == 2) {
+		my ( $size, $dim ) = @_;
+
+		$self = $class->SUPER::new( $size, $dim );
+		$self->_init;
+	} else {
+		$self = $class->SUPER::new();
+	}
+	
+	return $self;
+}
+
+# return a particular neuron as a row-vector
+sub get_neuron {
+	my $self = shift;
+	return undef unless defined $self->{'weights'};
+
+	return $self->{'_weights'}->view_row( $_[0] );
+}
+
+sub get_weights {
+	my $self = shift;
+	return $self->{'_weights'};
+}
+
+sub set_weights {
+	my $self = shift;
+	$self->{'_weights'} = $_[0];
+}
+
+sub size {
+	my $self = shift;
+
+	if (defined $_[0]) {
+		$self->SUPER::size($_[0]);
+		$self->_init;
+	} else {
+		return $self->{'_size'};
+	}
+}
+
+sub dim {
+	my $self = shift;
+
+	if (defined $_[0]) {
+		$self->SUPER::dim($_[0]);
+		$self->_init;
+	} else {
+		return $self->{'_dim'};
+	}
+}
+
+sub _init {
+	my $self = shift;
+
+	my ( $size, $dim ) = @{ $self }{ qw/_size _dim/ };
+
+	if (($size * $dim) > 0) {
+		$self->{'_weights'} = Anorman::Data::Matrix::DensePacked->new( $size, $dim );
+	}
+}
+
+1;
+
+package Anorman::ESOM::Grid::Rectangular;
+
+# grid is rectangular, i.e. arranged so that each node has 4 immediate neighbors (up, down, left, right)
+use strict;
+use parent -norequire, 'Anorman::ESOM::Grid::Matrix';
+
+use Anorman::Common;
+
+sub new {
+	my $class = shift;
+	$class->_error("Wrong number of arguments") if (@_ != 0 && @_ != 3);
+
+	my $self;
+
+	if (@_ == 3) {
+		my ($rows, $cols, $dim) = @_;
+
+		$self = $class->SUPER::new( $rows * $cols, $dim );
+
+		$self->{'_rows'}    = $rows;
+		$self->{'_columns'} = $cols;
+	} else {
+		$self = $class->SUPER::new();
+	}
+
+	return $self;
+}
+
+sub rows {
+	my $self = shift;
+	return $self->{'_rows'} unless defined $_[0];
+	$self->{'_rows'} = $_[0];
+	$self->size( $_[0] * $self->{'_columns'} );
+}
+
+sub columns {
+	my $self = shift;
+	return $self->{'_columns'} unless defined $_[0];
+	$self->{'_columns'} = $_[0];
+	$self->size( $_[0] * $self->{'_rows'} );
+
+}
+
+sub coords2index {
+	my $self = shift;
+	return _planar_coords2index($_[0], $_[1], $self->columns);
+}
+
+sub index2col {
+	my $self = shift;
+	return _index2col($_[0], $self->columns);
+}
+
+sub index2row {
+	my $self = shift;
+	return _index2row($_[0],$self->columns);
+}
+
+sub get_neuron {
+	my $self = shift;
+
+	if (@_ != 2) {
+		return $self->{'_weights'}->view_row( $_[0] );
+	} else {
+		return $self->{'_weights'}->view_row( _planar_coords2index( $_[0], $_[1], $self->columns ) );
+	}
+}
+
+
+use Inline (C => Config =>
+		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
+		NAME      => 'Anorman::ESOM::Grid::Rectangular',
+		ENABLE    => AUTOWRAP =>
+		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib',
+		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
+
+           );
+
+use Inline C => <<'END_OF_C_CODE';
+
+static int min( int, int );
+static int max( int, int );
+
+/* grid distance functions */
+int squared_eucl_grid_distance (int x1, int y1, int x2, int y2 ) {
+
+	int dx = x1 - x2;
+	int dy = y1 - y2;
+
+	return ( dx * dx ) + ( dy * dy );
+}
+
+int manhattan_grid_distance (int x1, int y1, int x2, int y2 ) {
+
+	return abs( x1 - x2 ) + abs( y1 - y2 );
+}
+
+int max_grid_distance (int x1, int y1, int x2, int y2, int rows, int columns) {
+
+	return max( abs( x1 - x2 ), abs( y1 - y2) );
+}
+
+/* same as above but on toroidal grids (i.e. PacMan-space) 
+ * the dimensions of the grid are required
+ */
+
+int toroid_squared_euclidean_grid_distance (int xi, int yi, int xj, int yj, int rows, int columns ) {
+
+	int x1 = min( xi, xj );
+	int x2 = max( xi, xj );
+	int y1 = min( yi, yj );
+	int y2 = max( yi, yj );
+
+	int dx = min( abs( x1 - x2 ), abs( x1 + columns - x2));
+	int dy = min( abs( y1 - y2 ), abs( y1 + rows - y2));
+
+	return ( dx * dx ) + ( dy * dy );
+}
+
+int toroid_manhattan_grid_distance (int xi, int yi, int xj, int yj, int rows, int columns ) {
+
+	int x1 = min( xi, xj );
+	int x2 = max( xi, xj );
+	int y1 = min( yi, yj );
+	int y2 = max( yi, yj );
+
+	int dx = min( abs( x1 - x2 ), abs((x1 + columns) - x2));
+	int dy = min( abs( y1 - y2 ), abs((y1 + rows) - y2));
+
+	return dx + dy;
+}
+
+int toroid_max_grid_distance (int xi, int yi, int xj, int yj, int rows, int columns) {
+	int x1 = min( xi, xj );
+	int x2 = max( xi, xj );
+	int y1 = min( yi, yj );
+	int y2 = max( yi, yj );
+
+	int dx = min( abs( x1 - x2 ), abs((x1 + columns) - x2));
+	int dy = min( abs( y1 - y2 ), abs((y1 + rows) - y2));
+
+	return max(dx, dy);
+}
+
+
+/* grid coordinate caluclations */
+
+int _index2col (int i, int columns) {
+	return (i % columns);
+}
+
+int _index2row (int i, int columns) {
+	return (int) ( i / columns );
+}
+
+
+int _planar_coords2index (int x, int y, int columns) {
+	return x * columns + y;
+}
+
+int _toroid_coords2index (int x, int y, int rows, int columns) {
+	int index = (((x + rows) % rows) * columns) + ((y + columns) % columns);
+	return index;
+}
+
+void find_euclidean_toroid_grid_neighbors ( int r, int rr, int c, char* n, int rows, int columns ) {
+
+	int* neighbor = (int*) n;
+
+	int xc = _index2row( c, columns );
+	int yc = _index2col( c, columns );
+
+	int x;
+	int y;
+
+	int index = 0;
+	for ( x = xc - r; x <= (xc + r); x++ ) {
+		for ( y = yc - r; y <= (yc + r); y++) {
+			int dist = toroid_squared_euclidean_grid_distance( x, y, xc, yc, rows, columns );
+			
+			if (dist <= rr ) {
+				int index2 = _toroid_coords2index( x, y, rows, columns );
+				neighbor[ index ] = index2;	
+				index++;
+			}
+		}
+	}
+	
+}
+
+void find_manhattan_toroid_grid_neighbors ( int r, int rr, int c, char* n, int rows, int columns ) {
+
+	int* neighbor = (int*) n;
+
+	int xc = _index2row( c, columns );
+	int yc = _index2col( c, columns );
+
+	int x;
+	int y;
+
+	int index = 0;
+
+	for ( x = xc - r; x <= (xc + r); x++ ) {
+		for ( y = yc - r; y <= (yc + r); y++) {
+			int dist = toroid_manhattan_grid_distance( x, y, xc, yc, rows, columns );
+			
+			if (dist <= rr ) {
+				int index2 = _toroid_coords2index( x, y, rows, columns );
+				neighbor[ index ] = index2;	
+				index++;
+			}
+		}
+	}
+	
+}
+
+void find_max_toroid_grid_neighbors ( int r, int rr, int c, char* n, int rows, int columns ) {
+
+	int* neighbor = (int*) n;
+
+	int xc = _index2row( c, columns );
+	int yc = _index2col( c, columns );
+
+	int x;
+	int y;
+
+	int index = 0;
+
+	for ( x = xc - r; x <= (xc + r); x++ ) {
+		for ( y = yc - r; y <= (yc + r); y++) {
+			int dist = toroid_max_grid_distance( x, y, xc, yc, rows, columns );
+			
+			if (dist <= rr ) {
+				int index2 = _toroid_coords2index( x, y, rows, columns );
+				neighbor[ index ] = index2;	
+				index++;
+			}
+		}
+	}
+	
+}
+
+int min ( int x, int y ) {
+	return x < y ? x : y;
+}
+
+int max ( int x, int y ) {
+	return x > y ? x : y;
+}
+
+END_OF_C_CODE
+
+1;
+
+package Anorman::ESOM::Grid::ToroidRectangular;
+
+# grid is toroidal (as opposed to planar) with an internal rectangular grid
+
+use strict;
+use parent -norequire,'Anorman::ESOM::Grid::Rectangular';
+
+sub new { return shift->SUPER::new(@_) };
+
+sub coords2index {
+	my $self = shift;
+	return Anorman::ESOM::Grid::Rectangular::_toroid_coords2index( $_[0], $_[1], $self->rows, $self->columns );
+}
+
+1;
+
+package Anorman::ESOM::Grid::Toroid;
+
+use strict;
+use parent -norequire,'Anorman::ESOM::Grid::ToroidRectangular';
+
+use Anorman::Common;
+
+sub new { 
+	my $class = shift;
+	my $self  = $class->SUPER::new(@_);
+	
+	#$self->{'_neighbors'} = {};
+	$self->{'_distances'} = [];
+
+	return $self;
+}
+
+sub inside_grid {
+	my $self = shift;
+	return 1;
+}
+
+sub neighbors {
+	my $self    = shift;
+	my ($c, $r) = @_;
+	#my $ptr     = $self->{'_neighbors'};
+
+	# check for neighbor map in cache
+	#if (exists $ptr->{ $c }) {
+	#	return $ptr->{ $c };
+	# }
+
+	# conversion of radius (euclidean distance trick) and allocation of string of unsigned integers for storing neighbors
+	my $rr   = $self->transform_radius( $r );
+	my $size = @{ $self->{'_distances'} };
+	my $n    = pack("I$size" , (-1) x $size );
+
+
+	#NOTE: Had to disable this giant memory leak. Consider a cache with size limit and LRU dumping policy	
+	#$ptr->{ $c } = $n;
+	
+	$self->_find_neighbors( $r, $rr, $c, $n );
+	return $n;
+}
+
+sub distances {
+	# calculate distance map of all neigbors within a given radius
+	# these only changes if the neighborhood radius is changed and
+	# can therefore be cached before each epoch
+	my $self = shift;
+	my $r    = shift;
+	
+	return $self->{'_distances'} unless defined $r;
+
+	# flush caches
+	@{ $self->{'_distances'} } = ();
+	#%{ $self->{'_neighbors'} } = ();
+
+	my $rr   = $self->transform_radius( $r );
+
+	warn "\tPre-calculating relative grid distances\n" if $VERBOSE;
+	foreach my $x( -$r..$r ) {
+		foreach my $y( -$r..$r ) {
+			my $dist = $self->grid_distance( 0, 0, $x, $y );
+			push @{ $self->{'_distances'} }, $dist if ($dist <= $rr);
+		}
+	}
+
+	return $self->{'_distances'};
+}
+
+sub immediate_neighbors {
+	# returns the the internal indices of the 4 immediate neighbors (a.k.a the von Neumann neghborhood)
+	# of a neuron
+	my $self = shift;
+	my $c    = shift;
+
+	my $x = $self->index2row( $c );
+	my $y = $self->index2col( $c );
+
+	my $n = [];
+
+	$n->[0] = $self->coords2index( $x - 1, $y);
+	$n->[1] = $self->coords2index( $x + 1, $y);
+	$n->[2] = $self->coords2index( $x, $y - 1);
+	$n->[3] = $self->coords2index( $x, $y + 1);
+
+	return wantarray ? @{ $n } : $n;
+}
+
+sub neighbors_XbyX {
+	my $self = shift;
+	my $c    = shift;
+	my $X    = shift;
+
+	my $x    = $self->index2row( $c );
+	my $y    = $self->index2col( $c );
+	my $n    = [];
+
+	my $dist = int($X - 1) / 2;
+
+	# add 8-neighborhood and include the center neuron
+	for (my $i = -$dist; $i <= $dist; $i++) {
+		for (my $j = -$dist; $j <= $dist; $j++) {
+			push @{ $n }, 
+			$self->coords2index( $x + $i, $y + $j);
+		}	
+	}
+
+	return wantarray ? @{ $n } : $n;  
+}
+
+1;
+
+package Anorman::ESOM::Grid::ToroidEuclidean;
+
+# a toroidal grid (see above) were grid distances are calculated in Euclidean space
+
+use strict;
+use parent -norequire,'Anorman::ESOM::Grid::Toroid';
+
+sub new { return shift->SUPER::new(@_) };
+
+sub grid_distance {
+	my $self = shift;
+	return Anorman::ESOM::Grid::Rectangular::toroid_squared_euclidean_grid_distance( @_, $self->rows, $self->columns );
+}
+
+sub _find_neighbors {
+	my $self = shift;
+	Anorman::ESOM::Grid::Rectangular::find_euclidean_toroid_grid_neighbors(@_, $self->rows, $self->columns );
+}
+
+sub transform_radius {
+	# saves having to apply sqrt in the grid distance calculations
+	return ($_[1] * $_[1]);
+}
+
+1;
+
+package Anorman::ESOM::Grid::ToroidManhattan;
+
+# a toroidal grid (see above) were grid distances are calculated in Manhattan/taxicab space
+
+use strict;
+use parent -norequire,'Anorman::ESOM::Grid::Toroid';
+
+sub new { return shift->SUPER::new(@_) };
+
+sub grid_distance {
+	my $self = shift;
+	return  Anorman::ESOM::Grid::Rectangular::toroid_manhattan_grid_distance( @_, $self->rows, $self->columns );
+}
+
+sub _find_neighbors {
+	my $self = shift;
+	Anorman::ESOM::Grid::Rectangular::find_manhattan_toroid_grid_neighbors(@_, $self->rows, $self->columns );
+}
+
+package Anorman::ESOM::Grid::ToroidMax;
+
+# a toroidal grid (see above) were grid distances are calculated in Maximum distance space
+
+use strict;
+use parent -norequire,'Anorman::ESOM::Grid::Toroid';
+
+sub new { return shift->SUPER::new(@_) };
+
+sub grid_distance {
+	my $self = shift;
+	return Anorman::ESOM::Grid::Rectangular::toroid_max_grid_distance( @_, $self->rows, $self->columns );
+}
+
+sub _find_neighbors {
+	my $self = shift;
+	Anorman::ESOM::Grid::Rectangular::find_max_toroid_grid_neighbors(@_, $self->rows, $self->columns );
+}
+
+
+1;
