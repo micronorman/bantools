@@ -25,10 +25,10 @@ use overload
 	'""' => \&_stringify;
 
 sub new {
-        my $class   = shift;
-        my $self    = bless ( {}, ref ($class) || $class);
+        my $that  = shift;
+	my $class = ref($that) || $that;
 
-	return $self;
+	return bless ( {}, $class );
 }
 
 # General accessors

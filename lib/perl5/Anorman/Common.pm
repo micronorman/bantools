@@ -1,20 +1,31 @@
 package Anorman::Common;
 
 # commonly used routines such as error reporting 
-BEGIN {
-	require 5.006_00;
-}
+use 5.012_00;
 
 use strict;
 use warnings;
 
+use vars qw($VERSION);
+
+$VERSION = 0.45;
+
+
 use Exporter;
-use Scalar::Util qw(looks_like_number blessed reftype);
+use vars qw(@ISA @EXPORT @EXPORT_OK);
 
-use vars qw(@ISA @EXPORT @EXPORT_OK $AN_TMP_DIR $AN_SRC_DIR $VERBOSE $DEBUG);
+@ISA = qw(Exporter);
 
-@ISA       = qw(Exporter);
-@EXPORT_OK = qw(
+BEGIN {
+	use vars qw($DEBUG $VERBOSE);
+
+	if ($Anorman::Common::DEBUG) {
+		warn "Debug Mode: ON\n";
+		$Anorman::Common::VERBOSE = 1;
+	}
+
+	@EXPORT    = qw(trace_error $VERBOSE $DEBUG);
+	@EXPORT_OK = qw(
 		trace_error
 		call_stack
 		sniff_scalar
@@ -22,14 +33,22 @@ use vars qw(@ISA @EXPORT @EXPORT_OK $AN_TMP_DIR $AN_SRC_DIR $VERBOSE $DEBUG);
 		check_hash_arg
 		whoami
 		whowasi
-		usag
+		usage
 		$DEBUG
 		$VERBOSE
-	       );
-@EXPORT    = qw(trace_error is_null $VERBOSE $DEBUG);
+	)
 
-$AN_TMP_DIR = exists $ENV{'AN_TMP'} ? $ENV{'AN_TMP'} : "/tmp/" . $ENV{'USER'};
-$AN_SRC_DIR = exists $ENV{'AN_SRC'} ? $ENV{'AN_SRC'} : $ENV{'HOME'} . "/src";
+}
+
+use vars qw($AN_TMP_DIR $AN_SRC_DIR);
+
+$AN_TMP_DIR = exists $ENV{'AN_TMP'} ? $ENV{'AN_TMP'} : $ENV{'TMPDIR'};
+$AN_SRC_DIR = exists $ENV{'AN_SRC'} ? $ENV{'AN_SRC'} : $ENV{'HOME'} . "/src/anorman";
+
+use Scalar::Util qw(looks_like_number blessed reftype);
+
+
+# SUBROUTINES #
 
 sub trace_error {
         # Graceful fatal error messages with stack trace      
@@ -118,6 +137,7 @@ sub sniff_scalar ($) {
 	# identifies a scalar as either 'NUMBER', '(n)D_MATRIX' or 
 	# returns the normal output of the native perl ref command
 	# see http://perldoc.perl.org/functions/ref.html for info
+
 
 	if (!ref $_[0]) {
 		return looks_like_number($_[0]) ? 'NUMBER' : undef;

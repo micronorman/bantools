@@ -134,8 +134,10 @@ use Inline C => <<'END_OF_C_CODE';
 
 #include "../lib/matrix.c"
 
+/*
 #define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
 #define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
+*/
 
 #define SVADDR_2PTR( sv_name, ptr_name )            \
      UV ptr_name = INT2PTR( double*, SvUV( sv_name ) ) 

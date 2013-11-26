@@ -65,7 +65,7 @@ sub new {
 
 	# Construct object from child caller
 	if ($class ne __PACKAGE__ ) {
-		warn "Class was called by child constructor $class\n" if $DEBUG;
+		warn __PACKAGE__ . " was called by child constructor $class\n" if $DEBUG;
 		$filename = $arg;
 		($type) = $class =~ /.+::(\w+)$/;
 		$type = $TYPES{ $type };

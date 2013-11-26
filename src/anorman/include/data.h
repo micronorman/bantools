@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "ppport.h"
 
 typedef struct {
     size_t rows;
@@ -38,7 +39,6 @@ typedef struct {
     int* column_offsets;
     bool view_flag;
 } SelectedMatrix;
-
 
 typedef struct {
     size_t size;
@@ -69,5 +69,11 @@ typedef struct {
     char* values;
     int   distinct;
 } Map;
+
+/* Defines. extract struct from Perl scalars */
+#define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
+#define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
+#define SV_2SELECTEDMATRIX( sv, ptr_name )    SelectedMatrix* ptr_name = (SelectedMatrix*) SvIV( SvRV( sv ) )
+#define SV_2SELECTEDVECTOR( sv, ptr_name )    SelectedVector* ptr_name = (SelectedVector*) SvIV( SvRV( sv ) )
 
 #endif
