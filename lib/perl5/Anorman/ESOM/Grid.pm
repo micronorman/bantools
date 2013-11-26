@@ -4,6 +4,8 @@ use strict;
 
 use Anorman::Common qw(trace_error);
 use Anorman::Math::DistanceFactory;
+use Anorman::Data::LinAlg::Property qw(is_matrix);
+
 use Math::Random::MT::Auto qw(gaussian);
 
 sub new {
@@ -62,6 +64,7 @@ sub init {
 	my $dim  = $self->dim;
 	my $size = $self->size;  
 
+	trace_error("Grid weights have not been set") unless is_matrix( $self->get_weights );
 	# generate random vectors based on gaussian distribution [ mean ± 2stdevs ]of input data descriptives
 	my $j = -1;
 	while (++$j < $self->dim) {
@@ -96,12 +99,19 @@ package Anorman::ESOM::Grid::Matrix;
 # grid data is stored in a packed dense Matrix. Indivdual neurons of size dim are stored as rows in the matrix
 # inheriting classes must define the arrangement and retrieval of neurons
 
+use strict;
+
 use parent -norequire,'Anorman::ESOM::Grid';
+
+use Anorman::Common;
+
 use Anorman::Data::Matrix::DensePacked;
 use Anorman::Data::LinAlg::Property qw( is_matrix );
 
+
 sub new {
 	my $class       = shift;
+
 	$class->error("Wrong number of arguments") if (@_ != 0 && @_ != 2);
 
 	my $self; 
@@ -177,6 +187,7 @@ use strict;
 use parent -norequire, 'Anorman::ESOM::Grid::Matrix';
 
 use Anorman::Common;
+use Anorman::ESOM::File;
 
 sub new {
 	my $class = shift;
@@ -201,6 +212,7 @@ sub new {
 sub rows {
 	my $self = shift;
 	return $self->{'_rows'} unless defined $_[0];
+
 	$self->{'_rows'} = $_[0];
 	$self->size( $_[0] * $self->{'_columns'} );
 }
@@ -236,6 +248,48 @@ sub get_neuron {
 	} else {
 		return $self->{'_weights'}->view_row( _planar_coords2index( $_[0], $_[1], $self->columns ) );
 	}
+}
+
+sub load_weights {
+	my $self     = shift;
+	my $filename = shift;
+	
+	my $wts = Anorman::ESOM::File::Wts->new;
+
+	$wts->load( $filename );
+
+	my $grid = Anorman::ESOM::Grid::ToroidEuclidean->new;
+
+	$grid->rows( $wts->rows );
+	$grid->columns( $wts->columns );
+	$grid->dim( $wts->dimensions );
+
+	my $i = -1;
+	while ( ++$i < $wts->neurons ) {
+		$grid->get_neuron( $i )->assign( $wts->data->view_row($i) );
+	}
+
+	return $grid;
+}
+
+sub save_weights {
+	my $self     = shift;
+	my $filename = shift;
+
+	my $wts = $self->get_wts;
+
+	$wts->save( $filename );
+
+}
+
+sub get_wts {
+	my $self = shift;
+
+	my $wts = Anorman::ESOM::File::Wts->new( $self->rows, $self->columns, $self->dim );
+
+	$wts->data( $self->get_weights );
+
+	return $wts;
 }
 
 

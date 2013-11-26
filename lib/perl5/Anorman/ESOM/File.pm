@@ -101,7 +101,6 @@ sub new {
 			'header'   => [],
 			'parser'   => $parser
 		     }; 
-		
 	return bless ( $self, $class ); 
 }
 

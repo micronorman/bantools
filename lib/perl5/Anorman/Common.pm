@@ -47,10 +47,10 @@ $AN_SRC_DIR = exists $ENV{'AN_SRC'} ? $ENV{'AN_SRC'} : $ENV{'HOME'} . "/src/anor
 
 use Scalar::Util qw(looks_like_number blessed reftype);
 
-
 # SUBROUTINES #
 
 sub trace_error {
+	$DEBUG = 1;
         # Graceful fatal error messages with stack trace      
         my $err_msg     = shift;
 	my $ext_status  = defined $_[0] ? shift : 1;

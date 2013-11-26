@@ -23,14 +23,17 @@ my $GRID         = 'toroid';
 my $SCALE        = 6;
 my $METHOD       = 'kbatch';
 my $NEIGHBORHOOD = 'gauss';
-my $LRN_FILE     = '';
 my $dk           = 0.15;
 my $COOL_RADIUS  = 'lin';
 my $COOL_LEARN   = 'lin';
 my $OUTPUT       = 'out';
-my $PRE_WEIGHTS;
 my $RATIO;
 my $optimize_ratio;
+
+my $LRN_FILE     = '';
+my $PRE_WEIGHTS  = '';
+
+
 
 
 # get user defined options
@@ -96,13 +99,11 @@ if ($NEIGHBORHOOD eq 'mexhat') {
 
 warn "Neighborhood: $NEIGHBORHOOD\n";
 
-# load data into grid
+# load data into trainer
 $som->data( $lrn->data );
 $som->keys( $lrn->keys );
 
 # calculate arbitrary grid size based on number of datapoints
-# TODO: implement PCA evaluation of optimal ratio
-
 $RATIO = $optimize_ratio ? ($som->descriptives->first_eigenvalue  / $som->descriptives->second_eigenvalue) : (5 / 3);
 
 warn "Grid dimension ratio: ", sprintf("%.2f", $RATIO), "\n";
@@ -163,11 +164,12 @@ $som->BMSearch->constant( $BMCONSTANT );
 
 # Initialize trainer
 if (defined $PRE_WEIGHTS) {
-	my $wts = Anorman::ESOM::File::Wts->new();
-	$wts->load($PRE_WEIGHTS);
 
-	$esom->add_new_data( $wts );	
+	# Add training grid from file
+	$som->grid->load_weights($PRE_WEIGHTS);
 } else {
+
+	# Otherwise initialize randomized grid from input data
 	$som->init;
 }
 
@@ -176,5 +178,5 @@ $esom->train( $som );
 
 # write output files
 $esom->umatrix->save("$OUTPUT.epoch" . $som->epochs . ".umx");
-$esom->weights->save("$OUTPUT.epoch" . $som->epochs . ".wts");
-$esom->bestmatches->save("$OUTPUT.epoch" . $som->epochs . ".bm");
+#$esom->weights->save("$OUTPUT.epoch" . $som->epochs . ".wts");
+#$esom->bestmatches->save("$OUTPUT.epoch" . $som->epochs . ".bm");

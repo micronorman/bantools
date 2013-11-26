@@ -36,7 +36,7 @@ sub init {
 	my $self   = shift;
 	printf STDERR ("Initializing [ %d x %d ] grid...\n", $self->grid->rows, $self->grid->columns ) if $VERBOSE;
 	$self->grid->init( $self->{'_descriptives'} );
-	$self->{'_permutation'} = [ 0 .. $self->data->rows - 1 ];
+
 }
 
 #===============================  main training routine =======================
@@ -53,6 +53,7 @@ sub train {
 		# tasks to perform before each epoch
 		$self->before_epoch;
 		
+		warn "\tTraining...\n" if $VERBOSE;
 		my $pos = 0;
 		foreach my $i( 0 .. $self->data->rows - 1 ) {
 			my $index = $self->{'_permutation'}->[ $i ];
@@ -109,14 +110,15 @@ sub before_epoch {
 	);	
 	
 	# shuffle data vectors
-	warn "\tPermuting data patterns\n" if $VERBOSE;
-	@{ $self->{'_permutation'} } = shuffle @{ $self->{'_permutation'} };
+	#warn "\tPermuting data patterns\n" if $VERBOSE;
+	#@{ $self->{'_permutation'} } = shuffle @{ $self->{'_permutation'} };
 };
 
 sub after_update { };
 
 sub after_epoch  {
 	my $self = shift;
+	warn "\tGrid updated, saving bestmatches\n" if $VERBOSE;
 	$self->BMSearch->old_bestmatches( $self->bestmatches );
 };
 
@@ -173,10 +175,19 @@ sub data {
 	my $data = shift;
 
 	if (defined $data) {
+
+		# Verify that input is matrix
 		check_matrix( $data );
+
+		# Add data to object
 		$self->{'data'}          = $data;
+
+		# Calculate descriptives
 		$self->{'_descriptives'} = Anorman::ESOM::Descriptives->new( $data );
+
+		# Initialize bestmatches and permutations
 		$#{ $self->{'_bestmatches'} }  = $data->rows - 1;
+		$self->{'_permutation'} = [ 0 .. $data->rows - 1 ];
 	} else {
 		return $self->{'data'};
 	}
