@@ -41,6 +41,8 @@ sub open {
 	my $self = shift;
 	my $fn   = shift;
 
+	return unless $fn gt '';
+
 	open (my $FH, '<', $fn) or $self->_error("Could not initialize filehandle for $fn, $!");
 
 	$self->{'_FH'} = $FH;

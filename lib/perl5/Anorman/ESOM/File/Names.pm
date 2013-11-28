@@ -56,6 +56,8 @@ sub subseq_index {
 		if (defined $seqid) {
 			push @{ $subseq_index->{ $seqid } }, $index;
 		} else {
+			# Only use first word as identifier
+			$name =~ s/^(\S+).*/$1/;
 			$subseq_index->{ $name } = [ ($index) ];
 		}
 	}

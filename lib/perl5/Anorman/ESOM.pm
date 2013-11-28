@@ -5,7 +5,7 @@ package Anorman::ESOM;
 # includes unified method for loading lrn-, wts-, cls-, bm-files
 # etc.
 
-our $VERSION = '0.8.3';
+our $VERSION = '0.8.6';
 
 use strict;
 use warnings;

@@ -176,6 +176,8 @@ sub data       { $_[0]->{'data'} }
 sub classes    { $_[0]->{'classes'} }
 sub size       { if (defined $_[0]->{'data'}) { $_[0]->{'data'}->size } else {0} }
   
+sub set_datapoints { $_[0]->{'datapoints'} = $_[1] }
+
 sub filename   { 
 	my $self = shift;
 	return $self->{'filename'} unless defined $_[0];

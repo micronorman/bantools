@@ -25,7 +25,7 @@ sub new {
 	$colors = Anorman::ESOM::File::ColorTable->new() if !defined $_[0];
 
 	my $self = { 'data'         => Anorman::Data::List->new,
-		     'indexmap'       => Anorman::Data::Hash->new,
+		     'indexmap'     => Anorman::Data::Hash->new,
 		     'namemap'      => Anorman::Data::Hash->new,
 		     'class_colors' => $colors
 		};
@@ -41,6 +41,7 @@ sub add {
 	my $self = shift;
 	my ($cls, $name, $color) = @_;
 
+	$cls  = $self->get_highest_class_index + 1 if !defined $cls;
 	$name = $cls if !defined $name;
 
 	unless (exists $self->{'indexmap'}->{ $cls }) {

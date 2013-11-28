@@ -5,10 +5,10 @@ use warnings;
 my %BLAST_RESULT = ();
 my %CLASS_NUM    = ();
 
-use Anorman::ESOM;
-use Anorman::HitTable;
-use Data::Dumper;
+use Anorman::ESOM::File;
 use Getopt::Long;
+
+use Data::Dumper;
 
 my ($blast_file, $names_file, $cls_file, $FH);
 
@@ -18,8 +18,10 @@ my ($blast_file, $names_file, $cls_file, $FH);
 	'cls|c=s'   => \$cls_file	
 );
 
-my $e = Anorman::ESOM->new;
-$e->open( $names_file, 'names' );
+my $names = Anorman::ESOM::File::Names->new( $names_file );
+my $cls   = Anorman::ESOM::File::Cls->new( $cls_file );
+
+$names->load;
 
 open ($FH, '<', $blast_file) or die "ERROR opening $blast_file: $!";
 
@@ -33,29 +35,28 @@ while (defined (my $line = <$FH>)) {
 close $FH;
 
 foreach my $class_name(sort keys %CLASS_NUM) {
-	$e->add_class( $class_name );
+	$cls->classes->add( undef, $class_name );
 }
 
-$e->generate_class_colors;
+my $subseq_index = $names->subseq_index;
 
-my $subseq_index = $e->subseq_index;
-
+my %tmp_cls = ();
 while (my ($query, $hit) = each %BLAST_RESULT) {
-	my $class_number = $e->class_number( $hit );
+	my $class_number = $cls->classes->get_by_name( $hit )->index;
 
 	if (exists $subseq_index->{ $query }) {
 		foreach my $index(@{ $subseq_index->{ $query } }) {
-			$e->dp_class( $index, $class_number );
-			my $dp = $e->dp_key( $index );
+			$tmp_cls{ $index } = $class_number;
 		}
+	} else {
+		warn "$query was not found\n";
 	}
 }
 
-$e->_index_classes;
+foreach my $index(sort { $a <=> $b } keys %tmp_cls) {
+	$cls->add( $index, $tmp_cls{$index} );
+}
 
-open ($FH, '>', $cls_file) or die "Cannot open file $cls_file for writing, $!";
+$cls->set_datapoints( $names->datapoints );
+$cls->save();
 
-print $FH $e->cls_header_string;
-print $FH join("\n", map{ $e->dp_key( $_ ) . "\t" . $e->dp_class( $_ ) } $e->datapoints), "\n";
-
-close $FH;

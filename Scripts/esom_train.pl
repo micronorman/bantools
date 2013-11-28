@@ -163,7 +163,7 @@ warn "Search Constant: $BMCONSTANT\n";
 $som->BMSearch->constant( $BMCONSTANT );
 
 # Initialize trainer
-if (defined $PRE_WEIGHTS) {
+if ($PRE_WEIGHTS ne '') {
 
 	# Add training grid from file
 	$som->grid->load_weights($PRE_WEIGHTS);
@@ -178,5 +178,5 @@ $esom->train( $som );
 
 # write output files
 $esom->umatrix->save("$OUTPUT.epoch" . $som->epochs . ".umx");
-#$esom->weights->save("$OUTPUT.epoch" . $som->epochs . ".wts");
-#$esom->bestmatches->save("$OUTPUT.epoch" . $som->epochs . ".bm");
+$esom->weights->save("$OUTPUT.epoch" . $som->epochs . ".wts");
+$esom->bestmatches->save("$OUTPUT.epoch" . $som->epochs . ".bm");
