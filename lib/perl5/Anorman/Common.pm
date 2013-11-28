@@ -71,7 +71,7 @@ sub trace_error {
  
 	if ($DEBUG) {
 	
-		$err_string .=  "\nStack Trace:";
+		$err_string .=  "\n\nStack Trace:";
 
 		if (@call_stack) {
 			foreach my $call(reverse @call_stack) {
