@@ -33,9 +33,6 @@ my $optimize_ratio;
 my $LRN_FILE     = '';
 my $PRE_WEIGHTS  = '';
 
-
-
-
 # get user defined options
 &GetOptions(
 	'lrn|l=s'		=> \$LRN_FILE,
