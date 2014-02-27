@@ -10,21 +10,20 @@ use vars qw($VERSION);
 
 $VERSION = 0.45;
 
-
 use Exporter;
 use vars qw(@ISA @EXPORT @EXPORT_OK);
 
 @ISA = qw(Exporter);
 
 BEGIN {
-	use vars qw($DEBUG $VERBOSE);
+	use vars qw($DEBUG $VERBOSE $TIME);
 
 	if ($Anorman::Common::DEBUG) {
 		warn "Debug Mode: ON\n";
 		$Anorman::Common::VERBOSE = 1;
 	}
 
-	@EXPORT    = qw(trace_error $VERBOSE $DEBUG);
+	@EXPORT    = qw(trace_error whomai whowasi $VERBOSE $DEBUG $TIME);
 	@EXPORT_OK = qw(
 		trace_error
 		call_stack
@@ -36,6 +35,7 @@ BEGIN {
 		usage
 		$DEBUG
 		$VERBOSE
+		$TIME
 	)
 
 }
@@ -46,6 +46,9 @@ $AN_TMP_DIR = exists $ENV{'AN_TMP'} ? $ENV{'AN_TMP'} : $ENV{'TMPDIR'};
 $AN_SRC_DIR = exists $ENV{'AN_SRC'} ? $ENV{'AN_SRC'} : $ENV{'HOME'} . "/src/anorman";
 
 use Scalar::Util qw(looks_like_number blessed reftype);
+use Time::Hires qw(time);
+
+$TIME = time();
 
 # SUBROUTINES #
 

@@ -30,6 +30,7 @@ sub new {
 	};
 
 	if (defined $_[0]) {
+		check_matrix( $_[0] );
 		my $M     = $_[0];
 		my $m     = $M->columns;
 		my $n     = $M->rows;
@@ -61,10 +62,9 @@ sub new {
 			# Calculate invese covariance matrix
 			$inv_covar = $chol->solve( $identity );
 		} else {
-			warn "WARNING: Covariance Matrix is not Symmetric Positive-Definite. Using LU factorization instead of Cholesky\n";
-			my $lu = Anorman::Data::LinAlg::LUDecomposition->new( $cov );
+			warn "WARNING: Covariance Matrix was not Symmetric Positive-Definite. LU factorization was used instead of Cholesky\n";
 
-			warn "Matrix rank was " . rank($cov) . "\n";
+			my $lu = Anorman::Data::LinAlg::LUDecomposition->new( $cov );
 
 			$inv_covar = $lu->solve( $identity );
 		}
@@ -86,6 +86,7 @@ sub get_inverse_covariance {
 }
 
 sub set_inverse_covariance {
+	# provide a pre-calculated covariance matrix
 	my $self = shift;
 
 	check_square($_[0]);
@@ -122,8 +123,10 @@ sub set_means {
 	my $means = shift;
 
 	if (defined $self->{'_inv_covar_matrix'}) {
-		trace_error("Means vector is incompatible (" . $means->size . ") with covariance matrix " . $self->{'_inv_covar_matrix'}->_to_short_string ) 
-			if ($means->size != $self->{'_n'});
+
+		# check vector size against covariance matrix
+		trace_error("Means vector is incompatible (" . $means->size . ") with covariance matrix " . 
+			$self->{'_inv_covar_matrix'}->_to_short_string ) if ($means->size != $self->{'_n'});
 	} else {
 		$self->{'_n'} = $means->size;
 	}
@@ -131,30 +134,30 @@ sub set_means {
 	$self->{'_means'} = $means;
 }
 
-sub MD {
+sub distance {
 	# Mahalanobis Distance
 	my ($self, $x_vec, $y_vec) = @_;
 
 	# sanity checks
-	trace_error("You must first define and inverse covariance matrix") if !defined $self->{'_inv_covar_matrix'};
+	trace_error("No inverse covariance matrix defined") if !defined $self->{'_inv_covar_matrix'};
 	check_vector($x_vec);
 	trace_error("Vector has incompatible size (" . $x_vec->size . ") with covariance matrix " 
 		. $self->{'_inv_covar_matrix'}->_to_short_string ) if ($x_vec->size != $self->{'_n'});
 
 	# pick matrix means if no second vector was provided
-	if (defined $y_vec) {
-		$x_vec->check_size($y_vec);
-	} else {
-		trace_error("No means defined. You must provide a second vector") unless defined $self->{'_means'};
+	#if (defined $y_vec) {
+	##	$x_vec->check_size($y_vec);
+	#} else {
+	#	trace_error("No means defined. You must provide a second vector") unless defined $self->{'_means'};
 		$y_vec = $self->{'_means'};
-	}
+	#}
 
 	my $diff  = $x_vec->copy;
 
 	# use fast subtraction if both vectors are packed
 	if (is_packed($diff) && is_packed($y_vec)) {
 		vv_minus_assign( $diff, $y_vec );
-	# otherwise use slow method
+	# otherwise use the pure perl (slow) method
 	} else {
 		$diff->assign( $y_vec, sub { $_[0] - $_[1] } );
 	}

@@ -8,6 +8,8 @@ use Anorman::Common::Color;
 use Anorman::ESOM::ClassTable;
 use Anorman::ESOM::DataItem;
 
+use Data::Dumper;
+
 # Header parser dispatch table
 my %parse_header = ( 
 	'bm'    => [ \&_header_matrix_dims, \&_header_datapoints ],
@@ -49,7 +51,7 @@ my %build_line = (
 	'cls'   => sub { my ($s,$r) = @_; return join ("\t", $s->keys->get( $r ), $s->data->get( $r ) ) },
 	'cmx'   => sub { my ($s,$r) = @_; return join ("\t", $s->keys->get( $r ), $s->data->get( $r ) ) },
 	'names' => sub { my ($s,$r) = @_; return join ("\t", @{ $s->data->get( $r ) }) },
-	'bm'    => sub { my ($s,$r) = @_; return join ("\t", @{ $s->data->get( $r ) }) },
+	'bm'    => sub { my ($s,$r) = @_; return join ("\t", grep { defined $_ } @{ $s->data->get( $r ) }) },
 	'lrn'   => sub { return join ("\t", &_build_matrix_row(@_) ) },
 	'wts'   => sub { return join ("\t", &_build_matrix_row(@_) ) },
 	'umx'   => sub { return join ("\t", &_build_matrix_row(@_) ) },
@@ -112,7 +114,7 @@ sub line_parser {
 				$stream->NEXT;
 			}
 			
-		}
+	}
 }
 
 sub _package_command_line {

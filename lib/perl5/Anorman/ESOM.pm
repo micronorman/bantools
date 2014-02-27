@@ -12,16 +12,16 @@ use warnings;
 
 use Anorman::Common;
 
+use Anorman::ESOM::Config;
 use Anorman::ESOM::Datapoint;
 use Anorman::ESOM::File;
 use Anorman::ESOM::Grid;
 use Anorman::ESOM::SOM;
 use Anorman::ESOM::BMSearch;
 
-use Anorman::ESOM::UMatrixRenderer qw(render);
-use Anorman::ESOM::Projection qw(project classify);
-
-use Data::Dumper;
+use Anorman::ESOM::ImageRenderer;
+use Anorman::ESOM::UMatrixRenderer;
+use Anorman::ESOM::Projection qw(project classify distances);
 
 use overload 
 	'""' => \&_stringify;
@@ -41,8 +41,8 @@ sub datapoints { $_[0]->{'datapoints'} }
 sub dimensions { $_[0]->{'dim'}        }
 sub classes    { $_[0]->{'classes'}    }
 
-# return input data object (ie lrn-data)
-sub data {
+# return training data (i.e. lrn-data)
+sub training_data {
 	my $self = shift;
 	return undef unless &_has_lrn( $self );
 	return $self->{'lrn'};
@@ -66,6 +66,26 @@ sub bestmatches {
 	}
 }
 
+# returns a bestmatch object like above, but containing the calculated deistance between 
+# data vectors and best match neurons
+
+sub bestmatch_distances {
+	my $self = shift;
+
+	return $self->{'distances'} if (defined $self->{'distances'});
+
+	if (&_has_lrn($self) && &_has_grid($self)) {
+
+		my $bm   = $self->bestmatches;
+		my $lrn  = $self->training_data;
+		my $grid = $self->grid;
+
+		$self->{'distances'} = distances( $lrn, $grid, $bm );
+	}
+
+	return $self->{'distances'};
+}
+
 # return object of classified data points
 sub data_classes {
 	my $self = shift;
@@ -86,16 +106,65 @@ sub names {
 	return $self->{'names'} if $self->_has_names();
 }
 
+# Generic opening function for loading multiple files
+# Trusts file extensions to reflect filetypes
 sub open {
 	my $self   = shift;
-	my $fn     = shift;
 
-	my $file = Anorman::ESOM::File->new( $fn );
+	foreach my $fn(@_) {
+		my $file = Anorman::ESOM::File->new( $fn );
 
-	$file->load( $fn );
-	$self->add_new_data( $file );
+		$file->load( $fn );
+		$self->add_new_data( $file );
+	}
 
-	return $file;
+	1;
+}
+
+sub load_data {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $lrn = Anorman::ESOM::File::Lrn->new( $fn );
+	$lrn->load;
+	$self->add_new_data( $lrn );
+}
+
+sub load_names {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $names = Anorman::ESOM::File::Names->new( $fn );
+	$names->load;
+	$self->add_new_data( $names );
+}
+
+sub load_bestmatches {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $bm = Anorman::ESOM::File::BM->new( $fn );
+	$bm->load;
+	$self->add_new_data( $bm ); 
+}
+
+sub load_matrix {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $umx = Anorman::ESOM::File::Umx->new( $fn );
+	$umx->load;
+	$self->add_new_data( $umx );
+}
+
+sub load_weights {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $wts = Anorman::ESOM::File::Wts->new( $fn );
+	$wts->load;
+	$self->add_new_data( $wts );
+	$self->grid;
 }
 
 sub add_new_data {
@@ -111,19 +180,19 @@ sub add_new_data {
 sub grid {
 	my $self = shift;
 
+	# Grid dimensions set, but no grid object present: Initialize grid object
 	if (&_has_grid($self) && !defined $self->{'grid'}) {
 		$self->{'grid'} = Anorman::ESOM::Grid::ToroidEuclidean->new;
 		$self->{'grid'}->rows( $self->{'rows'} );
 		$self->{'grid'}->columns( $self->{'columns'} );
 		
-
 		if (&_has_wts( $self )) {
 			$self->{'grid'}->set_weights( $self->_wts->data );
 		} elsif (&_has_dims( $self )) {
 
-			# This will allocate an empty [ rows x columns x dims ] matrix grid automatically
+			# This will allocate an empty [ rows x columns x dims ] matrix grid
 			$self->{'grid'}->dim( $self->{'dim'} );
-			$self->add_new_data( $self->{'grid'}->get_wts );
+			#$self->add_new_data( $self->{'grid'}->get_wts );
 		}
 	} elsif (@_ >= 1) {
 
@@ -161,13 +230,16 @@ sub weights {
 
 sub umatrix {
 	my $self = shift;
-
+	
 	# Render a new U-Matrix if Weights data is present
 	unless (&_has_umx($self)) {
-		warn "No U-Matrix present\n" if $VERBOSE;
 		if (&_has_grid($self)) {
-			$self->{'umx'} = Anorman::ESOM::File::Umx->new( $self->{'rows'}, $self->{'columns'} );
-			$self->{'umx'}->data( render( $self->grid ) );
+			my $r = Anorman::ESOM::UMatrixRenderer->new;
+
+			$self->{'umx'} = Anorman::ESOM::File::Umx->new( $self->rows, $self->columns );
+			$self->{'umx'}->data( $r->render( $self->grid ) );
+		} else {
+			trace_error "No U-Matrix or ESOM Grid present";
 		}
 	}
 
@@ -194,7 +266,7 @@ sub setup_trainer {
 	my %opt  = @_;
 
 	trace_error("Cannot initialize a trainer without data") unless &_has_lrn($self);
-	trace_error("Cannot initialize a trainer withoit a grid") unless &_has_grid($self);
+	trace_error("Cannot initialize a trainer without a grid") unless &_has_grid($self);
 	
 	$self->{'SOM'} = Anorman::ESOM::SOM::Online->new();
 	$self->{'SOM'}->BMSearch( Anorman::ESOM::BMSearch::Simple->new() );
@@ -204,6 +276,8 @@ sub setup_trainer {
 	my $grid = $self->{'grid'};
 
 	if (&_has_wts($self)) {
+		# If weights are already loaded use load these into the training grid
+		print $self;
 		$self->{'SOM'}->grid->set_weights( $self->_wts->data );
 	} else {
 		# Otherwise initialize grid from training data
@@ -249,6 +323,11 @@ sub train {
 	$self->add_new_data( $bm );
 }
 
+sub reset {
+	...
+}
+
+# Clear functions
 sub clear_umatrix {
 	my $self = shift;
 
@@ -259,6 +338,7 @@ sub clear_bestmatches {
 	my $self = shift;
 
 	delete $self->{'bm'};
+	delete $self->{'distances'};
 }
 
 sub clear_data {
@@ -267,6 +347,14 @@ sub clear_data {
 	delete $self->{'bm'};
 	delete $self->{'cls'};
 	delete $self->{'lrn'};
+	delete $self->{'distances'};
+}
+
+sub clear_classmask {
+	my $self = shift;
+
+	delete $self->{'cmx'};
+	delete $self->{'cls'};
 }
 
 sub clear_grid {
@@ -277,14 +365,15 @@ sub clear_grid {
 	delete $self->{'grid'};
 	delete $self->{'umx'};
 	delete $self->{'wts'};
+	delete $self->{'distances'};
 }
 
-# When adding new data, check for size consistency
+# When adding new data, verify consistency
 sub _check_new_data {
 	my $self    = shift;
 	my $input   = shift;
 
-	trace_error("Input is not an ESOM-file") unless $input->isa("Anorman::ESOM::File");
+	trace_error("Input is not a valid ESOM-file") unless $input->isa("Anorman::ESOM::File");
 
 	my $err_msg = '';
 
@@ -343,7 +432,7 @@ sub _check_new_data {
 	return 1;
 }
 
-# Internal object Accessors
+# Internal object Accessors. Nothing but syntactic sugar, really
 sub _bm    { $_[0]->{'bm'}    }
 sub _cls   { $_[0]->{'cls'}   }
 sub _cmx   { $_[0]->{'cmx'}   }
@@ -369,7 +458,7 @@ sub _has_dims       { return (defined $_[0]->dimensions)}
 sub _has_classes    { return (defined $_[0]->classes)   }
 sub _has_trainer    { return (defined $_[0]->_SOM)      }
 
-# Stringification
+# Stringification. To display basic information about the ESOM
 sub _2D_string {
 	return "[ " . $_[0]->rows . " x " . $_[0]->columns . " ]"; 
 }
@@ -388,8 +477,8 @@ sub _stringify {
 		$self->_bm->size : 'No');
 	$string .= "\nHas Data Classes:\t"     . (&_has_classes($self) ? 'Yes, ' .
 		$self->classes->size : 'No');
-	$string .= "\nHas Class Mask:\t\t"  . (&_has_cmx($self) ? 'Yes, coverage: ' .
-		(100 * $self->_cmx->size / $self->neurons) : 'No');
+	$string .= "\nHas Class Mask:\t\t"  . (&_has_cmx($self) ? 'Yes, coverage (%): ' .
+		( sprintf("%.2f", (100 * $self->_cmx->size / $self->neurons))) : 'No');
 	$string .= "\nHas Grid:\t\t"        . (&_has_grid($self) ? 'Yes, dimensions: ' .
 		&_2D_string($self) . ', neurons: ' . $self->neurons : 'No');
 	$string .= "\nHas U-Matrix:\t\t"    . (&_has_umx($self) ? 'Yes, dimensions: ' .

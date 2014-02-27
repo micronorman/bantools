@@ -1,5 +1,8 @@
 package Anorman::ESOM::File::Map;
 
+# Generic data structure for ESOM filetypes requiring
+# indexed key/value pairs
+
 use strict;
 use warnings;
 

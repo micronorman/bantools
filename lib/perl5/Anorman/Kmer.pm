@@ -1,6 +1,7 @@
 package Anorman::Kmer;
 
 use strict;
+
 use Anorman::Common;
 use Anorman::DNA qw(mono_nt_freq);
 
@@ -31,12 +32,13 @@ sub init {
 
 
 sub seq {
+
+	# loads a new sequence into the cache or returns the existing one
 	my $self = shift;
 
 	if (defined $_[0]) {
 		$self->{'seq'} = shift;
 
-		
 		# reset kmer counters
 		%{ $self->{'kmers'} }         = ();
 		%{ $self->{'_mono_nt_freq'} } = ();
@@ -63,6 +65,7 @@ sub ksize {
 }
 
 sub relative_kmer_abundance {
+
 	my $self  = shift;
 	my $kmer  = shift;
 

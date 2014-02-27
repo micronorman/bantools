@@ -7,8 +7,10 @@ use parent 'Anorman::ESOM::File';
 
 use Anorman::Common;
 use Anorman::Data::LinAlg::Property qw(check_matrix);
+use Anorman::ESOM::Config;
 
-our $PACKDATA       = 1;
+# Flag indicating wether data should be stored internally 
+# as a packed matrix (packed, C-type data structure) or not (normal perl data structure)
 
 sub data {
 	my $self = shift;
@@ -16,7 +18,6 @@ sub data {
 
 	check_matrix($_[0]);	
 	$self->{'data'} = shift;
-
 }
 
 sub rows {
@@ -51,7 +52,9 @@ sub _init {
 
 	trace_error("Invalid matrix dimensions") unless (defined $rows && defined $columns);
 
-	$self->{'data'} = $PACKDATA ? Anorman::Data->packed_matrix($rows, $columns) : Anorman::Data->matrix($rows,$columns);
+	$self->{'data'} = $Anorman::ESOM::Config::PACK_MATRIX_DATA ? 
+		Anorman::Data->packed_matrix($rows, $columns) : 
+		Anorman::Data->matrix($rows,$columns);
 }
 
 1;

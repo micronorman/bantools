@@ -49,6 +49,12 @@ sub size {
 	$#{ $self } = $_[0] - 1;
 }
 
+sub clear {
+	my $self = shift;
+
+	@{ $self } = ();
+}
+
 sub sort {
 	...
 }

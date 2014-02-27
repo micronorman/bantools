@@ -52,7 +52,7 @@ sub distance_function {
 	my $func = shift;
 
 	if (defined $func) {
-		$self->_error("Not a valid distance function") unless (ref $func) =~ m/::Math::Distance::/;
+		#$self->_error("Not a valid distance function") unless (ref $func) =~ m/::Math::Distance::/;
 		$self->{'_distance_function'} = $func;
 	}
 	return $self->{'_distance_function'};
@@ -108,7 +108,6 @@ use Anorman::Common;
 use Anorman::Data::Matrix::DensePacked;
 use Anorman::Data::LinAlg::Property qw( is_matrix );
 
-
 sub new {
 	my $class       = shift;
 
@@ -131,7 +130,7 @@ sub new {
 # return a particular neuron as a row-vector
 sub get_neuron {
 	my $self = shift;
-	return undef unless defined $self->{'weights'};
+	return undef unless defined $self->{'_weights'};
 
 	return $self->{'_weights'}->view_row( $_[0] );
 }
@@ -243,6 +242,7 @@ sub index2row {
 sub get_neuron {
 	my $self = shift;
 
+	print Dumper \@_;
 	if (@_ != 2) {
 		return $self->{'_weights'}->view_row( $_[0] );
 	} else {
@@ -506,7 +506,7 @@ sub new {
 	my $self  = $class->SUPER::new(@_);
 	
 	#$self->{'_neighbors'} = {};
-	$self->{'_distances'} = [];
+	$self->{'_distance_cache'} = [];
 
 	return $self;
 }
@@ -528,7 +528,7 @@ sub neighbors {
 
 	# conversion of radius (euclidean distance trick) and allocation of string of unsigned integers for storing neighbors
 	my $rr   = $self->transform_radius( $r );
-	my $size = @{ $self->{'_distances'} };
+	my $size = scalar @{ $self->{'_distance_cache'} };
 	my $n    = pack("I$size" , (-1) x $size );
 
 
@@ -546,27 +546,29 @@ sub distances {
 	my $self = shift;
 	my $r    = shift;
 	
-	return $self->{'_distances'} unless defined $r;
+	return $self->{'_distance_cache'} unless defined $r;
 
 	# flush caches
-	@{ $self->{'_distances'} } = ();
+	@{ $self->{'_distance_cache'} } = ();
 	#%{ $self->{'_neighbors'} } = ();
 
 	my $rr   = $self->transform_radius( $r );
 
-	warn "\tPre-calculating relative grid distances\n" if $VERBOSE;
+	warn "\tCaching relative grid distances\n" if $VERBOSE;
+
+	# 
 	foreach my $x( -$r..$r ) {
 		foreach my $y( -$r..$r ) {
 			my $dist = $self->grid_distance( 0, 0, $x, $y );
-			push @{ $self->{'_distances'} }, $dist if ($dist <= $rr);
+			push @{ $self->{'_distance_cache'} }, $dist if ($dist <= $rr);
 		}
 	}
 
-	return $self->{'_distances'};
+	return $self->{'_distance_cache'};
 }
 
 sub immediate_neighbors {
-	# returns the the internal indices of the 4 immediate neighbors (a.k.a the von Neumann neghborhood)
+	# returns the the internal indices of the 4 immediate neighbors (a.k.a the von Neumann neighborhood)
 	# of a neuron
 	my $self = shift;
 	my $c    = shift;

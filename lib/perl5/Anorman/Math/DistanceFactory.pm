@@ -23,10 +23,10 @@ sub get_function {
 		$class->_error("Unkown option $opt") if !exists $opt{ $setting };
 		
 		if ( $setting eq 'SPACE' ) {
-			$class->_error("Unkown Geometry $value") if !exists $SPACES{ $value };
+			trace_error("Unkown Geometry $value") if !exists $SPACES{ $value };
 			$self->{'SPACE'} = $value;
 		} elsif ( $value != 1 && $value != 0 ) {
-			$class->_error("Boolean option $setting can only contain value 0 or 1");
+			trace_error("Boolean option $setting can only contain value 0 or 1");
 			$opt{ $setting } = $value ? 1 : undef;
 		}
 	}
@@ -37,11 +37,6 @@ sub get_function {
 		return  Anorman::Math::Distance::Function->new( %opt );
 	} 
 }	
-
-sub _error {
-	shift;
-	trace_error(@_);
-}
 
 1;
 
@@ -95,6 +90,11 @@ sub apply {
 	}
 
 	return $self->( $u, $v );
+}
+
+sub apply_quick {
+	# skip all checks and assume that vectors are packed
+	return $_[0]->($_[1],$_[2]);
 }
 
 sub function {

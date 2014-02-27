@@ -4,7 +4,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Exporter;
 
-@EXPORT_OK = qw(log10 log2 hypot);
+@EXPORT_OK = qw(log10 log2 hypot min max plus minus sqrt identity square);
 
 @ISA = qw(Exporter);
 
@@ -33,6 +33,15 @@ sub hypot ($$) {
 	}
 	return $r;
 }
+
+sub identity ($) { $_[0] };
+sub square ($) { $_[0] * $_[0] };
+sub sqrt ($) { sqrt $_[0] };
+
+sub min  (@) { $_[0] < $_[1] ? $_[0] : $_[1] };
+sub max  (@) { $_[0] > $_[1] ? $_[0] : $_[1] };
+sub plus (@) { $_[0] + $_[1] };
+sub minus (@) { $_[0] - $_[1] };
 
 #====== STATISTICS FUNCTIONS ======
 
@@ -256,7 +265,7 @@ sub optimize_BoxCox_shift_parameter {
 	my $data_r  = shift;
 	my $lambda1 = shift;
 
-	my $amin = abs( min (derefify ($data_r) ) );
+	my $amin = abs( List::Util::min (derefify ($data_r) ) );
 	my $amax = $amin + 2;
 	my $acen = ($amin + $amax) * (2 - phi);
 

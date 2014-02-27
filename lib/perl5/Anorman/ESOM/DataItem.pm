@@ -54,24 +54,33 @@ use parent -norequire,'Anorman::ESOM::DataItem';
 
 sub new {
 	my $class = shift;
-	my ($index,$row,$column)   = @_;
+	my ($index,$row,$column, $distance)   = @_;
 
 	my $self = $class->SUPER::new( $index );
 	
-	$self->[1] = $row;    # BestMatch Row
-	$self->[2] = $column; # BestMarch Column
+	$self->[1] = $row;      # BestMatch Row
+	$self->[2] = $column;   # BestMarch Column
+	$self->[3] = $distance; # Arbitrary distance to bestmatch neuron
 
 	return $self;
 }
 
 sub row {
+	# Retreive or set row value
 	return $_[0]->[1] unless defined $_[1];
 	$_[0]->[1] = $_[1];
 }
 
 sub column {
+	# Retrieve or set column value
 	return $_[0]->[2] unless defined $_[1];
 	$_[0]->[2] = $_[1];
+}
+
+sub distance {
+	# Retrieve or set distance value
+	return $_[0]->[3] unless defined $_[1];
+	$_[0]->[3] = $_[1];
 }
 
 1;

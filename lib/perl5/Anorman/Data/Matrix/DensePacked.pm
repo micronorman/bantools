@@ -198,6 +198,8 @@ SV* _struct_clone( SV* self ) {
     sv_setiv( obj, (IV) n );
     SvREADONLY_on( obj );
 
+    /* TODO: Do something about problems during garbage collection */
+
     return clone; 
 }
 
@@ -252,7 +254,7 @@ NV sum( SV* self ) {
 }
 
 /* object initializors */
-void _setup ( SV* self, ...) {
+void _setup ( SV* self, ... ) {
     Inline_Stack_Vars;
     
     if ( items != 3 && items != 7) {
@@ -366,38 +368,13 @@ void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
         return;
     }
 
-    /* straight memcopy if neither marix is a view */
+    /* straight up memcopy if neither marix is a view */
     if (A->view_flag == FALSE && B->view_flag == FALSE) {
         Copy( B->elements, A->elements, (UV) (A->rows * A->columns), double );
         return; 
     }
 
-    ELEMS_BEG( A_elem, A);
-    ELEMS_BEG( B_elem, B);
-
-    int    A_cs = A->column_stride;
-    int    B_cs = B->column_stride;
-    int    A_rs = A->row_stride;
-    int    B_rs = B->row_stride;
-    int B_index = c_m_index( B, 0,0 );
-    int A_index = c_m_index( A, 0,0 );
-
-    int row = A->rows;
-    while ( --row >= 0) {
-        int i = A_index;
-        int j = B_index;
-
-        int column = A->columns;
-        while (--column >= 0) {
-            A_elem[ i ] = B_elem[ j ];
-            i += A_cs;
-            j += B_cs;
-        }
-
-        A_index += A_rs;
-        B_index += B_rs;
-    }
-
+    c_mm_copy( A, B );
 }
 
 void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* function ) {

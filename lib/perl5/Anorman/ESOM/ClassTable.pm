@@ -12,8 +12,6 @@ use Anorman::Data::Hash;
 use Anorman::ESOM::DataItem;
 use Anorman::ESOM::File::ColorTable;
 
-use Data::Dumper;
-
 use overload
 	'@{}' => \&_to_array,
 	'fallback' => undef;

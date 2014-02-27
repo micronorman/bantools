@@ -26,7 +26,7 @@ sub new {
 		}
 	}
 
-	$self->{'classes'} = Anorman::Data::List->new;
+	$self->{'classes'} = Anorman::ESOM::ClassTable->new;
 	$self->{'keys'}    = Anorman::Data::List->new;
 
 	return $self;
@@ -62,8 +62,15 @@ sub get_quick {
 }
 
 sub get_by_index {
-	my $self  = shift;
-	return $self->{'data'}->get( $self->{'map'}->get( $_[0] ) ) || 0; 
+	my ($self, $index) = @_;
+
+	my $pos = $self->{'map'}->get( $index );
+
+	if (defined $pos) { 	
+		return $self->{'data'}->get( $self->{'map'}->get( $index ) ); 
+	} 
+	
+	return 0;	
 }
 
 sub set {

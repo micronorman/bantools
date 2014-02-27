@@ -6,15 +6,16 @@ use warnings;
 use Anorman::Common;
 use Anorman::Common::Iterator;
 
+use Anorman::Data;
 use Anorman::Data::List;
 use Anorman::Data::Hash;
-use Anorman::Data;
+
+use Anorman::ESOM::Config;
 
 use Anorman::ESOM::File::List;
 use Anorman::ESOM::File::Map;
 use Anorman::ESOM::File::Grid;
 use Anorman::ESOM::File::Matrix;
-
 use Anorman::ESOM::File::BM;
 use Anorman::ESOM::File::ClassMask;
 use Anorman::ESOM::File::Cls;
@@ -26,10 +27,10 @@ use Anorman::ESOM::File::Wts;
 
 use Anorman::ESOM::ParserFactory;
 
+# Default data tokens
 our $DELIMITER      = "\t";
 our $HEADER_PREFIX  = "%";
 our $COMMENT_PREFIX = "#";
-
 
 our %FILETYPES = (
 	'lrn'   => 'Multivariate Data',  
@@ -65,7 +66,6 @@ sub new {
 
 	# Construct object from child caller
 	if ($class ne __PACKAGE__ ) {
-		warn __PACKAGE__ . " was called by child constructor $class\n" if $DEBUG;
 		$filename = $arg;
 		($type) = $class =~ /.+::(\w+)$/;
 		$type = $TYPES{ $type };
@@ -73,24 +73,19 @@ sub new {
 		# Attempt to derive type from filename
         	if ($arg =~ m/.*\.(\w{2,5})$/) {
 			$filename = $arg;
-			warn "Input $filename looks like a filename\n" if $DEBUG;
 			$type     = $1;
-			warn "Looks like it's a $type-file\n" if $DEBUG;
 
 		# Otherwise assume that a type was passed directly
 		} else {
-			warn "Looks like type $type was passed\n" if $DEBUG;
 			$type = $arg;
 		}
 	
 		# Data type sanity check
 		trace_error( "No file type defined" ) if (!defined $type);
-		trace_error( "Unknown filetype $type" )  if !exists $FILETYPES{ $type };
+		trace_error( "Unknown filetype $type" )  if !exists $Anorman::ESOM::Config::FILETYPES{ $type };
 
-		$class .= '::' . $CLASS_NAMES{ $type };
+		$class .= '::' . $Anorman::ESOM::Config::CLASS_NAMES{ $type };
 		
-		warn "Reconstructing as child-class $class with $filename\n" if $DEBUG;
-
 		return $class->new( $filename );
 	}
 
@@ -115,7 +110,7 @@ sub load {
 	
 	# Open a filehandle if there's a file (otherwise STDIN is the input);
 	if (defined $self->{'filename'}) {
-		warn "Loading $FILETYPES{ $self->{'type'} } from file $self->{'filename'}\n" if $VERBOSE;
+		warn "Loading $Anorman::ESOM::Config::FILETYPES{ $self->{'type'} } from file $self->{'filename'}\n" if $VERBOSE;
 		$stream->open( $self->{'filename'}) if defined $self->{'filename'};
 	}
 	
@@ -194,6 +189,7 @@ sub description {
 
 sub _init {
 	# Dummy method
+	# Is executed after loading
 }
 
 # Build a header for the current filetype

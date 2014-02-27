@@ -9,7 +9,7 @@ use Anorman::Common::Color;
 use parent 'Anorman::ESOM::File::List';
 
 # A default set of hardcoded colors based on the Crayola scheme
-# NOTE: Some of these colors are not that different...
+# TODO: Some of these colors should be more different...
 
 our @CLASSES = (
 	'#EFDECD' , '#CD9575' , '#FDD9B5' , '#78DBE2' , '#87A96B' , '#FFA474' ,
@@ -42,13 +42,16 @@ sub new {
 
 	$self->filename( shift ) if defined $_[0];
 
-	foreach (@CLASSES) {
-		$self->{'data'}->add( Anorman::Common::Color->new($_) );
-	}
-	
 	return $self;
 }
 
+sub generate_colors {
+	my $self = shift;
+
+	foreach (@CLASSES) {
+		$self->{'data'}->add( Anorman::Common::Color->new($_) );
+	}
+}
 
 1;
 

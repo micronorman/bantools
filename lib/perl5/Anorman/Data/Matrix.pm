@@ -6,6 +6,7 @@ use warnings;
 use parent 'Anorman::Data';
 
 use Anorman::Common qw(sniff_scalar trace_error);
+use Anorman::Math::Common qw( min max plus minus identity );
 use Anorman::Data::LinAlg::Property qw( :all );
 
 use Scalar::Util qw(refaddr blessed looks_like_number);
@@ -197,6 +198,60 @@ sub assign {
 	my $self = $_[0];
 	my $type = sniff_scalar($_[1]);
 	$ASSIGN_DISPATCH{ $type }->( @_ );
+}
+
+sub aggregate {
+	my $self  = shift;
+
+	# Check wether results matrix was provided
+	my $other = shift if is_matrix($_[0]);
+	
+	return undef if ($self->size == 0);
+	
+	my ($aggr, $f) = @_;
+
+	# Set f to identity if it was not provided
+	$f = \&identity if !defined $f;
+
+	my $loop_func;
+
+	if ($other) {
+		$self->_check_shape($other);
+		$loop_func = sub { $f->( $self->get_quick($_[0],$_[1]), $other->get_quick($_[0],$_[1]) ) };
+	} else {
+		$loop_func = sub { $f->( $self->get_quick($_[0], $_[1]) ) };
+	}
+
+	my $row    = $self->rows - 1;
+	my $column = $self->columns - 1;
+
+	my $a = $loop_func->($row,$column);
+	my $d = 1;
+	
+	$row = $self->rows;
+	while ( --$row >= 0 ) {
+		$column = $self->columns - $d;
+		while ( --$column >= 0 ) {
+			$a = $aggr->( $a, $loop_func->($row,$column) ); 
+		}
+		$d = 0;
+	}
+
+	return $a;
+}
+
+sub normalize {
+	# Normalize matrix in place to [0..1]
+	my $self = shift;
+
+	my $min = $self->aggregate( \&min );
+	my $max = $self->aggregate( \&max );
+
+	return if ($min == 0 && $max == 1);
+
+	my $diff = $max - $min;
+	$self->assign( sub { $_[0] - $min } );
+	$self->assign( sub { $_[0] / $diff } );
 }
 
 sub equals {
@@ -464,6 +519,13 @@ sub _assign_Matrix_from_CODE {
 sub _assign_Matrix_from_OBJECT_and_CODE {
 	my ($self, $other, $function) = @_;
 	$self->_check_shape( $other );
+	my $row = $self->rows;
+	while ( --$row >= 0 ) {
+		my $column = $self->columns;
+		while ( --$column >= 0 ) {
+			$self->set_quick($row, $column, $function->($self->get_quick($row, $column) , $other->get_quick($row, $column)));
+		}
+	}
 	
 }
 

@@ -155,6 +155,8 @@ package Anorman::ESOM::BMSearch::Simple;
 
 use parent -norequire,'Anorman::ESOM::BMSearch';
 
+use Data::Dumper;
+
 sub new { return shift->SUPER::new() };
 
 sub find_bestmatch {

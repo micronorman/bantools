@@ -8,8 +8,6 @@ use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::Data::LinAlg::EigenValueDecomposition;
 use Anorman::Data::Algorithms::Statistic;
 
-use Data::Dumper;
-
 sub new {
 	my $class     = shift;
 	my $data      = shift;

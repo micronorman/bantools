@@ -12,7 +12,8 @@ use Anorman::ESOM::Grid;
 use Anorman::ESOM::Neighborhood;
 use Anorman::ESOM::BMSearch;
 
-use Getopt::Long;
+use Getopt::Long qw( :config no_auto_abbrev no_ignore_case );
+use Pod::Usage;
 use POSIX qw(ceil);
 
 # Default options
@@ -38,19 +39,21 @@ my $PRE_WEIGHTS  = '';
 	'lrn|l=s'		=> \$LRN_FILE,
 	'epochs|e=i'		=> \$EPOCHS,
 	'scale|s=i'		=> \$SCALE,
-	'method|m=s'		=> \$METHOD,
+	'algorithm|a=s'		=> \$METHOD,
 	'bmconstant|bmc=i'	=> \$BMCONSTANT,
 	'bmsearch|bms=s'	=> \$BMSEARCH,
 	'cool-radius|rc=s'	=> \$COOL_RADIUS,
-	'cool-learn|lr=s'	=> \$COOL_LEARN,
+	'cool-learn|lc=s'	=> \$COOL_LEARN,
 	'grid|g=s'		=> \$GRID,
 	'neighborhood|n=s'	=> \$NEIGHBORHOOD,
 	'weights|w=s'		=> \$PRE_WEIGHTS,
 	'ratio|r'		=> \$optimize_ratio,
 	'K|k=f'			=> \$dk,
 	'output|o=s'		=> \$OUTPUT,
-	'verbose'		=> \$VERBOSE
-);
+	'verbose'		=> \$VERBOSE,
+	'help'			=> sub { pod2usage( verbose => 1 ) },
+	'manual'		=> sub { pod2usage( verbose => 2 ) }
+) or pod2usage( msg => "\nuse --help for more information\n", verbose => 0 );
 
 my $esom = Anorman::ESOM->new();
 
@@ -173,7 +176,96 @@ if ($PRE_WEIGHTS ne '') {
 # run training
 $esom->train( $som );
 
+warn "Writing output file...\n";
+
 # write output files
 $esom->umatrix->save("$OUTPUT.epoch" . $som->epochs . ".umx");
 $esom->weights->save("$OUTPUT.epoch" . $som->epochs . ".wts");
 $esom->bestmatches->save("$OUTPUT.epoch" . $som->epochs . ".bm");
+
+__END__
+=pod
+
+=head1 NAME
+
+esom_train.pl - ESOM training tool
+
+=head1 SYNOPSIS
+
+=over 8
+
+=item B<esom_train.pl> 
+
+-l I<file>
+[-w I<file>]
+[-g I<STR>]
+[-a I<STR>]
+[-e I<NUM>]
+[-rc I<NUM>]
+[-lc I<NUM>]
+[-bms I<STR>]
+
+=back
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-l, --lrn> I<file>
+
+lrn-file (*.lrn) with input data patterns
+
+=item B<-w, --wts> I<file>
+
+wts-file (*.wts) with weights to begin training with
+
+=item B<-a, --algorithm> 
+
+The training algorithm. Possible choices are:
+C<online> (default),
+C<slowbatch>,
+C<kbatch>
+
+=item B<-g, --grid>
+
+The training grid type. Possible choices are:
+C<toroid> (default),
+C<toroid_man>,
+C<toroid_max>
+
+=item B<-e, --epochs>
+
+The number of training epochs (default: 20)
+
+=item B<-n, --neighborhood>
+
+The neighborhood kernel function. Possible choices are:
+C<bubble>,
+C<cone>,
+C<epan>,
+C<gauss> (default),
+C<mexhat> 
+
+=item B<-rc, --cool-radius>
+
+Cooling strategy for kernel radius. Choose between C<lin> (linear) or C<exp> (exponential)
+
+=item B<-lc, --cool-learn>
+
+Cooling strategy for learning rate. (see -rc)
+
+=item B<-bms, --bmsearch> 
+
+The bestmatch search method. Possible choices are:
+C<standard> (default),
+C<constant>,
+C<quick>,
+C<faster>
+
+=item B<-o, --output>
+
+The output prefix. Will be used to generate names for the output wts-, umx- and bm-files. Default is C<out>
+
+=back
+
+=cut

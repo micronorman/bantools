@@ -3,14 +3,14 @@ package Anorman::ESOM::File::BM;
 use strict;
 use warnings;
 
-use parent -norequire,'Anorman::ESOM::File::Map';
+use parent 'Anorman::ESOM::File::Map';
 
 sub new {
 	my $class    = shift;
 	my $filename = shift;
 	my $self     = $class->SUPER::new();
 
-	$self->{'filename'} = $filename;
+	$self->{'filename'}  = $filename;
 
 	return $self;
 }

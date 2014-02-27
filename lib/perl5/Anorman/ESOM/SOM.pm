@@ -14,10 +14,8 @@ use Anorman::Math::DistanceFactory;
 use List::Util qw(shuffle);
 use Time::HiRes qw(time);
 
-our $TIME = time();
-
-our $TRAIN_BEG;
-our $TRAIN_END;
+my $TRAIN_BEG;
+my $TRAIN_END;
 
 sub new {
 	my $class = shift;
