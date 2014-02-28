@@ -167,6 +167,15 @@ sub load_weights {
 	$self->grid;
 }
 
+sub load_data_classes {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $cls = Anorman::ESOM::File::Cls->new( $fn );
+	$cls->load;
+	$self->add_new_data( $cls );
+}
+
 sub add_new_data {
 	my $self  = shift;
 	my $input = shift;

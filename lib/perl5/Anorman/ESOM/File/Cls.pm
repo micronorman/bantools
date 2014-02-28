@@ -56,7 +56,11 @@ sub set {
 
 sub get_by_index {
 	my $self = shift;
-	return $self->{'data'}->[ $self->{'map'}->get( $_[0] ) ];
+	
+	my $i = $self->{'map'}->get( $_[0] );
+
+	return undef if !defined $i;
+	return $self->{'data'}->[ $i ];
 }
 
 sub remove {

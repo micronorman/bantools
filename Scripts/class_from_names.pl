@@ -3,13 +3,11 @@
 use strict;
 use warnings;
 
-use Data::Dumper;
 use Anorman::ESOM;
 
 my $esom = Anorman::ESOM->new;
 
 $esom->open($ARGV[0]);
-$esom->init;
 
 my %classes        = ();
 my @dp_class_names = ();
@@ -37,8 +35,6 @@ foreach my $class_name( sort { $a cmp $b } keys %classes) {
 	my $index = $esom->add_class( $class_name );
 	$class_numbers{ $class_name } = $index;
 }
-
-$esom->generate_class_colors;
 
 print $esom->cls_header_string;
 

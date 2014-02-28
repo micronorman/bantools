@@ -17,6 +17,7 @@ my (
     $VERBOSE,
     $MIN_LENGTH,
     $MAX_LENGTH,
+    $METHOD,
     $SUBDIVIDE,
     $CHUNK_SIZE,
     $WINDOW_SIZE,
@@ -27,10 +28,13 @@ $MIN_LENGTH      = 500;
 $MAX_LENGTH      = 1<<30;
 $KSIZE           = 4;
 
+$METHOD = 'raw';
+
 &GetOptions (   "help"        => \$HELP,
 	        "input=s"     => \$FILE,
 		"kmersize=i"  => \$KSIZE,
                 "verbose"     => \$VERBOSE,
+		"method=s"    => \$METHOD,
 		"minlen=i"    => \$MIN_LENGTH,
 		"maxlen=i"    => \$MAX_LENGTH,
 		"subdivide=i" => \$CHUNK_SIZE,
@@ -132,8 +136,14 @@ sub add_kmer_counts_to_table {
 	my @keys     = qw/name length/;
 
 	$kmer_o->seq( $seq_r->{'seq'} );
-	@row_data = $kmer_o->get_raw_counts;
-	#@row_data = map { $kmer_o->relative_kmer_abundance( $_ ) } $kmer_o->sorted_kmers;
+
+	if ($METHOD eq 'freq') {
+		@row_data = map { $kmer_o->kmer_freq( $_ ) } $kmer_o->sorted_kmers; 
+	} elsif ($METHOD eq 'relative') {
+		@row_data = map { $kmer_o->relative_kmer_abundance( $_ ) } $kmer_o->sorted_kmers;
+	} else {
+		@row_data = $kmer_o->get_raw_counts;
+	}
 
 	# transfer sequence info to row info
 	@row_info{ @keys } = @{ $seq_r }{ @keys };
@@ -141,3 +151,15 @@ sub add_kmer_counts_to_table {
 	# create new row in table
 	$table_o->add_row( \%row_info, @row_data );
 }
+
+=pod
+
+=head1 NAME
+
+calc_kmer_freq.pl -- Calculates k-mer frequencies of nucleotide sequences
+
+=head1 SYNOPSIS
+
+
+=cut
+

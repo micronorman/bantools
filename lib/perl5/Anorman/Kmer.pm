@@ -39,7 +39,7 @@ sub seq {
 	if (defined $_[0]) {
 		$self->{'seq'} = shift;
 
-		# reset kmer counters
+		# reset all counters
 		%{ $self->{'kmers'} }         = ();
 		%{ $self->{'_mono_nt_freq'} } = ();
 		$self->{'ksum'}               = 0;
@@ -86,8 +86,8 @@ sub relative_kmer_abundance {
 	foreach my $nt(@KMER) {
 		$f *= $self->{'_mono_nt_freq'}->{ $nt };
 	}
-	
-	return ($self->{'kmers'}->{ $kmer } / $self->{'ksum'}) / $f; 
+
+	return $self->{'kmers'}->{ $kmer } / ($self->{'ksum'} * $f); 
 }
 
 sub kmer_freq {

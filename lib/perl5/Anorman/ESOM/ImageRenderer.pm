@@ -8,15 +8,19 @@ use Anorman::Common::Color;
 use Anorman::ESOM::Config;
 use Anorman::ESOM::File::ColorTable;
 use Anorman::ESOM::UMatrixRenderer;
+use Anorman::ESOM::BestMatchRenderer;
 
 use GD;
 
 use List::Util qw(max);
 
+use Data::Dumper;
+
 my %DEFAULTS = (
 	'zoom'	 	=> 1,
 	'colorscheme' 	=> undef,
 	'background'	=> Anorman::ESOM::UMatrixRenderer->new,
+	'foreground'	=> Anorman::ESOM::BestMatchRenderer->new,
 	'bmsize' 	=> 1,
 	'clipping'	=> undef,
 	'clip'		=> 1.0,
@@ -40,7 +44,7 @@ sub new {
 	my ($esom, %opt) = @_;
 
 	if (defined $esom) {
-		$self->set_esom( $_[0] ) if defined $_[0];
+		$self->esom( $esom );
 	} 
 
 	if (%opt) {
@@ -64,12 +68,15 @@ sub new {
 sub render {
 	my ($self, $fn) = @_;
 
-	warn "Rendering image...\n" if $VERBOSE;
+	warn "Rendering background...\n" if $VERBOSE;
 	$self->_zoom_background;
 	$self->_draw_background;
 	$self->_clone_bg_image;
 	$self->_tile_background;
 	$self->_clone_image;
+
+	warn "Rendering foreground...\n" if $VERBOSE;
+	$self->{'foreground'}->render( $self );
 
 	return $self->{'image'};
 }
@@ -105,23 +112,28 @@ sub clip {
 	...
 }
 
-sub set_esom {
-	my $self = shift;
+sub tiled { $_[0]->{'tiled'} }
 
-	trace_error("Arguement error. Not an ESOM object") unless $_[0]->isa("Anorman::ESOM");
+sub esom {
+	my ($self, $esom) = @_;
 
-	my $esom = shift;
+	if (defined $esom) {
+		trace_error("Arguement error. Not an ESOM object") unless $esom->isa("Anorman::ESOM");
+
 	
-	if (defined $esom->_umx) {
-		$self->{'matrix'} = $esom->_umx->data;
+		if (defined $esom->_umx) {
+			$self->{'matrix'} = $esom->_umx->data;
 
+		} else {
+			$self->{'matrix'} = $self->{'background'}->render( $esom->grid );
+		}
+
+		$self->{'height'} = $esom->rows;
+		$self->{'width'}  = $esom->columns;
+		$self->{'esom'}   = $esom;
 	} else {
-		$self->{'matrix'} = $self->{'background'}->render( $esom->grid );
-	}
-
-	$self->{'height'} = $esom->rows;
-	$self->{'width'}  = $esom->columns;
-		
+		return $self->{'esom'};
+	}		
 }
 
 sub render_background {

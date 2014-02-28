@@ -41,6 +41,8 @@ unless (@ARGV) {
 	'manual' 	=> sub { pod2usage( verbose => 2 ) }
 ) or pod2usage( msg => 'Use --help for more information', verbose => 0 );
 
+$zoom = 1 unless $zoom;
+
 # Set vebosity
 $Anorman::Common::VERBOSE = !$quiet;
 
@@ -64,9 +66,19 @@ if (defined $wtsfile) {
 	$e->load_matrix($umxfile);
 }
 
+if (defined $bmfile) {
+	$e->load_bestmatches($bmfile);
+}
+
+if (defined $clsfile) {
+	$e->load_data_classes($clsfile);
+}
+
+
 if (defined $pngfile) {
 	# Initialize Image renderer
-	my $ir = Anorman::ESOM::ImageRenderer->new( $e, colorscheme => $rgbname, zoom => $zoom );
+	my $fg = Anorman::ESOM::BestMatchRenderer->new( classification => $e->data_classes, bmsize => 2 );
+	my $ir = Anorman::ESOM::ImageRenderer->new( $e, colorscheme => $rgbname, zoom => $zoom, foreground => $fg );
 	
 	my $image = $ir->render;
 	

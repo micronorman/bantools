@@ -25,6 +25,7 @@ sub new {
 
 sub get { 
 	my ($self, $key) = @_;
+	return undef unless defined $key;
 	return $self->{ $key };
 }
 

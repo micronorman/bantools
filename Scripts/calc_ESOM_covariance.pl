@@ -5,7 +5,6 @@ use warnings;
 
 use Anorman::Data::Algorithms::MahalanobisDistance;
 use Anorman::ESOM;
-use Anorman::ESOM::Descriptives;
 
 use Getopt::Long;
 
@@ -34,15 +33,17 @@ if ($prefix) {
 
 die "$invcovarfile already exists. Use --force to ovewrite existing files\n" if !$force && -e $invcovarfile;
 die "$meansfile already exists. Use --force to overwrite existing files\n"   if !$force && -e $meansfile;
-die "You must specify either a Lrn-file or a Wts-file\n" unless (defined $lrnfile || defined $wtsfile) || !(;
+die "You must specify either a Lrn-file or a Wts-file\n" unless (defined $lrnfile || defined $wtsfile);
 
 my $data;
 my $esom = Anorman::ESOM->new;
 
 if (defined $lrnfile) {
 	warn "Opening $lrnfile...\n";
-	$esom->open($lrnfile, 'lrn');
-	$data = $esom->data
+	$esom->open($lrnfile);
+
+	# Extract data matrix
+	$data = $esom->training_data->data;
 
 	if (defined $clsfile) {
 		warn "Opening $clsfile...\n";
@@ -58,22 +59,19 @@ if (defined $lrnfile) {
 		$esom->classify_bestmatches;
 	}
 
-	$esom->init;
-	$data = $esom->data;
-
 } elsif (defined $wtsfile) {
 	warn "Opening $wtsfile...\n";
-	$esom->open($wtsfile, 'wts');
+	$esom->open($wtsfile);
 
 	if (defined $cmxfile) {
 		warn "Opening $cmxfile...\n";
 		$esom->open( $cmxfile, 'cmx' );
 	}
 
-	$esom->init;
 	$data = $esom->grid->get_weights;
 
 } else {
+	# Nothing yet
 }
 
 my @class_names = ('All');
@@ -85,13 +83,12 @@ if (defined $lrnfile && (defined $clsfile || defined $bmfile && defined $cmxfile
 	if (defined $clsfile) {
 		warn "Opening $clsfile...\n";
 		$esom->open($clsfile);
-		$esom->init;
 	} else {
 		
 	}
 
 	foreach my $class(@{ $esom->classes }) {
-		next if $class->number == 0;
+		next if $class->index == 0;
 
 		my $name    = $class->name;
 		my $members = $class->members;
@@ -99,7 +96,7 @@ if (defined $lrnfile && (defined $clsfile || defined $bmfile && defined $cmxfile
 		warn "$name: ", scalar @{ $members }, "\n";
 
 		# Making a copy ensures fast dot-product calculations during matrix factorizations
-		my $matrix = $esom->data->view_selection( $members, undef )->copy;
+		my $matrix = $esom->data->data->view_selection( $members, undef )->copy;
 			
 		next if $matrix->rows <= 1;
 
@@ -111,7 +108,6 @@ if (defined $lrnfile && (defined $clsfile || defined $bmfile && defined $cmxfile
 	warn "Opening $wtsfile...\n";
 
 	$esom->open($wtsfile);
-	$esom->init;
 
 	push @mhdists, Anorman::Data::Algorithms::MahalanobisDistance->new( $esom->grid->get_weights );
 	push @class_names, 'Weights';
