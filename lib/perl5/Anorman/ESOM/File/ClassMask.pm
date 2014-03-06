@@ -6,6 +6,7 @@ use warnings;
 use parent 'Anorman::ESOM::File::Map';
 
 use Anorman::Common;
+use Data::Dumper;
 
 use Scalar::Util qw(looks_like_number);
 
@@ -88,12 +89,21 @@ sub _fill_classes {
 	my $self  = shift;
 	my %class_index = ();
 
-	foreach my $class( $self->classes ) {
+	foreach my $class( @{ $self->classes } ) {
 		$class->clear;
 	}
 
-	while (my ($index,$cls) = $self->map->iterate ) {
-		$self->classes->[ $cls ]->add_members( $index );
+	warn "Indexing neurons...\n" if $VERBOSE;
+	
+	my $i = - 1;
+	while ( ++$i < $self->neurons ) {
+		my $cls = $self->get_by_index( $i );
+		
+		if ($cls) { 
+			$self->classes->get_by_index( $cls )->add_members( $i );
+		} else {
+			$self->classes->get(0)->add_members( $i );
+		}
 	}
 
 	$self->{'_indexed'} = 1;	

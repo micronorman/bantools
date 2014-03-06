@@ -14,8 +14,6 @@ use GD;
 
 use List::Util qw(max);
 
-use Data::Dumper;
-
 my %DEFAULTS = (
 	'zoom'	 	=> 1,
 	'colorscheme' 	=> undef,
@@ -57,6 +55,7 @@ sub new {
 	if (defined $self->{'colorscheme'}) {
 		$self->colorscheme( $self->{'colorscheme'} );
 	} else {
+		# A default colorshceme of 256-color grayscale
 		foreach my $i( 0 .. 255) {
 			$self->{'colors'}->data->add( Anorman::Common::Color->new($i,$i,$i) );
 		}
@@ -69,13 +68,25 @@ sub render {
 	my ($self, $fn) = @_;
 
 	warn "Rendering background...\n" if $VERBOSE;
+
+	# Render a zoomed background
 	$self->_zoom_background;
+
+	# Draw a bitmap image of the zoomed background
 	$self->_draw_background;
+
+	# Clone background image
 	$self->_clone_bg_image;
+
+	# Apply tiling to the background
 	$self->_tile_background;
+
+	# Clone the image
 	$self->_clone_image;
 
 	warn "Rendering foreground...\n" if $VERBOSE;
+
+	# Render foreground (i.e. Bestmarches and classes)
 	$self->{'foreground'}->render( $self );
 
 	return $self->{'image'};
@@ -104,9 +115,7 @@ sub colorscheme {
 	}
 }
 
-sub bmsize {
-	...
-}
+sub bmsize { $_[1] ? $_[0]->{'bmzise'} = $_[1] : $_[0]->{'bmsize'} }
 
 sub clip {
 	...
@@ -177,8 +186,8 @@ sub _draw_background {
 		my $colors = $self->{'colors'}->data;
 		my $num_colors = $colors->size;
 
-		my $h = max( 1, $matrix->rows );
-		my $w = max ( 1, $matrix->columns );
+		my $h = max( 1, $matrix->rows    );
+		my $w = max( 1, $matrix->columns );
 
 		$bg_image  = GD::Image->new( $w, $h );
 

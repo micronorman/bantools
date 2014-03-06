@@ -71,6 +71,7 @@ if (defined $bmfile) {
 }
 
 if (defined $clsfile) {
+	die("A bm-file is required for displaying classifications\n") if !$bmfile;
 	$e->load_data_classes($clsfile);
 }
 

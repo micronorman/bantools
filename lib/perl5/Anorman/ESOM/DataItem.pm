@@ -157,7 +157,6 @@ sub delete_members {
 sub _stringify {
 	my $self = shift;
 
-	trace_error("NO");
 	return join ($Anorman::ESOM::DataItem::DELIM, $self->[0], $self->[1], @{ $self->[2] });
 }
 

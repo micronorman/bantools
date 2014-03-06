@@ -23,7 +23,7 @@ sub project {
 
 	trace_error("Not a lrn-file") unless $lrn->isa('Anorman::ESOM::File::Lrn');
 	trace_error("Not a wts-file") unless $wts->isa('Anorman::ESOM::File::Wts');
-	trace_error("Vector dimensions do not match between lrn and wts") if ($wts->dimensions != $lrn->dimensions);
+	trace_error("Vector dimension mismatch between lrn- and wts-data") if ($wts->dimensions != $lrn->dimensions);
 
 	my $rows    = $wts->rows;
 	my $columns = $wts->columns;

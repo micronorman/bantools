@@ -23,6 +23,7 @@ use Anorman::ESOM::ImageRenderer;
 use Anorman::ESOM::UMatrixRenderer;
 use Anorman::ESOM::Projection qw(project classify distances);
 
+use Data::Dumper;
 use overload 
 	'""' => \&_stringify;
 
@@ -176,6 +177,22 @@ sub load_data_classes {
 	$self->add_new_data( $cls );
 }
 
+sub load_class_mask {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $cmx = Anorman::ESOM::File::ClassMask->new( $fn );
+	$cmx->load;
+	$self->add_new_data( $cmx );
+}
+
+sub load_colors {
+	my $self = shift;
+	my $fn   = shift;
+
+	my $rgb = Anorman::ESOM::File::ColorTable->new( $fn );
+}
+
 sub add_new_data {
 	my $self  = shift;
 	my $input = shift;
@@ -276,9 +293,14 @@ sub setup_trainer {
 
 	trace_error("Cannot initialize a trainer without data") unless &_has_lrn($self);
 	trace_error("Cannot initialize a trainer without a grid") unless &_has_grid($self);
-	
-	$self->{'SOM'} = Anorman::ESOM::SOM::Online->new();
-	$self->{'SOM'}->BMSearch( Anorman::ESOM::BMSearch::Simple->new() );
+
+	if (exists $opt{'algorithm'} and $opt{'algorithm'} eq 'kbatch') {
+		delete $opt{'algorithm'};
+		$self->{'SOM'} = Anorman::ESOM::SOM::Kbatch->new( %opt );
+	} else {	
+		$self->{'SOM'} = Anorman::ESOM::SOM::Online->new( %opt );
+	}
+
 	$self->{'SOM'}->data( $self->{'lrn'}->data );
 	$self->{'SOM'}->keys( $self->{'lrn'}->keys );
 
@@ -286,7 +308,6 @@ sub setup_trainer {
 
 	if (&_has_wts($self)) {
 		# If weights are already loaded use load these into the training grid
-		print $self;
 		$self->{'SOM'}->grid->set_weights( $self->_wts->data );
 	} else {
 		# Otherwise initialize grid from training data
@@ -297,7 +318,6 @@ sub setup_trainer {
 
 sub train {
 	my $self = shift;
-	
 	$self->{'SOM'} = shift if (defined $_[0] && $_[0]->isa("Anorman::ESOM::SOM"));
 	
 	trace_error("No ESOM-training set up") unless defined $self->{'SOM'};

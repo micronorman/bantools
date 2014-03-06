@@ -141,6 +141,34 @@ Vector* c_mv_mult ( Matrix *A, Vector* y, Vector* z, double alpha, double beta )
 
     return z;
 }
+
+void c_mm_copy( Matrix* A, Matrix* B) {
+    double* A_elems = A->elements;
+    double* B_elems = B->elements;
+
+    int    A_cs = A->column_stride;
+    int    B_cs = B->column_stride;
+    int    A_rs = A->row_stride;
+    int    B_rs = B->row_stride;
+    int B_index = c_m_index( B, 0,0 );
+    int A_index = c_m_index( A, 0,0 );
+
+    int row = A->rows;
+    while ( --row >= 0) {
+        int i = A_index;
+        int j = B_index;
+
+        int column = A->columns;
+        while (--column >= 0) {
+            A_elems[ i ] = B_elems[ j ];
+            i += A_cs;
+            j += B_cs;
+        }
+
+        A_index += A_rs;
+        B_index += B_rs;
+    }
+}
  
 double c_m_sum( Matrix* m ) {
     double sum = 0;

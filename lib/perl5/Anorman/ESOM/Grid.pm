@@ -6,7 +6,9 @@ use Anorman::Common qw(trace_error);
 use Anorman::Math::DistanceFactory;
 use Anorman::Data::LinAlg::Property qw(is_matrix);
 
+# Random number generators
 use Math::Random::MT::Auto qw(gaussian);
+use Math::Random::MT::Auto::Range;
 
 sub new {
 	my $class = shift;
@@ -59,27 +61,74 @@ sub distance_function {
 }
 
 sub init {
-	my $self = shift;
-	my $desc = shift;
+	my $self   = shift;
+	my $desc   = shift;
+	my $method = defined $_[0] ? shift : 'norm_mean_2std';
+
+	# Without descriptives, set everything to zero
+	$method = 'zero' if !defined $desc;
+
 	my $dim  = $self->dim;
 	my $size = $self->size;  
 
-	trace_error("Grid weights have not been set") unless is_matrix( $self->get_weights );
-	# generate random vectors based on gaussian distribution [ mean ± 2stdevs ]of input data descriptives
-	my $j = -1;
-	while (++$j < $self->dim) {
-		my $sd   = 2 * $desc->stdevs->[ $j ];
-		my $mean = $desc->means->[ $j ];
-		my $i = $size;
-                my $vals = [];
+	trace_error("Grid weights have not been set. Cannot initialize") unless is_matrix( $self->get_weights );
 
-		# another optimization. Whole column is generated and the assigned to the matrix
-		# this causes a significant speedup compared to using set_quick on individual data cells
-		# cells. This, however, requires the data to be stored in a matrix NOTE: I guess we'll always use matrices
-		while (--$i >= 0) {
-			$vals->[ $i ] =  gaussian( $sd, $mean ); 
+	if ($method eq 'norm_mean_2std') {
+		# generate random vectors based on gaussian distribution [ mean ± 2stdevs ]of input data descriptives
+		my $j = -1;
+		while (++$j < $dim) {
+			my $sd   = $desc->stdevs->[ $j ];
+			my $mean = $desc->means->[ $j ];
+			my $i = $size;
+			my $vals = [];
+
+			while (--$i >= 0) {
+				$vals->[ $i ] =  gaussian( 2 * $sd, $mean ); 
+			}
+
+			$self->get_weights->view_column( $j )->assign( $vals );
 		}
-                $self->get_weights->view_column( $j )->assign( $vals );
+	} elsif ($method eq 'uni_min_max') {
+		my $uniform = Math::Random::MT::Auto::Range->new( LO => 0.0 , HI => 1.0, TYPE => 'DOUBLE');
+
+		my $j = -1;
+		while ( ++$j < $dim ) {
+			my $min = $desc->minima->[ $j ];
+			my $max = $desc->maxima->[ $j ];
+
+			$uniform->set_range( $min, $max );
+			warn "COLUMN: $j RANGE: $min - $max\n";
+			my $i = $size;
+			my $vals = [];
+
+			while ( --$i >= 0 ) {
+				$vals->[ $i ] = $uniform->rrand()
+			}
+
+			$self->get_weights->view_column( $j )->assign( $vals );
+		}
+
+	} elsif ($method eq 'uni_mean_2std') {
+		my $uniform = Math::Random::MT::Auto::Range->new( LO => 0.0 , HI => 1.0, TYPE => 'DOUBLE');
+
+		my $j = -1;
+		while ( ++$j < $dim ) {
+			my $sd   = $desc->stdevs->[ $j ];
+			my $mean = $desc->means->[ $j ];
+
+			$uniform->set_range( $mean - (2 * $sd), $mean + (2 * $sd) );
+			my $i = $size;
+			my $vals = [];
+
+			while ( --$i >= 0 ) {
+				$vals->[ $i ] = $uniform->rrand()
+			}
+
+			$self->get_weights->view_column( $j )->assign( $vals );
+		}
+
+	} elsif ($method eq 'zero') {
+		$self->get_weights->assign(0);
 	}
 }
 

@@ -55,6 +55,18 @@ sub clear {
 	@{ $self } = ();
 }
 
+sub index_of {
+	my $self = shift;
+
+	my $i = -1;
+	foreach (@{ $self }) {
+		$i++;
+		return $i if $_[0] == $_;
+	}
+
+	return -1;
+}
+
 sub sort {
 	...
 }
@@ -62,15 +74,7 @@ sub sort {
 sub contains {
 	my $self = shift;
 	
-	trace_error("No element defined\n\nusage: " . __PACKAGE__ . "::contains( element  )") unless defined $_[0];
-
-	my $element = shift;
-
-	foreach my $i( 0 .. $#{ $self } ) {
-		return $i if $self->[$i] == $element;
-	}
-
-	return undef;
+	return $self->index_of($_[0]) >= 0;
 }
 
 sub _stringify {

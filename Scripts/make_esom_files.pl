@@ -5,7 +5,7 @@ use warnings;
 use Anorman::Counts;
 use Getopt::Long;
 
-our (
+my (
     $FILE,
     $HELP,
     $VERBOSE,
@@ -13,7 +13,7 @@ our (
     );
 
 # Default output prefix
-our $OUT = "out";
+my $OUT = "out";
 
 &GetOptions (   "help"        => \$HELP,
                 "input=s"     => \$FILE,

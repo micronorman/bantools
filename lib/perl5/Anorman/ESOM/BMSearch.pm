@@ -8,7 +8,7 @@ use Anorman::Common;
 use Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
-@EXPORT_OK = qw(bm_brute_force_search bm_local_search);
+@EXPORT_OK = qw(bm_brute_force_search bm_local_search bm_indexed_search);
 @ISA       = qw(Exporter);
 
 sub new {
@@ -53,7 +53,7 @@ use Inline C => <<'END_OF_C_CODE';
 #define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
 
 IV bm_brute_force_search( SV* vector, SV* weights ) {
-
+    /* search all weights for bestmatch */
     SV_2VECTOR( vector, v );
     SV_2MATRIX( weights, w );
 
@@ -96,8 +96,54 @@ IV bm_brute_force_search( SV* vector, SV* weights ) {
     return (IV) bm;
 }
 
-IV bm_local_search( SV* vector, SV* weights, IV top, IV left, IV bottom, IV right, IV grid_rows, IV grid_columns ) {
+IV bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
+    /* search a list of neurons for the best match */
+    SV_2VECTOR( vector, v );
+    SV_2MATRIX( weights, w );
+
+    int    bm        = -1;
+    double min       = DBL_MAX;
+    double threshold = min;
+    double dist2; /* square distance */	
+    double diff;
+
+    double* v_elems = (double*) v->elements;
+    double* w_elems = (double*) w->elements;
+
+    int n = (int) av_len(indices) + 1;
+    int i;
+
+    /* highly optimized search. Only measures euclidean distance */    
+    for (i = 0; i < n; i++ ) {
+        int index = (int) SvIV( *av_fetch( indices, i, 0 ) ); 
+        int w_index = (int) (v->size + index * w->row_stride) - 1;
+        int v_index = (int) (v->zero + v->size - 1);
+
+        diff = v_elems[ v_index ] - w_elems[ w_index ];
+        dist2 = (diff * diff); 
     
+        int k = v->size - 1;
+        while ( --k >= 0) {
+            v_index--;
+            w_index--;
+            if (dist2 > threshold)
+            break;
+            diff   = v_elems[ v_index ] - w_elems[ w_index ];
+            dist2  += (diff * diff);
+        }
+
+        if ( dist2 < min ) {
+             min = dist2;
+             bm  = i;
+             threshold = dist2;
+        }
+    }
+
+    return (IV) bm;
+}
+
+IV bm_local_search( SV* vector, SV* weights, IV top, IV left, IV bottom, IV right, IV grid_rows, IV grid_columns ) {
+    /* search a square area for the best match */
     SV_2VECTOR( vector, v );
     SV_2MATRIX( weights, w );
 
@@ -154,8 +200,6 @@ END_OF_C_CODE
 package Anorman::ESOM::BMSearch::Simple;
 
 use parent -norequire,'Anorman::ESOM::BMSearch';
-
-use Data::Dumper;
 
 sub new { return shift->SUPER::new() };
 
@@ -296,5 +340,10 @@ sub get_range {
 		return $range;
 	}
 }
+
+1;
+
+package Anorman::ESOM::BMSearch::LSH;
+
 
 1;

@@ -55,6 +55,10 @@ my $PRE_WEIGHTS  = '';
 	'manual'		=> sub { pod2usage( verbose => 2 ) }
 ) or pod2usage( msg => "\nuse --help for more information\n", verbose => 0 );
 
+if ('' eq $LRN_FILE) {
+	pod2usage( msg => "No lrn-file specified", verbose => 0 );
+}
+
 my $esom = Anorman::ESOM->new();
 
 # open input data
@@ -176,7 +180,7 @@ if ($PRE_WEIGHTS ne '') {
 # run training
 $esom->train( $som );
 
-warn "Writing output file...\n";
+warn "Writing output files...\n";
 
 # write output files
 $esom->umatrix->save("$OUTPUT.epoch" . $som->epochs . ".umx");

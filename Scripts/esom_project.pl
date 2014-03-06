@@ -51,19 +51,12 @@ pod2usage( msg => $err_msg . "\n" , verbose => 0 ) if $err_msg ne '';
 # initialize an ESOM object
 my $esom = Anorman::ESOM->new;
 
-# Add grid (required)
-my $wts = Anorman::ESOM::File::Wts->new( $wtsfile );
-
 # Load weights into ESOM
-$wts->load;
-$esom->add_new_data( $wts );
+$esom->load_weights( $wtsfile );
 
 if ($lrnfile) {
-	my $lrn = Anorman::ESOM::File::Lrn->new( $lrnfile ) if ($lrnfile && $bmfile);
-	
 	# Load training data into ESOM
-	$lrn->load;
-	$esom->add_new_data( $lrn );
+	$esom->load_data( $lrnfile );
 
 	# Project training data onto grid and save bm-file
 	unless ( $distances ) {
@@ -72,11 +65,8 @@ if ($lrnfile) {
 		$esom->bestmatch_distances->save( $bmfile );
 	}
 } else {
-	my $bm = Anorman::ESOM::File::BM->new( $bmfile );
-	
 	# Load bestmatches into ESOM
-	$bm->load;
-	$esom->add_new_data( $bm );
+	$esom->load_bestmatches( $bmfile );
 }
 
 if ($cmxfile) {

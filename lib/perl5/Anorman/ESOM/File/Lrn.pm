@@ -57,10 +57,21 @@ sub col_types {
 	return wantarray ? @{ $self->{'col_types'} } : $self->{'col_types'} unless defined $_[0];
 }
 
+sub get_by_index {
+	my $self = shift;
+	my $index = shift;
+
+	if ($self->{'keys'}->contains( $index )) {
+		return $self->{'data'}->view_row( $self->{'keys'}->index_of( $index ) );
+	} else {
+		return undef;
+	}
+}
+
 sub keys {
 	my $self = shift;
 
-	return wantarray ? @{ $self->{'keys'} } : $self->{'keys'} unless defined $_[0];
+	return $self->{'keys'} unless defined $_[0];
 
 	if ($self->{'key_column'} < 0) {
 		unshift @{ $self->{'key_column'} }, 9;

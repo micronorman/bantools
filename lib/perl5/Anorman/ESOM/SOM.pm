@@ -17,27 +17,104 @@ use Time::HiRes qw(time);
 my $TRAIN_BEG;
 my $TRAIN_END;
 
+my %DEFAULTS = (
+	'epochs'          => 20,
+	'permute'         => 1,
+	'neighborhood'    => 'gauss',
+	'bmsearch'        => 'standard',
+	'bmconstant'      => 8,
+	'init_method'     => 'norm_mean_2std',
+	'neuron_distance' => 'euc',
+	'cool-radius'     => 'lin',
+	'start-radius'    => 24,
+	'end-radius'      => 1,
+	'cool-learn'      => 'lin',
+	'start-learn'     => 0.5,
+	'end-learn'       => 0.1,
+);
+
 sub new {
-	my $class = shift;
+	my $that  = shift;
+	my $class = ref $that || $that;
+
 	my $self  = {};
 
+	my %user_opt = @_;
+
+	# Check user sanity
+	do { trace_error("Illegal argument $_") unless exists $DEFAULTS{ $_ } } for keys %user_opt;
+	my %opt = (%DEFAULTS, %user_opt);
+
+
+	# Set neighborhood type
+	if ($opt{'neighborhood'} eq 'gauss') {
+		$self->{'_neighborhood'} = Anorman::ESOM::Neighborhood::Gaussian->new;
+	} elsif ($opt{'neighborhood'} eq 'mexhat') {
+		$self->{'_neighborhood'} = Anorman::ESOM::Neighborhood::MexicanHat->new;
+	} elsif ($opt{'neighborhood'} eq 'bubble') {
+		$self->{'_neighborhood'} = Anorman::ESOM::Neighborhood::Bubble->new;
+	} elsif ($opt{'neighborhood'} eq 'cone') {
+		$self->{'_neighborhood'} = Anorman::ESOM::Neighborhood::Cone->new;
+	} elsif ($opt{'neighborhood'} eq 'epan') {
+		$self->{'_neighborhood'} = Anorman::ESOM::Neighborhood::Epanechnikov->new;
+	}
+
+	# Set radius cooling type and limits
+	if ($opt{'cool-radius'} eq 'lin') {
+		$self->{'_radius_cooling'} = Anorman::ESOM::Cooling::Linear->new( $opt{'start-radius'},
+										  $opt{'epochs'},
+										  $opt{'end-radius'});
+	} elsif ($opt{'cool-radius'} eq 'exp') {
+		$self->{'_radius_cooling'} = Anorman::ESOM::Cooling::Exponential->new( $opt{'start-radius'},
+										       $opt{'epochs'},
+										       $opt{'end-radius'});
+	}
+
+	# Set learning rate cooling type and limits
+	if ($opt{'cool-learn'} eq 'lin') {
+		$self->{'_rate_cooling'}   = Anorman::ESOM::Cooling::Linear->new( $opt{'start-learn'},
+										  $opt{'epochs'},
+										  $opt{'end-learn'});
+	} elsif ($opt{'cool-learn'} eq 'exp') {
+		$self->{'_rate_cooling'}   = Anorman::ESOM::Cooling::Exponential->new( $opt{'start-learn'},
+										       $opt{'end-learn'});
+	}
+
+	# Set the bestmatch search strategy
+	if ($opt{'bmsearch'} eq 'standard') {
+		$self->{'_bmsearch'} = Anorman::ESOM::BMSearch::Simple->new;
+	} elsif ($opt{'bmsearch'} eq 'quick') {
+		$self->{'_bmsearch'} = Anorman::ESOM::BMSearch::Local::QuickLearning->new;
+	} elsif ($opt{'bmsearch'} eq 'faster') {
+		$self->{'_bmsearch'} = Anorman::ESOM::BMSearch::Local::MuchFasterLearning->new;
+	} elsif ($opt{'constant'} eq 'constant') {
+		$self->{'_bmsearch'} = Anorman::ESOM::BMSearch::Local::Constant->new;
+	}
 	$self->{'_distance_func'}  = Anorman::Math::DistanceFactory->get_function( SPACE => 'euclidean', THRESHOLD => 1 );
-	$self->{'_epochs'}         = 20;
-	$self->{'_neighborhood'}   = Anorman::ESOM::Neighborhood::Gaussian->new;
-	$self->{'_radius_cooling'} = Anorman::ESOM::Cooling::Linear->new( 24, $self->{'_epochs'}, 1);
-	$self->{'_rate_cooling'}   = Anorman::ESOM::Cooling::Linear->new( 0.5, $self->{'_epochs'}, 0.1);
-	
-	return bless ( $self, ref($class) || $class);
+	$self->{'_epochs'}         = $opt{'epochs'};
+	$self->{'_init_method'}    = $opt{'init_method'};
+	$self->{'_permute'}        = $opt{'permute'};
+
+	$self->{'_bmsearch'}->constant( $opt{'bmconstant'} );
+
+	return bless ( $self, $class );
 }
 
 sub init {
 	my $self   = shift;
-	printf STDERR ("Initializing [ %d x %d ] grid...\n", $self->grid->rows, $self->grid->columns ) if $VERBOSE;
-	$self->grid->init( $self->{'_descriptives'} );
+
+	trace_error("Cannot initialize trainer with no grid loaded") unless $self->{'_grid'};
+
+	if ($VERBOSE) {	
+		printf STDERR ("Initializing [ %d x %d ] grid...\n", $self->grid->rows, $self->grid->columns );
+	}
+
+	# Initialize the grid using the selected method
+	$self->grid->init( $self->{'_descriptives'}, $self->{'_init_method'} );
 
 }
 
-#===============================  main training routine =======================
+#===========================  MAIN TRAINING ROUTINE ===========================
 
 sub train {
 	$TRAIN_BEG = time ();
@@ -45,6 +122,7 @@ sub train {
 	my $self = shift;
 	
 	$self->{'_epoch'} = 0;
+	$self->{'_bmsearch'}->som( $self );
 
 	until ( $self->stop ) {
 		
@@ -52,17 +130,19 @@ sub train {
 		$self->before_epoch;
 		
 		warn "\tTraining...\n" if $VERBOSE;
+
 		my $pos = 0;
 		foreach my $i( 0 .. $self->data->rows - 1 ) {
 			my $index = $self->{'_permutation'}->[ $i ];
 
+			# Retrieve data vector
 			my $vector = $self->get_pattern( $index );
 
-			# locate bestmatch neuron
-			my $bm     = $self->BMSearch->find_bestmatch( $index,
-								      $vector, 
-                                                                      $self->grid->get_weights,
-                                                                      $self->{'_epoch'}
+			# Locate the bestmatch neuron
+			my $bm = $self->{'_bmsearch'}->find_bestmatch( $index,
+			                                               $vector, 
+                                                                       $self->grid->get_weights,
+                                                                       $self->{'_epoch'}
                                                                      ); 
 			
 			# store bestmatch
@@ -84,6 +164,7 @@ sub train {
 
 	my $TRAIN_END = time();
 	my $DURATION  = sprintf("%.2f",$TRAIN_END - $TRAIN_BEG);
+
 	warn "[ ", sprintf("%.2f", $TRAIN_END - $TIME) ," ] Finished. Total training time: ", $DURATION, "\n";
 }
 
@@ -108,8 +189,8 @@ sub before_epoch {
 	);	
 	
 	# shuffle data vectors
-	#warn "\tPermuting data patterns\n" if $VERBOSE;
-	#@{ $self->{'_permutation'} } = shuffle @{ $self->{'_permutation'} };
+	warn "\tPermuting data patterns\n" if $VERBOSE;
+	@{ $self->{'_permutation'} } = shuffle @{ $self->{'_permutation'} };
 };
 
 sub after_update { };
@@ -359,7 +440,12 @@ package Anorman::ESOM::SOM::Online;
 
 use parent -norequire,'Anorman::ESOM::SOM';
 
-sub new { $_[0]->SUPER::new };
+sub new { 
+	my $class = shift;
+	my $self  = $class->SUPER::new(@_); 
+
+	return $self;
+};
 
 sub update {
 	my $self = shift;
@@ -380,7 +466,7 @@ my $NUM_UPDATES = 0;
 
 sub new { 
 	my $class = shift;
-	my $self  = $class->SUPER::new();
+	my $self  = $class->SUPER::new(@_);
 
 	$self->{'_hashmap'} = {};
 	$self->{'_kepoch'}  = 0;
@@ -487,7 +573,7 @@ package Anorman::ESOM::SOM::SlowBatch;
 
 use parent -norequire,'Anorman::ESOM::SOM';
 
-sub new { $_[0]->SUPER::new };
+sub new { $_[0]->SUPER::new(@_) };
 
 sub after_epoch {
 	my $self = shift;
@@ -500,6 +586,33 @@ sub after_epoch {
 		$self->update_neighborhood( $self->get_pattern( $i ), $bm );
 		$i++;
 	}
+}
+
+1;
+
+package Anorman::ESOM::SOM::GESOM;
+
+use parent -norequire,'Anorman::ESOM::SOM';
+
+use Anorman::ESOM::GrowGrid;
+
+sub new { $_[0]->SUPER::new(@_) };
+
+sub update {
+	my $self = shift;
+	$self->update_neighborhood( @_ );
+}
+
+sub init {
+	my $self = shift;
+	my $rows    = $self->{'_grid'}->rows;
+	my $columns = $self->{'_grid'}->columns;
+
+
+}
+
+sub before_epoch {
+
 }
 	
 1;

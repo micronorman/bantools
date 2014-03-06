@@ -5,7 +5,7 @@ use warnings;
 
 use parent 'Anorman::Data';
 
-use Anorman::Common qw(sniff_scalar trace_error);
+use Anorman::Common qw(sniff_scalar trace_error $VERBOSE $DEBUG);
 use Anorman::Math::Common qw( min max plus minus identity );
 use Anorman::Data::LinAlg::Property qw( :all );
 
@@ -140,9 +140,12 @@ sub view_selection {
 	$row_indexes    = [ (0 .. $self->rows    - 1) ] if (!defined $row_indexes);
 	$column_indexes = [ (0 .. $self->columns - 1) ] if (!defined $column_indexes);
 
+	warn "Calculating row offsets for selection...\n" if $DEBUG;
 	my $row_offsets    = [ map { $self->row_zero + $_ * $self->row_stride } @{ $row_indexes    } ];
-	my $column_offsets = [ map { $self->column_zero + $_ * $self->column_stride } @{ $column_indexes } ];
 
+	warn "Calculating column offsets...\n" if $DEBUG;
+	my $column_offsets = [ map { $self->column_zero + $_ * $self->column_stride } @{ $column_indexes } ];
+	
 	return $self->_view_selection_like( $row_offsets, $column_offsets );
 }
 

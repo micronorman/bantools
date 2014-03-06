@@ -23,10 +23,10 @@ use Anorman::Data::LinAlg::Property qw( :matrix check_vector );
 sub new {
 	my $class = ref $_[0] ? ref shift : shift;
 
-	my $self = { '_inv_covar_matrix' => undef,
-		     '_covarance_matrix' => undef,
-		     '_means'            => undef,
-		     '_n'                => 0, 
+	my $self = { '_inv_covar_matrix'  => undef,
+		     '_covariance_matrix' => undef,
+		     '_means'             => undef,
+		     '_n'                 => 0, 
 	};
 
 	if (defined $_[0]) {
@@ -44,7 +44,8 @@ sub new {
 		$self->{'_means'} = $M->like_vector($m)->assign(\@means);
 		$self->{'_n'}     = $m;
 
-		# Perform Cholesky Decomposition
+		# Calculate covariance matrix
+		warn "Calculating covariance matrix...\n" if $VERBOSE;
 		my $cov  = covariance($M);
 		$self->{'_covariance_matrix'} = $cov;
 
@@ -62,7 +63,7 @@ sub new {
 			# Calculate invese covariance matrix
 			$inv_covar = $chol->solve( $identity );
 		} else {
-			warn "WARNING: Covariance Matrix was not Symmetric Positive-Definite. LU factorization was used instead of Cholesky\n";
+			warn "WARNING: Covariance Matrix was not Symmetric Positive-Definite. LU factorization was used instead of Cholesky decomposition\n";
 
 			my $lu = Anorman::Data::LinAlg::LUDecomposition->new( $cov );
 

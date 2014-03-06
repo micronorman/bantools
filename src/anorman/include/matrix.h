@@ -6,6 +6,7 @@
 int c_m_index( Matrix*, int, int );
 double c_m_get_quick( Matrix*, int, int );
 void c_m_set_quick( Matrix*, int, int, double);
+void c_mm_copy( Matrix*, Matrix* );
 double c_m_sum( Matrix* );
 
 #endif
