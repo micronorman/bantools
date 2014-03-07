@@ -23,7 +23,6 @@ use Anorman::ESOM::ImageRenderer;
 use Anorman::ESOM::UMatrixRenderer;
 use Anorman::ESOM::Projection qw(project classify distances);
 
-use Data::Dumper;
 use overload 
 	'""' => \&_stringify;
 
@@ -40,19 +39,25 @@ sub columns    { $_[0]->{'columns'}    }
 sub neurons    { $_[0]->{'neurons'}    }
 sub datapoints { $_[0]->{'datapoints'} }
 sub dimensions { $_[0]->{'dim'}        }
-sub classes    { $_[0]->{'classes'}    }
 
 # return training data (i.e. lrn-data)
 sub training_data {
 	my $self = shift;
-	return undef unless &_has_lrn( $self );
+	
+	return $self->{'lrn'} if &_has_lrn($self);
+
+	$self->{'lrn'} = Anorman::ESOM::File::Lrn->new(@_);
+
 	return $self->{'lrn'};
 }
 
 # return class mask object
 sub class_mask {
 	my $self = shift;
-	return undef unless &_has_cmx( $self );
+	return $self->{'cmx'} if &_has_cmx( $self );
+
+	$self->{'cmx'} = Anorman::ESOM::File::ClassMask->new( $self->{'classes'} );
+
 	return $self->{'cmx'};
 }
 
@@ -64,7 +69,11 @@ sub bestmatches {
 
 	if (&_has_wts($self) && &_has_lrn($self)) {
 		$self->{'bm'} = project( $self->{'lrn'}, $self->{'wts'} ); 
+	} else {
+		$self->{'bm'} = Anorman::ESOM::File::BM->new();
 	}
+
+	return $self->{'bm'};
 }
 
 # returns a bestmatch object like above, but containing the calculated deistance between 
@@ -95,7 +104,9 @@ sub data_classes {
 
 	if (&_has_bm($self) && &_has_cmx($self)) {
 		$self->{'cls'} = classify( $self->{'bm'}, $self->{'cmx'} );
-	}
+	} else {
+		$self->{'cls'} = Anorman::ESOM::File::Cls->new( $self->{'classes'} );
+	} 
 
 	return $self->{'cls'};
 }
@@ -105,6 +116,36 @@ sub names {
 	my $self = shift;
 
 	return $self->{'names'} if $self->_has_names();
+
+	$self->{'names'} = Anorman::ESOM::File::Names->new;
+
+	return $self->{'names'};
+}
+
+# return class table
+sub class_table {
+	my $self = shift;
+
+	return $self->{'classes'} if &_has_classes($self);
+
+	unless (&_has_rgb($self)) {
+		$self->{'rgb'} = Anorman::ESOM::File::ColorTable->new("00classes");
+		$self->{'rgb'}->load;
+	}
+	
+	$self->{'classes'} = Anorman::ESOM::ClassTable->new( $self->{'rgb'} );
+
+	return $self->{'classes'};
+}
+
+sub color_table {
+	my $self = shift;
+	
+	return $self->{'rgb'} if &_has_rgb($self);
+
+	$self->{'rgb'} = Anorman::ESOM::ColorTable->new;
+
+	return $self->{'rgb'};
 }
 
 # Generic opening function for loading multiple files
@@ -129,6 +170,8 @@ sub load_data {
 	my $lrn = Anorman::ESOM::File::Lrn->new( $fn );
 	$lrn->load;
 	$self->add_new_data( $lrn );
+
+	return $lrn;
 }
 
 sub load_names {
@@ -138,6 +181,8 @@ sub load_names {
 	my $names = Anorman::ESOM::File::Names->new( $fn );
 	$names->load;
 	$self->add_new_data( $names );
+
+	return $names;
 }
 
 sub load_bestmatches {
@@ -147,6 +192,8 @@ sub load_bestmatches {
 	my $bm = Anorman::ESOM::File::BM->new( $fn );
 	$bm->load;
 	$self->add_new_data( $bm ); 
+
+	return $bm;
 }
 
 sub load_matrix {
@@ -166,6 +213,8 @@ sub load_weights {
 	$wts->load;
 	$self->add_new_data( $wts );
 	$self->grid;
+
+	return $wts;
 }
 
 sub load_data_classes {
@@ -175,6 +224,8 @@ sub load_data_classes {
 	my $cls = Anorman::ESOM::File::Cls->new( $fn );
 	$cls->load;
 	$self->add_new_data( $cls );
+
+	return $cls;
 }
 
 sub load_class_mask {
@@ -184,13 +235,19 @@ sub load_class_mask {
 	my $cmx = Anorman::ESOM::File::ClassMask->new( $fn );
 	$cmx->load;
 	$self->add_new_data( $cmx );
+
+	return $cmx;
 }
 
-sub load_colors {
+sub load_color_table {
 	my $self = shift;
 	my $fn   = shift;
 
 	my $rgb = Anorman::ESOM::File::ColorTable->new( $fn );
+	$rgb->load;
+	$self->add_new_data( $rgb );
+
+	return $rgb;
 }
 
 sub add_new_data {
@@ -200,6 +257,7 @@ sub add_new_data {
 	trace_error("Invalid input format") unless $input->isa("Anorman::ESOM::File");
 
 	$self->_check_new_data( $input );
+	warn "Adding " . $input->type . " data\n";
 	$self->{ $input->type } = $input;
 }
 
@@ -248,6 +306,8 @@ sub weights {
 	unless (&_has_wts($self)) {
 		if (&_has_grid($self)) {
 			$self->add_new_data( $self->grid->get_wts );
+		} else {
+			$self->{'wts'} = Anorman::ESOM::File::Wts->new();
 		}
 	}
 
@@ -473,19 +533,20 @@ sub _wts   { $_[0]->{'wts'}   }
 sub _SOM   { $_[0]->{'SOM'}   }
 
 # Internal data checks
-sub _has_lrn        { return (defined $_[0]->_lrn)      }
-sub _has_bm         { return (defined $_[0]->_bm)       } 
-sub _has_names      { return (defined $_[0]->_names)    }
-sub _has_cmx        { return (defined $_[0]->_cmx)      }
-sub _has_cls        { return (defined $_[0]->_cls)      }
+sub _has_rgb        { return (defined $_[0]->_rgb)       }
+sub _has_lrn        { return (defined $_[0]->_lrn)       }
+sub _has_bm         { return (defined $_[0]->_bm)        } 
+sub _has_names      { return (defined $_[0]->_names)     }
+sub _has_cmx        { return (defined $_[0]->_cmx)       }
+sub _has_cls        { return (defined $_[0]->_cls)       }
 sub _has_grid       { return (defined $_[0]->rows && defined $_[0]->columns ) };
-sub _has_wts        { return (defined $_[0]->_wts)      }
-sub _has_umx        { return (defined $_[0]->_umx)      }
-sub _has_neurons    { return (defined $_[0]->neurons)   }
-sub _has_datapoints { return (defined $_[0]->datapoints)}
-sub _has_dims       { return (defined $_[0]->dimensions)}
-sub _has_classes    { return (defined $_[0]->classes)   }
-sub _has_trainer    { return (defined $_[0]->_SOM)      }
+sub _has_wts        { return (defined $_[0]->_wts)       }
+sub _has_umx        { return (defined $_[0]->_umx)       }
+sub _has_neurons    { return (defined $_[0]->neurons)    }
+sub _has_datapoints { return (defined $_[0]->datapoints) }
+sub _has_dims       { return (defined $_[0]->dimensions) }
+sub _has_classes    { return (defined $_[0]->{'classes'})}
+sub _has_trainer    { return (defined $_[0]->_SOM)       }
 
 # Stringification. To display basic information about the ESOM
 sub _2D_string {

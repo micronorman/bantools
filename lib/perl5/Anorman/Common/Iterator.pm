@@ -43,7 +43,7 @@ sub open {
 
 	return unless $fn gt '';
 
-	open (my $FH, '<', $fn) or $self->_error("Could not initialize filehandle for $fn, $!");
+	open (my $FH, '<', $fn) or $self->_error("Could not initialize filehandle for $fn. $!");
 
 	$self->{'_FH'} = $FH;
 

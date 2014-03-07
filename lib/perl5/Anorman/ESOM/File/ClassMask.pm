@@ -6,7 +6,6 @@ use warnings;
 use parent 'Anorman::ESOM::File::Map';
 
 use Anorman::Common;
-use Data::Dumper;
 
 use Scalar::Util qw(looks_like_number);
 

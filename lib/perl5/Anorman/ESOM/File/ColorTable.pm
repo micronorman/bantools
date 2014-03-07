@@ -5,6 +5,7 @@ use warnings;
 
 use Anorman::Common;
 use Anorman::Common::Color;
+use Anorman::ESOM::Config;
 
 use parent 'Anorman::ESOM::File::List';
 
@@ -43,6 +44,24 @@ sub new {
 	$self->filename( shift ) if defined $_[0];
 
 	return $self;
+}
+
+sub filename {
+	my $self = shift;
+
+	return $self->{'filename'} unless defined $_[0];
+
+	my $fn = shift;
+
+	unless ($fn =~ m/\.rgb$/) {
+		$fn .= ".rgb";
+	}
+
+	if ( -e $Anorman::ESOM::Config::COLORS_PATH . $fn) {
+		$fn = $Anorman::ESOM::Config::COLORS_PATH . $fn;
+	}
+
+	$self->{'filename'} = $fn;
 }
 
 sub generate_colors {

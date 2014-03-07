@@ -25,6 +25,14 @@ sub add {
 	%{ $self->{'subseqs'} } = ();
 }
 
+sub get_by_index {
+	my $self = shift;
+	my $index = shift;
+
+	return $self->{'map'}->get( $index );
+	
+}
+
 sub get_subseq_indexes {
 	my $self = shift;
 	

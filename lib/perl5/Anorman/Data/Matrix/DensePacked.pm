@@ -3,7 +3,7 @@ package Anorman::Data::Matrix::DensePacked;
 use strict;
 use parent 'Anorman::Data::Matrix';
 
-use Anorman::Common qw(sniff_scalar);
+use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::LinAlg::Property qw(is_packed);
 use Anorman::Data::Vector::DensePacked;
 use Anorman::Data::Matrix::SelectedDensePacked;
@@ -18,8 +18,12 @@ my %ASSIGN_DISPATCH = (
 
 
 sub new {
-	my $class = shift;
-	$class->_error("Wrong number of arguments") if (@_ != 1 && @_ != 2 && @_ != 7);
+	my $that = shift;
+	
+	trace_error("Wrong number of arguments") if (@_ != 1 && @_ != 2 && @_ != 7);
+
+	my $class = ref $that || $that;
+	my $self  = $class->new_matrix_object();
 
 	my ( $rows,
              $columns,
@@ -29,7 +33,6 @@ sub new {
              $column_stride
            );
 
-	my $self = &new_matrix_object( ref($class) || $class );
 
 	if (@_ == 1) {
 		my $type = sniff_scalar($_[0]);
@@ -42,7 +45,7 @@ sub new {
 			$self->_set_elements_addr( $self->_alloc_elements( $rows * $columns ) );
 			$self->_assign_DensePackedMatrix_from_2D_MATRIX( $M );
 		} else {
-			$self->_error("Not a matrix reference");
+			$self->_error("Argument error. Input is not a matrix reference");
 		}
 
 	} elsif (@_ == 2) {

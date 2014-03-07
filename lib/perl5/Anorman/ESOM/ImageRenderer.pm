@@ -86,7 +86,7 @@ sub render {
 
 	warn "Rendering foreground...\n" if $VERBOSE;
 
-	# Render foreground (i.e. Bestmarches and classes)
+	# Render foreground (i.e. Bestmatches and classes)
 	$self->{'foreground'}->render( $self );
 
 	return $self->{'image'};
@@ -223,10 +223,10 @@ sub _tile_background {
 		# Get image dimensions
 		my ($w, $h) = $cloned_bg_image->getBounds;
 
-		# Allocate tiled image
+		# Allocate new tiled image
 		my $tiled_image = GD::Image->new( 2 * $w, 2 * $h );
 
-		# Tile image
+		# Tile image by copying image into 4 quadrants
 		$tiled_image->copy( $cloned_bg_image, 0 , 0 , 0, 0, $w, $h );
 		$tiled_image->copy( $cloned_bg_image, $w, 0 , 0, 0, $w, $h );
 		$tiled_image->copy( $cloned_bg_image, 0 , $h, 0, 0, $w, $h );
@@ -251,17 +251,18 @@ sub _zoom_background {
 			my $h = $self->{'height'};
 			my $w = $self->{'width'};
 
-			my ($ih,$fx,$fy,$ul,$ur,$ll,$lr);
+			my ($fx,$fy,$ul,$ur,$ll,$lr);
 
 			if ($self->{'tiled'}) {
 				my $y = -1;
 				while ( ++$y < $h ) {
 					my $x = -1;
 					while ( ++$x < $w ) {
-						$ul = $matrix->get_quick($y, $x);
 
-						$ur = $matrix->get_quick($y, ($x + 1) % $w);
-						$ll = $matrix->get_quick(($y + 1) % $h, $x);
+						# Get heights from 4 adjacent points
+						$ul = $matrix->get_quick(           $y,            $x);
+						$ur = $matrix->get_quick(           $y, ($x + 1) % $w);
+						$ll = $matrix->get_quick(($y + 1) % $h,            $x);
 						$lr = $matrix->get_quick(($y + 1) % $h, ($x + 1) % $w);
 
 						my $yz = -1;
@@ -272,13 +273,17 @@ sub _zoom_background {
 							while ( ++$xz < $zoom ) {
 								$fx = $xz / $zoom;
 
-								$zoomed_matrix->set_quick((($y * $zoom) +$yz 
-									+ $shift) % ($h * $zoom),
-									(($x * $zoom) + $xz + $shift) % ($w * $zoom),
-									((1 - $fy) * (((1 - $fx) * $ul)
-									+ ($fx * $ur)))
-									+ ($fy * (((1 - $fx) * $ll)
-									+ ($fx * $lr))));
+								# Calculate interpolated XY-coordinates
+								my $ix = (($y * $zoom) + $yz + $shift) % ($h * $zoom);
+								my $iy = (($x * $zoom) + $xz + $shift) % ($w * $zoom);
+
+								# Calculate interpolated height
+								my $ih = ((1 - $fy) * (((1 - $fx) * $ul) + 
+								         ($fx * $ur))) + 
+								         ($fy * (((1 - $fx) * $ll) +
+								         ($fx * $lr)));
+
+								$zoomed_matrix->set_quick($ix, $iy, $ih);
 							}
 						} 
 					}

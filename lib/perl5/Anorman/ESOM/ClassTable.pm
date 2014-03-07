@@ -18,19 +18,17 @@ use overload
 
 sub new {
 	my $class  = shift;
-	my $colors = shift;
+	my $colors = defined $_[0] ? shift : Anorman::ESOM::File::ColorTable->new();
 
-	$colors = Anorman::ESOM::File::ColorTable->new() if !defined $_[0];
-
-	my $self = { 'data'         => Anorman::Data::List->new,
-		     'indexmap'     => Anorman::Data::Hash->new,
-		     'namemap'      => Anorman::Data::Hash->new,
-		     'class_colors' => $colors
+	my $self = { 'data'          => Anorman::Data::List->new,
+		     'indexmap'      => Anorman::Data::Hash->new,
+		     'namemap'       => Anorman::Data::Hash->new,
+		     'class_colors'  => $colors
 		};
 
 	bless ( $self, $class );
 
-	$self->add(0, 'NO_CLASS' );
+	$self->add(0, 'NO_CLASS' ) if $colors->size == 0;
 
 	return $self;
 }
@@ -63,6 +61,10 @@ sub add {
 	}
 
 	
+}
+
+sub color_table {
+	return $_[0]->{'color_table'};
 }
 
 sub size {

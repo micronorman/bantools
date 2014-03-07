@@ -6,7 +6,7 @@ use warnings;
 use parent 'Anorman::ESOM::File';
 
 use Anorman::Common;
-use Anorman::Data::LinAlg::Property qw(check_matrix);
+use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::ESOM::Config;
 
 # Flag indicating wether data should be stored internally 
@@ -16,7 +16,11 @@ sub data {
 	my $self = shift;
 	return $self->{'data'} unless defined $_[0];
 
-	check_matrix($_[0]);	
+	my $data = shift;
+
+	if (is_matrix($_[0])) {
+		check_matrix($_[0]);	
+	}
 	$self->{'data'} = shift;
 }
 

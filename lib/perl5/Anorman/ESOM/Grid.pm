@@ -2,7 +2,7 @@ package Anorman::ESOM::Grid;
 
 use strict;
 
-use Anorman::Common qw(trace_error);
+use Anorman::Common;
 use Anorman::Math::DistanceFactory;
 use Anorman::Data::LinAlg::Property qw(is_matrix);
 
@@ -71,6 +71,8 @@ sub init {
 	my $dim  = $self->dim;
 	my $size = $self->size;  
 
+	warn "Initializing grid (Method: $method)\n" if $VERBOSE;
+
 	trace_error("Grid weights have not been set. Cannot initialize") unless is_matrix( $self->get_weights );
 
 	if ($method eq 'norm_mean_2std') {
@@ -97,7 +99,6 @@ sub init {
 			my $max = $desc->maxima->[ $j ];
 
 			$uniform->set_range( $min, $max );
-			warn "COLUMN: $j RANGE: $min - $max\n";
 			my $i = $size;
 			my $vals = [];
 

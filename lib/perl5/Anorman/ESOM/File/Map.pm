@@ -50,7 +50,7 @@ sub get {
 	my $self = shift;
 	my $key  = shift;
 
-	return $self->{'map'}->{ $key };
+	return $self->{'map'}->get( $key );
 }
 
 sub get_quick {

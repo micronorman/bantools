@@ -8,7 +8,9 @@ use parent 'Anorman::ESOM::File::Grid';
 use Anorman::Common;
 
 sub new {
-	my $class = shift;
+	my $that = shift;
+	my $class = ref $that || $that;
+
 	my $self  = $class->SUPER::new();
 
 	if (@_ == 1) {
