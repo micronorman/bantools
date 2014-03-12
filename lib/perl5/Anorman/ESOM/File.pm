@@ -32,6 +32,7 @@ our $DELIMITER      = "\t";
 our $HEADER_PREFIX  = "%";
 our $COMMENT_PREFIX = "#";
 
+=head
 our %FILETYPES = (
 	'lrn'   => 'Multivariate Data',  
         'cov'	=> 'Covariance Data',
@@ -57,6 +58,7 @@ my %CLASS_NAMES = (
 );
 
 my %TYPES = reverse %CLASS_NAMES;
+=cut
 
 sub new {
 	my $class    = shift;
@@ -68,7 +70,7 @@ sub new {
 	if ($class ne __PACKAGE__ ) {
 		$filename = $arg;
 		($type) = $class =~ /.+::(\w+)$/;
-		$type = $TYPES{ $type };
+		$type = $Anorman::ESOM::Config::TYPES{ $type };
 	} else {
 		# Attempt to derive type from filename
         	if ($arg =~ m/.*\.(\w{2,5})$/) {
@@ -134,7 +136,7 @@ sub save {
 	$self->{'filename'} = shift if defined $_[0];
 
 	if (defined $self->{'filename'}) {
-		warn "Writing $FILETYPES{ $self->{'type'} } to file $self->{'filename'}\n" if $VERBOSE;
+		warn "Writing $Anorman::ESOM::Config::FILETYPES{ $self->{'type'} } to file $self->{'filename'}\n" if $VERBOSE;
 		open ($FH, '>', $self->{'filename'}) or trace_error("Could not write to file $self->{'filename'}. $!");
 	} 
 
@@ -168,7 +170,7 @@ sub neurons    { $_[0]->{'neurons'} }
 sub datapoints { $_[0]->{'datapoints'} }
 sub dimensions { $_[0]->{'dim'} }
 sub data       { $_[0]->{'data'} }
-sub classes    { $_[0]->{'classes'} }
+sub _classes    { $_[0]->{'classes'} }
 sub size       { if (defined $_[0]->{'data'}) { $_[0]->{'data'}->size } else {0} }
   
 sub set_datapoints { $_[0]->{'datapoints'} = $_[1] }
@@ -182,7 +184,7 @@ sub filename   {
 
 sub description {
 	my $self = shift;
-	return $FILETYPES{ $self->{'type'} };
+	return $Anorman::ESOM::Config::FILETYPES{ $self->{'type'} };
 }
 
 ###### INTERNAL UNIVERSAL FILE METHODS #######

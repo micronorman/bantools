@@ -257,7 +257,7 @@ sub add_new_data {
 	trace_error("Invalid input format") unless $input->isa("Anorman::ESOM::File");
 
 	$self->_check_new_data( $input );
-	warn "Adding " . $input->type . " data\n";
+	warn "Merging " . $input->type . " data into ESOM\n" if $VERBOSE;
 	$self->{ $input->type } = $input;
 }
 
@@ -286,7 +286,6 @@ sub grid {
 		if (@_== 1) {
 			$_[0]->isa("Anorman::ESOM::Grid") or trace_error("Not a grid");
 			$self->{'grid'} = $_[0];
-			
 		} else {
 			# Set dimensions so grid initializes at the next call	
 			$self->{'rows'}    = $_[0];
@@ -351,7 +350,7 @@ sub setup_trainer {
 	my $self = shift;
 	my %opt  = @_;
 
-	trace_error("Cannot initialize a trainer without data") unless &_has_lrn($self);
+	trace_error("Cannot initialize a trainer without any training data!") unless &_has_lrn($self);
 	trace_error("Cannot initialize a trainer without a grid") unless &_has_grid($self);
 
 	if (exists $opt{'algorithm'} and $opt{'algorithm'} eq 'kbatch') {
@@ -380,7 +379,7 @@ sub train {
 	my $self = shift;
 	$self->{'SOM'} = shift if (defined $_[0] && $_[0]->isa("Anorman::ESOM::SOM"));
 	
-	trace_error("No ESOM-training set up") unless defined $self->{'SOM'};
+	trace_error("No ESOM trainer present. Use setup_trainer to initialize") unless defined $self->{'SOM'};
 
 	# run trainer
 	$self->{'SOM'}->train;
@@ -522,21 +521,23 @@ sub _check_new_data {
 }
 
 # Internal object Accessors. Nothing but syntactic sugar, really
-sub _bm    { $_[0]->{'bm'}    }
-sub _cls   { $_[0]->{'cls'}   }
-sub _cmx   { $_[0]->{'cmx'}   }
-sub _lrn   { $_[0]->{'lrn'}   }
-sub _names { $_[0]->{'names'} }
-sub _rgb   { $_[0]->{'rgb'}   }
-sub _umx   { $_[0]->{'umx'}   }
-sub _wts   { $_[0]->{'wts'}   }
-sub _SOM   { $_[0]->{'SOM'}   }
+sub _bm      { $_[0]->{'bm'}      }
+sub _cls     { $_[0]->{'cls'}     }
+sub _cmx     { $_[0]->{'cmx'}     }
+sub _lrn     { $_[0]->{'lrn'}     }
+sub _names   { $_[0]->{'names'}   }
+sub _classes { $_[0]->{'classes'} }
+sub _rgb     { $_[0]->{'rgb'}     }
+sub _umx     { $_[0]->{'umx'}     }
+sub _wts     { $_[0]->{'wts'}     }
+sub _SOM     { $_[0]->{'SOM'}     }
 
 # Internal data checks
 sub _has_rgb        { return (defined $_[0]->_rgb)       }
 sub _has_lrn        { return (defined $_[0]->_lrn)       }
 sub _has_bm         { return (defined $_[0]->_bm)        } 
 sub _has_names      { return (defined $_[0]->_names)     }
+sub _has_classes    { return (defined $_[0]->_classes)   }
 sub _has_cmx        { return (defined $_[0]->_cmx)       }
 sub _has_cls        { return (defined $_[0]->_cls)       }
 sub _has_grid       { return (defined $_[0]->rows && defined $_[0]->columns ) };
@@ -545,7 +546,6 @@ sub _has_umx        { return (defined $_[0]->_umx)       }
 sub _has_neurons    { return (defined $_[0]->neurons)    }
 sub _has_datapoints { return (defined $_[0]->datapoints) }
 sub _has_dims       { return (defined $_[0]->dimensions) }
-sub _has_classes    { return (defined $_[0]->{'classes'})}
 sub _has_trainer    { return (defined $_[0]->_SOM)       }
 
 # Stringification. To display basic information about the ESOM

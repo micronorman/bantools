@@ -52,7 +52,7 @@ use Inline C => <<'END_OF_C_CODE';
 #define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
 #define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
 
-IV bm_brute_force_search( SV* vector, SV* weights ) {
+void bm_brute_force_search( SV* vector, SV* weights ) {
     /* search all weights for bestmatch */
     SV_2VECTOR( vector, v );
     SV_2MATRIX( weights, w );
@@ -68,7 +68,7 @@ IV bm_brute_force_search( SV* vector, SV* weights ) {
     double* v_elems = (double*) v->elements;
     double* w_elems = (double*) w->elements;
 
-    /* highly optimized search. Only measures euclidean distance */    
+    /* highly optimized search. Will only measure euclidean distance */    
     while ( ++i < w->rows ) {
         int w_index = (int) (v->size + i * w->row_stride) - 1;
         int v_index = (int) (v->zero + v->size - 1);
@@ -93,10 +93,16 @@ IV bm_brute_force_search( SV* vector, SV* weights ) {
         }
     }
 
-    return (IV) bm;
+    /* Prepare return values */
+    Inline_Stack_Vars;
+
+    Inline_Stack_Reset;
+    Inline_Stack_Push(sv_2mortal(newSViv(bm)));
+    Inline_Stack_Push(sv_2mortal(newSVnv(min)));
+    Inline_Stack_Done;
 }
 
-IV bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
+void bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
     /* search a list of neurons for the best match */
     SV_2VECTOR( vector, v );
     SV_2MATRIX( weights, w );
@@ -139,10 +145,16 @@ IV bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
         }
     }
 
-    return (IV) bm;
+    /* Prepare return values */
+    Inline_Stack_Vars;
+
+    Inline_Stack_Reset;
+    Inline_Stack_Push(sv_2mortal(newSViv(bm)));
+    Inline_Stack_Push(sv_2mortal(newSVnv(min)));
+    Inline_Stack_Done;
 }
 
-IV bm_local_search( SV* vector, SV* weights, IV top, IV left, IV bottom, IV right, IV grid_rows, IV grid_columns ) {
+void bm_local_search( SV* vector, SV* weights, IV top, IV left, IV bottom, IV right, IV grid_rows, IV grid_columns ) {
     /* search a square area for the best match */
     SV_2VECTOR( vector, v );
     SV_2MATRIX( weights, w );
@@ -190,7 +202,13 @@ IV bm_local_search( SV* vector, SV* weights, IV top, IV left, IV bottom, IV righ
         }
     }
 
-    return (IV) bm;
+    /* Prepare return values */
+    Inline_Stack_Vars;
+
+    Inline_Stack_Reset;
+    Inline_Stack_Push(sv_2mortal(newSViv(bm)));
+    Inline_Stack_Push(sv_2mortal(newSVnv(min)));
+    Inline_Stack_Done;
 }
 
 END_OF_C_CODE

@@ -88,17 +88,17 @@ sub getD {
 
 sub getV {
 	my $self = shift;
-	return $self->{'_V'};
+	return Anorman::Data->matrix($self->{'_V'});
 }
 
 sub getRealEigenvalues {
 	my $self = shift;
-	return wantarray ? @{ $self->{'_d'} } : $self->{'_d'};
+	return Anorman::Data->vector($self->{'_d'});
 }
 
 sub getImagEigenvalues {
 	my $self = shift;
-	return wantarray ? @{ $self->{'_e'} } : $self->{'_e'};
+	return Anorman::Data->vector($self->{'_e'});
 }
 
 sub _tridiagonal_QL {

@@ -57,6 +57,7 @@ sub distance_function {
 		#$self->_error("Not a valid distance function") unless (ref $func) =~ m/::Math::Distance::/;
 		$self->{'_distance_function'} = $func;
 	}
+
 	return $self->{'_distance_function'};
 }
 
@@ -65,7 +66,7 @@ sub init {
 	my $desc   = shift;
 	my $method = defined $_[0] ? shift : 'norm_mean_2std';
 
-	# Without descriptives, set everything to zero
+	# In the absence of any data descriptives, set everything to zero
 	$method = 'zero' if !defined $desc;
 
 	my $dim  = $self->dim;
@@ -76,7 +77,7 @@ sub init {
 	trace_error("Grid weights have not been set. Cannot initialize") unless is_matrix( $self->get_weights );
 
 	if ($method eq 'norm_mean_2std') {
-		# generate random vectors based on gaussian distribution [ mean ± 2stdevs ]of input data descriptives
+		# generate random vectors based on gaussian distribution [ mean ± 2stdevs ] from input descriptives
 		my $j = -1;
 		while (++$j < $dim) {
 			my $sd   = $desc->stdevs->[ $j ];
@@ -91,6 +92,7 @@ sub init {
 			$self->get_weights->view_column( $j )->assign( $vals );
 		}
 	} elsif ($method eq 'uni_min_max') {
+		# generate random vectors based on uniform distribution [ min, max ]
 		my $uniform = Math::Random::MT::Auto::Range->new( LO => 0.0 , HI => 1.0, TYPE => 'DOUBLE');
 
 		my $j = -1;
@@ -289,10 +291,37 @@ sub index2row {
 	return _index2row($_[0],$self->columns);
 }
 
+sub init {
+	my ($self,$desc, $method) = @_;
+	
+	if (defined $method && $method eq 'pca') {
+		warn "Initializing grid using the pca method\n";
+		my $i = 0;
+		while ( ++$i <= $self->rows ) {
+			my $row_factor = ( $i - ($self->rows / 2) - 0.5) / (($self->rows / 2) - 0.5);
+
+			my $j = 0;
+			while ( ++$j < $self->columns ) {
+				my $col_factor = ($j - ($self->columns / 2) - 0.5) / (($self->columns / 2) - 0.5);
+				my $neuron = $self->get_neuron( $i - 1, $j - 1);
+				my $d = -1;
+
+				while ( ++$d < $self->dim ) {
+					$neuron->set( $d, $desc->means->[ $d ] 
+					+ (2 * $row_factor * $desc->first_eigenvalue  * $desc->first_eigenvector->get($d))
+					+ (2 * $col_factor * $desc->second_eigenvalue * $desc->second_eigenvector->get($d)));
+				}
+			}
+		
+		}
+	} else {
+		$self->SUPER::init(@_);
+	}
+}
+
 sub get_neuron {
 	my $self = shift;
 
-	print Dumper \@_;
 	if (@_ != 2) {
 		return $self->{'_weights'}->view_row( $_[0] );
 	} else {

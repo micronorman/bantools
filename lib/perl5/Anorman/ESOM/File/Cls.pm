@@ -79,7 +79,7 @@ sub correct_subseqs {
 	my $self  = shift;
 	my $names = shift;
 
-	trace_error("Requires a name file as input") unless (defined $names && $names->isa("Anorman::ESOM::File::Names"));
+	trace_error("Requires a names file as input") unless (defined $names && $names->isa("Anorman::ESOM::File::Names"));
 
 	my $corrections  = 0;
 	my $subseq_index = $names->subseq_index;	

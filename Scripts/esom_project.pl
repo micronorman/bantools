@@ -13,6 +13,7 @@ use Pod::Usage;
 my ($lrnfile,
     $wtsfile,
     $cmxfile,
+    $namesfile,
     $clsfile,
     $distances,
     $bmfile,
@@ -25,16 +26,17 @@ my %distances = ( euc => 'euclidean',
 		);
 
 # Parse user arguments
-&GetOptions( 'l|lrn=s'  => \$lrnfile,
-             'M|manual' => sub { pod2usage( verbose => 2 ) },
-             'd|dist=s' => \$distances,  
-	     'w|wts=s'  => \$wtsfile,
-             'm|cmx=s'  => \$cmxfile,
-	     'b|bm=s'   => \$bmfile,
-             'c|cls=s'  => \$clsfile,
-	     'q|quiet'  => \$quiet,
-             'h|help'   => sub { pod2usage( verbose => 1 ) }
-           ) or pod2usage( exit => 1, verbose => 0 );
+&GetOptions( 'l|lrn=s'   => \$lrnfile,
+             'M|manual'  => sub { pod2usage( verbose => 2 ) },
+             'd|dist=s'  => \$distances,  
+	     'w|wts=s'   => \$wtsfile,
+             'm|cmx=s'   => \$cmxfile,
+             'n|names=s' => \$namesfile,
+	     'b|bm=s'    => \$bmfile,
+             'c|cls=s'   => \$clsfile,
+	     'q|quiet'   => \$quiet,
+             'h|help'    => sub { pod2usage( verbose => 1 ) }
+           ) or pod2usage( msg => 'Use --help for more information', exit => 1, verbose => 0 );
 
 $VERBOSE = !$quiet;
 
@@ -46,9 +48,9 @@ $err_msg .= "\nA cls-file MUST be specified when providing a cmx-file" if ($cmxf
 $err_msg .= "\nA cmx-file MUST be specified when providing a cls-file" if ($clsfile && !$cmxfile); 
 $err_msg .= "\nAn output bm-file MUST be specified when providing a lrn-file" if ($lrnfile && !$bmfile);
 
-pod2usage( msg => $err_msg . "\n" , verbose => 0 ) if $err_msg ne '';
+pod2usage( exit => 1, msg => $err_msg . "\n" , verbose => 0 ) if $err_msg ne '';
 
-# initialize an ESOM object
+# initialize new ESOM object
 my $esom = Anorman::ESOM->new;
 
 # Load weights into ESOM
@@ -69,16 +71,19 @@ if ($lrnfile) {
 	$esom->load_bestmatches( $bmfile );
 }
 
+# Load class mask for classifying datapoints;
 if ($cmxfile) {
-	my $cmx = Anorman::ESOM::File::ClassMask->new( $cmxfile ) if $cmxfile;
-	$cmx->load;
-	$esom->add_new_data( $cmx );
+	$esom->load_class_mask( $cmxfile );
+
+	# Use names file to correct subseq classifications
+	if ($namesfile) {
+		$esom->load_names( $namesfile );
+		$esom->data_classes->correct_subseqs( $esom->names );
+	}
 	
 	# Classify bestmatches and save a cls-file
 	$esom->data_classes->save( $clsfile );
 }
-
-__END__
 
 =pod
 
@@ -96,9 +101,11 @@ B<-w> I<file>
 [B<-l> I<file>]
 [B<-b> I<file>]
 [B<-m> I<file>]
+[B<-n> I<file>]
 [B<-c> I<file>]
 [B<-q>]
 [B<-h>]
+[B<-M>]
 
 =back
 
@@ -113,19 +120,23 @@ Weights file (*.wts) with trained ESOM map
 
 =item B<-l, --lrn> I<file>
 
-Training file (*.lrn) with data patterns
+Training file (*.lrn) with data patterns to be projected onto the ESOM map
 
 =item B<-b, --bm> I<file>
 
-Bestmatches file (*.bm) with positions of the closest matched neuron
+Bestmatches file (*.bm) with positions of the closest matched neuron.
 
 =item B<-m, --cmx> I<file>
 
-Class Mask file (*.cmx) with classifications of ESOM grid positions
+Class Mask file (*.cmx) with classifications of ESOM grid positions. This will classify bestmatches as they are projected
 
 =item B<-c, --cls> I<file>
 
-Classes file (*.cls) with classifications of data points
+Output classes file (*.cls) with classifications of data points
+
+=item B<-n, --names>
+
+Names file (*.names) used to correct classification of subdivided sequences. All subfragments are moved to the class with the most members from the larger sequence
 
 =item B<-q, --quiet>
 

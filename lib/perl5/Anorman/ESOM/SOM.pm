@@ -3,6 +3,7 @@ package Anorman::ESOM::SOM;
 use strict;
 
 use Anorman::Common;
+use Anorman::Data;
 use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::ESOM::Grid;
 use Anorman::ESOM::BMSearch;
@@ -13,6 +14,8 @@ use Anorman::Math::DistanceFactory;
 
 use List::Util qw(shuffle);
 use Time::HiRes qw(time);
+
+use Data::Dumper;
 
 my $TRAIN_BEG;
 my $TRAIN_END;
@@ -90,6 +93,7 @@ sub new {
 	} elsif ($opt{'constant'} eq 'constant') {
 		$self->{'_bmsearch'} = Anorman::ESOM::BMSearch::Local::Constant->new;
 	}
+
 	$self->{'_distance_func'}  = Anorman::Math::DistanceFactory->get_function( SPACE => 'euclidean', THRESHOLD => 1 );
 	$self->{'_epochs'}         = $opt{'epochs'};
 	$self->{'_init_method'}    = $opt{'init_method'};
@@ -118,11 +122,14 @@ sub init {
 
 sub train {
 	$TRAIN_BEG = time ();
-	warn "[ ", sprintf("%.2f", $TRAIN_BEG - $TIME) , "s ] Training begin\n";
-	my $self = shift;
+
+	my $self    = shift;
+	my $weights = $self->grid->get_weights;
 	
 	$self->{'_epoch'} = 0;
 	$self->{'_bmsearch'}->som( $self );
+
+	warn "[ ", sprintf("%.2f", $TRAIN_BEG - $TIME) , "s ] Training begin\n";
 
 	until ( $self->stop ) {
 		
@@ -132,29 +139,37 @@ sub train {
 		warn "\tTraining...\n" if $VERBOSE;
 
 		my $pos = 0;
-		foreach my $i( 0 .. $self->data->rows - 1 ) {
+
+		my $i = -1;
+		while ( ++$i < $self->data->rows ) {
+
+			# Retrive row index from the current permutation
 			my $index = $self->{'_permutation'}->[ $i ];
 
 			# Retrieve data vector
 			my $vector = $self->get_pattern( $index );
 
 			# Locate the bestmatch neuron
-			my $bm = $self->{'_bmsearch'}->find_bestmatch( $index,
-			                                               $vector, 
-                                                                       $self->grid->get_weights,
-                                                                       $self->{'_epoch'}
-                                                                     ); 
+			my ($bm, $dist) = $self->{'_bmsearch'}->find_bestmatch( $index,
+			                                                        $vector, 
+                                                                                $weights,
+                                                                                $self->{'_epoch'}
+                                                                              ); 
 			
-			# store bestmatch
+			# Store the best match
 			$self->{'_bestmatches'}->[ $index ] = $bm;
 
-			# online update ( disabled for batch training )
+			# Store the distance
+			$self->{'_distances'}->set( $i, $dist );
+
+			# online update ( disabled when batch training )
 			$self->update( $vector, $bm, $pos );
 
 			# stuff to do after neuron has been updated
 			$self->after_update( $bm, $index );
 		
 			$pos++;
+
 		}
 
 		# after epoch stuff
@@ -165,7 +180,18 @@ sub train {
 	my $TRAIN_END = time();
 	my $DURATION  = sprintf("%.2f",$TRAIN_END - $TRAIN_BEG);
 
-	warn "[ ", sprintf("%.2f", $TRAIN_END - $TIME) ," ] Finished. Total training time: ", $DURATION, "\n";
+	warn "[ ", sprintf("%.2f", $TRAIN_END - $TIME) ," ] Total training time: ", $DURATION, "\n";
+
+	# Final round of bestmatch searching (Always uses brute force search)
+	my $i  = -1;
+	while ( ++$i < $self->data->rows ) {
+		my $index = $self->{'_permutation'}->[ $i ];
+		my $vector = $self->get_pattern( $index );
+		my ($bm, $dist) = Anorman::ESOM::BMSearch::bm_brute_force_search( $vector, $weights );
+		
+		$self->{'_bestmatches'}->[ $index ] = $bm;		 
+		$self->{'_distances'}->set( $i, $dist );
+	}
 }
 
 #==============================================================================
@@ -173,10 +199,10 @@ sub train {
 sub before_epoch {
 	my $self = shift;
 
-	# save intermediate data
+	# Save intermediate data
 	# TODO
 	
-	# cool parameters
+	# Cool parameters
 	$self->cool;
 
 	# Display progress
@@ -187,17 +213,19 @@ sub before_epoch {
 		$self->neighborhood->get->size - 1,
 		$self->{'_rate'}
 	);	
-	
-	# shuffle data vectors
-	warn "\tPermuting data patterns\n" if $VERBOSE;
-	@{ $self->{'_permutation'} } = shuffle @{ $self->{'_permutation'} };
+
+	if ($self->{'_permute'}) {	
+		# shuffle data vectors
+		warn "\tPermuting data patterns\n" if $VERBOSE;
+		@{ $self->{'_permutation'} } = shuffle @{ $self->{'_permutation'} };
+	}
 };
 
 sub after_update { };
 
 sub after_epoch  {
 	my $self = shift;
-	warn "\tGrid updated, saving bestmatches\n" if $VERBOSE;
+	warn "\tGrid updated, storing bestmatches\n" if $VERBOSE;
 	$self->BMSearch->old_bestmatches( $self->bestmatches );
 };
 
@@ -266,6 +294,7 @@ sub data {
 
 		# Initialize bestmatches and permutations
 		$#{ $self->{'_bestmatches'} }  = $data->rows - 1;
+		$self->{'_distances'} = Anorman::Data->packed_vector( $data->rows );
 		$self->{'_permutation'} = [ 0 .. $data->rows - 1 ];
 	} else {
 		return $self->{'data'};
@@ -326,11 +355,7 @@ sub rate_cooling {
 
 sub distances {
 	my $self = shift;
-	if (@_ == 2) {
-		$self->{'_distances'}->{ $_[0] } = $_[1];
-	} else {
-		return $self->{'_distances'};
-	}
+	return $self->{'_distances'};
 }
 
 sub BMSearch {

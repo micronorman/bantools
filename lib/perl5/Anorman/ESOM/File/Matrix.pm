@@ -9,19 +9,19 @@ use Anorman::Common;
 use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::ESOM::Config;
 
-# Flag indicating wether data should be stored internally 
-# as a packed matrix (packed, C-type data structure) or not (normal perl data structure)
-
 sub data {
 	my $self = shift;
 	return $self->{'data'} unless defined $_[0];
 
 	my $data = shift;
 
-	if (is_matrix($_[0])) {
-		check_matrix($_[0]);	
+	if (is_matrix($data)) {
+		$self->{'data'} = $data;
+	} else {
+		$self->{'data'} = $Anorman::ESOM::Config::PACK_MATRIX_DATA ? 
+		Anorman::Data->packed_matrix($data) : 
+		Anorman::Data->matrix($data);
 	}
-	$self->{'data'} = shift;
 }
 
 sub rows {

@@ -62,7 +62,7 @@ sub eigenvalue {
 	my $self = shift;
 	my $i    = shift;
 
-	return $self->eigenvalues->[ $self->{'_columns'} - $i - 1 ];
+	return $self->eigenvalues->get( $self->{'_data'}->columns - $i - 1 );
 }
 
 sub first_eigenvalue {
@@ -98,6 +98,27 @@ sub eigenvectors {
 	return $self->{'_ev'};
 }
 
+sub eigenvector {
+	my $self = shift;
+	my $i    = shift;
+	return $self->eigenvectors->view_column( $self->{'_data'}->columns - $i - 1);
+}
+
+sub first_eigenvector {
+	my $self = shift;
+	return $self->eigenvector(0);
+}
+
+sub second_eigenvector {
+	my $self = shift;
+	return $self->eigenvector(1);
+}
+
+sub third_eigenvector {
+	my $self = shift;
+	return $self->eigenvector(2);
+}
+
 sub projection {
 	my $self = shift;
 	$self->_calc_pca unless defined $self->{'_evd'};
@@ -123,7 +144,7 @@ sub _calculate_descriptives {
 
 	my ($i,$j);
 	
-	warn "Calculating descriptives...\n";
+	warn "Calculating descriptives...\n" if $VERBOSE;
 
 	$i = $rows;
 
