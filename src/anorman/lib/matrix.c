@@ -59,7 +59,7 @@ Matrix* c_mm_mult ( Matrix* A, Matrix* B, Matrix* C, double alpha, double beta) 
                 int kA = iA;
                 int kB = jB;
 
-                double s = 0.0;
+                long double s = 0.0;
 
                 /*
                 // not unrolled
@@ -117,7 +117,7 @@ Vector* c_mv_mult ( Matrix *A, Vector* y, Vector* z, double alpha, double beta )
     int cols = A->columns;
     int row  = A->rows;
     while ( --row >= 0 ) {
-        double sum = 0;
+        long double sum = 0;
 
         int i = indexA - As;
         int j = indexy - ys;

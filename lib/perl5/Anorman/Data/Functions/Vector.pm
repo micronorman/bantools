@@ -6,7 +6,7 @@ use warnings;
 use vars qw(@ISA @EXPORT_OK);
 use Anorman::Common;
 
-@EXPORT_OK = qw(v_variance v_div_assign v_mean v_sum v_stdev);
+@EXPORT_OK = qw(v_variance v_variance2 v_div_assign v_mean v_sum v_stdev);
 @ISA = qw(Exporter);
 
 use Inline (C => Config =>
@@ -31,6 +31,11 @@ use Inline C => <<'END_OF_C_CODE';
 NV v_variance ( SV* self ) {
     SV_2VECTOR( self, v );
     return (NV) c_v_variance( v->size, v );
+}
+
+NV v_variance2 ( SV* self ) {
+    SV_2VECTOR( self, v );
+    return (NV) c_v_variance2( v->size, v );
 }
 
 NV v_mean ( SV* self ) {

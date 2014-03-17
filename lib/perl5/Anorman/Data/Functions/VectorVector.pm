@@ -7,7 +7,7 @@ use Anorman::Common;
 
 use vars qw(@ISA @EXPORTER @EXPORT_OK);
 
-@EXPORT_OK = qw(vv_covariance vv_add_assign vv_minus_assign vv_dist_euclidean);
+@EXPORT_OK = qw(vv_covariance vv_add_assign vv_minus_assign vv_dist_euclidean vv_squared_dist_euclidean);
 @ISA       = qw(Exporter);
 
 
@@ -43,6 +43,15 @@ NV vv_covariance ( SV* self, SV* other ) {
 
     _check_size( u, v);	
     return (NV) c_vv_covariance( u->size, u, v );
+}
+
+NV vv_squared_dist_euclidean( SV* self, SV* other ) {
+    
+    SV_2VECTOR( self, u );
+    SV_2VECTOR( other, v );
+    _check_size( u, v );
+
+    return (NV) c_vv_squared_dist_euclidean( u->size, u, v );
 }
 
 NV vv_dist_euclidean( SV* self, SV* other ) {

@@ -102,9 +102,7 @@ sub dot_product {
 		$length = $self->size;
 	}
 
-	my $sum = $self->_packed_dot_product( $other, $from, $length );
-
-	return $sum; 
+	return $self->_packed_dot_product( $other, $from, $length );
 }
 
 sub swap {
@@ -329,7 +327,7 @@ void _assign_DensePackedVector_from_NUMBER( SV* self, NV value ) {
     c_vn_assign( v, value );    
 }
 
-double _packed_dot_product( SV* self, SV* other, IV from, IV length ) {
+NV _packed_dot_product( SV* self, SV* other, IV from, IV length ) {
     SV_2VECTOR( self, a );
     SV_2VECTOR( other, b );
 

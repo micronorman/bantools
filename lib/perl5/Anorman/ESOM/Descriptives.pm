@@ -3,14 +3,15 @@ package Anorman::ESOM::Descriptives;
 use strict;
 
 use Anorman::Common;
-use Anorman::Data::Matrix::Dense;
+use Anorman::Data;
 use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::Data::LinAlg::EigenValueDecomposition;
 use Anorman::Data::Algorithms::Statistic;
 
 sub new {
-	my $class     = shift;
-	my $data      = shift;
+	my $that  = shift;
+	my $class = ref $that || $that;
+	my $data  = shift;
 	
 	check_matrix( $data );
 
@@ -181,21 +182,21 @@ sub _calculate_descriptives {
 	}
 
 	foreach (@{ $stdevs }) { $_ = sqrt( $_ / ($rows - 1) )};
-	
-	$self->{'_minima'} = $minima;
-	$self->{'_maxima'} = $maxima;
-	$self->{'_means'}  = $means;
-	$self->{'_stdevs'} = $stdevs;
+
+	$self->{'_minima'} = Anorman::Data->packed_vector( $minima );
+	$self->{'_maxima'} = Anorman::Data->packed_vector( $maxima );
+	$self->{'_means'}  = Anorman::Data->packed_vector( $means  );
+	$self->{'_stdevs'} = Anorman::Data->packed_vector( $stdevs );
 }
 
 sub _calc_pca {
 	my $self = shift;
 	my $data = $self->{'_data'};
 
-	warn "Calculating Covariance matrix...\n";
+	warn "Calculating Covariance matrix...\n" if $VERBOSE;
 	$self->{'_cov'} = Anorman::Data::Algorithms::Statistic::covariance( $data );
 
-	warn "Calculating Eigenvalues...\n";
+	warn "Calculating Eigenvalues...\n" if $VERBOSE;
 	$self->{'_evd'} = Anorman::Data::LinAlg::EigenValueDecomposition->new( $self->{'_cov'} );
 	$self->{'_ev'}  = $self->{'_evd'}->getV;
 }

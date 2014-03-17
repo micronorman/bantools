@@ -4,7 +4,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Exporter;
 
-@EXPORT_OK = qw(log10 log2 hypot min max plus minus sqrt identity square);
+@EXPORT_OK = qw(log10 log2 hypot min max plus minus sqrt identity square quiet_sqrt);
 
 @ISA = qw(Exporter);
 
@@ -14,9 +14,9 @@ use Anorman::Common;
 
 #====== COMMON MATHS FUNCTIONS ====
 
-sub log10 { return (log $_[0] / log 10) }
+sub log10 ($) { return (log $_[0] / log 10) }
 
-sub log2  { return (log $_[0] / log 2) };
+sub log2  ($) { return (log $_[0] / log 2) };
 
 sub hypot ($$) {
 	my ($a,$b) = @_;
@@ -31,17 +31,18 @@ sub hypot ($$) {
 	} else {
 		$r = 0.0;
 	}
+
 	return $r;
 }
 
-sub identity ($) { $_[0] };
-sub square ($) { $_[0] * $_[0] };
-sub sqrt ($) { sqrt $_[0] };
-
-sub min  (@) { $_[0] < $_[1] ? $_[0] : $_[1] };
-sub max  (@) { $_[0] > $_[1] ? $_[0] : $_[1] };
-sub plus (@) { $_[0] + $_[1] };
-sub minus (@) { $_[0] - $_[1] };
+sub identity   ($) { $_[0] };
+sub square     ($) { $_[0] * $_[0] };
+sub sqrt       ($) { sqrt $_[0] };
+sub quiet_sqrt ($) { ($_[0] >=0) ? sqrt($_[0]) : 'nan' }
+sub min        (@) { $_[0] < $_[1] ? $_[0] : $_[1] };
+sub max        (@) { $_[0] > $_[1] ? $_[0] : $_[1] };
+sub plus       (@) { $_[0] + $_[1] };
+sub minus      (@) { $_[0] - $_[1] };
 
 #====== STATISTICS FUNCTIONS ======
 
@@ -313,13 +314,17 @@ sub distance_vector ($$) {
 
 sub vector_euclidean_norm (@) {
 	my $norm = 0;
-	$norm += $_**2 for @_;
+
+	$norm += $_i ** 2 for @_;
+
 	return sqrt $norm;
 }
 
 sub vector_euclidean_distance ($$) {
 	my $dist_sq_sum = 0;
-	$dist_sq_sum += ($_[0]->[ $_ ] - $_[1]->[ $_ ])**2 for 0..$#{ $_[0] };
+
+	$dist_sq_sum += ($_[0]->[ $_ ] - $_[1]->[ $_ ]) ** 2 for (0 .. $#{ $_[0] });
+
 	return sqrt $dist_sq_sum;
 }
 
@@ -352,4 +357,5 @@ sub derefify {
 sub refify {
 	
 }
+
 1;

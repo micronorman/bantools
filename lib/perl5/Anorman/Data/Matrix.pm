@@ -121,13 +121,23 @@ sub view_row {
 }
 
 sub view_column {
-	my $self =shift;
+	my $self = shift;
 
 	$self->_check_column( $_[0] );
 
 	my $view_size   = $self->rows;
 	my $view_zero   = $self->_index( 0, $_[0] );
 	my $view_stride = $self->row_stride;
+
+	return $self->_like_vector($view_size, $view_zero, $view_stride);
+}
+
+sub view_diagonal {
+	my $self = shift;
+
+	my $view_size   = min ( $self->rows, $self->columns );
+	my $view_zero   = $self->_index( 0, 0 );
+	my $view_stride = $self->row_stride + 1;
 
 	return $self->_like_vector($view_size, $view_zero, $view_stride);
 }
@@ -158,6 +168,30 @@ sub view_part {
 	my $self = shift;
 	my ($row,$column,$height,$width) = @_;	
 	return $self->_view->_v_part( $row, $column, $height, $width );
+}
+
+sub swap_rows {
+	my $self = shift;
+	my ($a,$b) = @_;
+
+	$self->_check_row( $a );
+	$self->_check_row( $b );
+
+	return if ($a == $b);
+
+	$self->view_row( $a )->swap( $self->view_row( $b ) );
+}
+
+sub swap_columns {
+	my $self = shift;
+	my ($a,$b) = @_;
+
+	$self->_check_column( $a );
+	$self->_check_column( $b );
+
+	return if ($a == $b);
+
+	$self->view_column( $a )->swap( $self->view_column( $b ) );
 }
 
 sub copy {
@@ -339,14 +373,15 @@ sub _mult_matrix_vector {
 
 	my ($m,$n) = ($self->rows,$self->columns);
 
-	my $i = $n;
+	my $i = $m;
 	while ( --$i >=0 ) {
 		my $s = 0;
-		my $j = $m;
+		my $j = $n;
 		while ( --$j >= 0 ) {
-				$s += $self->get_quick($i,$j) * $other->get_quick($j);
-			}
-		$result->set_quick( $i, $alpha * $s + $beta * $other->get_quick($i) );
+			$s += $self->get_quick($i,$j) * $other->get_quick($j);
+		}
+
+		$result->set_quick( $i, $alpha * $s + $beta * $result->get_quick($i) );
 	}
 }
 
@@ -455,11 +490,11 @@ sub _assign_Matrix_from_NUMBER {
 	my $r = $self->rows;
 	my $c = $self->columns;
 
-	my $row = -1;
-	while ( ++$row < $r ) {
+	my $row = $self->rows;
+	while ( --$row >= $r ) {
 		
-		my $column = -1;
-		while ( ++$column < $c ) {
+		my $column = $self->columns;
+		while ( --$column >= $c ) {
 			$self->set_quick($row,$column,$value);
 		}
 	}

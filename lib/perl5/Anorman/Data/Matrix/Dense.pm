@@ -80,7 +80,7 @@ sub assign {
 	}
 
 	# execute from dispatch table
-	$ASSIGN_DISPATCH{ $type }->( $self, @_ ) || $self->_error("Assigment error");
+	$ASSIGN_DISPATCH{ $type }->( $self, @_ );# || $self->_error("Assigment error");
 
 	return $self;
 }

@@ -19,7 +19,8 @@ BEGIN {
 	use vars qw($DEBUG $VERBOSE $TIME);
 
 	if ($Anorman::Common::DEBUG) {
-		warn "Debug Mode: ON\n";
+		warn "=" x 80 . "\nDebug Mode: ON\n" . "=" x 80 . "\n";
+		#$Exporter::Verbose = 1;
 		$Anorman::Common::VERBOSE = 1;
 	}
 
@@ -64,7 +65,7 @@ sub trace_error {
 	if ($VERBOSE || $DEBUG) {
 		$err_string .= "\nModule $last_call->[0] caused a fatal error in line $last_call->[2]";
 	} else {
-		$err_string .= "\nFATAL ERROR";
+		$err_string .= "\nError in " . __FILE__ . ", line " . __LINE__;
 	}
 	
 	if ($err_msg) {

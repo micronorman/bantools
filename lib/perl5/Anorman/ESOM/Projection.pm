@@ -5,6 +5,7 @@ use warnings;
 
 use Anorman::Common;
 
+use Anorman::Data;
 use Anorman::ESOM::BMSearch qw(bm_brute_force_search);
 use Anorman::ESOM::DataItem;
 use Anorman::ESOM::File;
@@ -13,7 +14,7 @@ use Anorman::ESOM::Grid;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA       = qw(Exporter);
-@EXPORT_OK = qw(project classify distances);
+@EXPORT_OK = qw(project classify bestmatch_distances);
 
 sub project {
 	# projects multivariate data onto an ESOM grid
@@ -27,14 +28,15 @@ sub project {
 
 	my $rows    = $wts->rows;
 	my $columns = $wts->columns;
+	my $neurons = $wts->data; 
+	my $size    = $lrn->size;
 	my $bm      = &_new_bm_file( $rows, $columns, $lrn->datapoints );
+	my $dist    = Anorman::Data->packed_vector( $size );
 	my $grid    = Anorman::ESOM::Grid::Rectangular->new;
 	
 	$grid->rows( $rows );
 	$grid->columns( $columns );
 
-	my $neurons = $wts->data; 
-	my $size    = $lrn->size;
 
 	warn "Projecting data onto weights...\n" if $VERBOSE;
 
@@ -43,18 +45,19 @@ sub project {
 		my $index  = $lrn->keys->get( $i );
 		my $vector = $lrn->data->view_row( $i );
 
-		my $neuron_i  = bm_brute_force_search( $vector, $neurons );
+		my ($neuron_i, $distance) = bm_brute_force_search( $vector, $neurons );
 		my $bestmatch = Anorman::ESOM::DataItem::BestMatch->new( $index,
 									 $grid->index2row( $neuron_i ),
 									 $grid->index2col( $neuron_i ) );
 
-		$bm->add( $bestmatch ); 
+		$bm->add( $bestmatch );
+		$dist->set( $i, $distance ); 
 	}
 
-	return $bm;
+	return wantarray ? ($bm, $dist) : $bm;
 }
 
-sub distances {
+sub bestmatch_distances {
 	# calculates distances between a set of data vectors and their projected bestmatches (neurons).
 	# data vectors will be projected (using "project") if no bestmatch-file was provided
 	# NOTE: This will override any existing bm-distances present in the provided BestMatch-file;
@@ -65,26 +68,29 @@ sub distances {
 
 	my $func = $grid->distance_function;
 	my $size = $lrn->size;
+	my $dist = Anorman::Data->packed_vector( $lrn->size );
 
-	# Create a new bm-file if none was provided.
-	$bm = &project( $lrn, $grid->get_wts ) if !defined $bm;
+	if (!defined $bm) {
+		# Create a new bm-file if none was provided.
+		($bm, $dist) = &project( $lrn, $grid->get_wts );
+	} else {
+		warn "Calculating bestmatch distances...\n" if $VERBOSE;
 
-	warn "Calculating bestmatch distances...\n" if $VERBOSE;
+		my $i = -1;
+		while ( ++$i < $size ) {
+			my $index     = $lrn->keys->get( $i );
+			my $vector    = $lrn->data->view_row( $i );
+			my $bestmatch = $bm->get_quick( $i );
+			my $neuron    = $grid->get_neuron( $bestmatch->row, $bestmatch->column );
 
-	my $i = -1;
-	while ( ++$i < $size ) {
-		my $index     = $lrn->keys->get( $i );
-		my $vector    = $lrn->data->view_row( $i );
-		my $bestmatch = $bm->get_quick( $i );
-		my $neuron    = $grid->get_neuron( $bestmatch->row, $bestmatch->column );
+			# Execute the distance-function embedded into the grid on each vector/neuron pair.
+			my $bm_dist      = $func->apply( $vector, $neuron );
 
-		# Execute the distance-function embedded into the grid on each vector/neuron pair.
-		my $dist      = $func->apply( $vector, $neuron );
-
-		$bestmatch->distance( $dist );
+			$dist->set( $i, $bm_dist );
+		}
 	}	
 	
-	return $bm;
+	return $dist;
 }
 
 sub classify {

@@ -144,7 +144,7 @@ double c_vv_dot_product ( int size, Vector* a, Vector* b, int from, int length )
     double* a_elems = (double*) a->elements;
     double* b_elems = (double*) b->elements;
 
-    double sum = 0.0;
+    long double sum = 0.0;
 
     /* loop unrolled for speed */
     i -= a_str;

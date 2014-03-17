@@ -4,7 +4,7 @@
  * internally in an array regardless of 
  * the number of dimension
  *
- * (C) Anders Norman, July - September 2013
+ * (C) Anders Norman, July 2013 - March 2014
  * lordnorman@gmail.com
  */
 
@@ -15,7 +15,8 @@
 #include <stdbool.h>
 #include "ppport.h"
 
-typedef struct {
+struct matrix_struct
+{
     size_t rows;
     size_t columns;
     double* elements;
@@ -24,9 +25,12 @@ typedef struct {
     int row_stride;
     int column_stride;
     bool view_flag;
-} Matrix;
+};
 
-typedef struct {
+typedef struct matrix_struct Matrix;
+
+struct select_matrix_struct
+{
     size_t rows;
     size_t columns;
     double* elements; 	
@@ -38,17 +42,23 @@ typedef struct {
     int* row_offsets;
     int* column_offsets;
     bool view_flag;
-} SelectedMatrix;
+};
 
-typedef struct {
+typedef struct select_matrix_struct SelectedMatrix;
+
+struct vector_struct
+{
     size_t size;
     double* elements;
     int zero;
     int stride;
     bool view_flag;
-} Vector;
+};
 
-typedef struct {
+typedef struct vector_struct Vector;
+
+struct select_vector_struct
+{
     size_t size;
     double* elements;
     int zero;
@@ -56,19 +66,35 @@ typedef struct {
     int offset;
     int* offsets;
     bool view_flag;
-} SelectedVector;
+}
+;
+typedef struct select_vector_struct SelectedVector;
 
-typedef struct {
+struct intlist_struct
+{
     size_t size;
     int* elements;
-} IntList;
+};
 
-typedef struct {
+typedef struct intlist_struct IntList;
+
+struct doublelist_struct
+{
+    size_t size;
+    double* elements;
+};
+
+typedef struct doublelist_struct DoubleList;
+
+struct intdoublemap_struct
+{
     char* states;
-    char* table;
-    char* values;
+    int* table;
+    double* values;
     int   distinct;
-} Map;
+};
+
+typedef struct intdoublemap_struct IntDoubleMap;
 
 /* Defines. extract struct from Perl scalars */
 #define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )

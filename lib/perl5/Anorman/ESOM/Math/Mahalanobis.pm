@@ -20,7 +20,8 @@ sub new {
 		trace_error("No class data present") unless $esom->_has_cls;
 	}
 
-	my $classes = $esom->class_table;
+	my $classes     = $esom->class_table;
+	my $bestmatches = $esom->bestmatches;
 
 	my %mhdist = ();
 

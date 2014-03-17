@@ -34,8 +34,12 @@ my $optimize_ratio;
 my $LRN_FILE     = '';
 my $PRE_WEIGHTS  = '';
 
+my ($ROWS,$COLS);
+
 # get user defined options
 &GetOptions(
+	'columns|c=i'		=> \$COLS,
+	'rows|r=i'		=> \$ROWS,
 	'lrn|l=s'		=> \$LRN_FILE,
 	'epochs|e=i'		=> \$EPOCHS,
 	'scale|s=i'		=> \$SCALE,
@@ -112,8 +116,11 @@ $RATIO = $optimize_ratio ? ($som->descriptives->first_eigenvalue  / $som->descri
 
 warn "Grid dimension ratio: ", sprintf("%.2f", $RATIO), "\n";
 
-my $ROWS  = ceil( sqrt( ( $lrn->size * $SCALE ) / $RATIO ) );
-my $COLS  = ceil( $ROWS * $RATIO );
+unless (defined $ROWS && defined $COLS) {
+	$ROWS  = ceil( sqrt( ( $lrn->size * $SCALE ) / $RATIO ) );
+	$COLS  = ceil( $ROWS * $RATIO );
+}
+
 my $RS    = ceil( $ROWS / 2 );
 
 # Intialize grid

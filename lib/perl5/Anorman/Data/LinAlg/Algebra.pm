@@ -23,12 +23,13 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use Anorman::Common;
 use Anorman::Math::Algorithm;
 use Anorman::Data;
-use Anorman::Data::LinAlg::Property qw( :matrix );
+use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Data::LinAlg::LUDecomposition;
 use Anorman::Data::LinAlg::SingularValueDecomposition;
 
 use List::Util qw(min);
 
+use Data::Dumper;
 
 sub inverse {
 	my $A = shift;
@@ -39,7 +40,7 @@ sub inverse {
 	#
 	#}
 	
-	return &solve($A, Anorman::Data->identity_matrix($A->rows));
+	return &solve($A, Anorman::Data->identity_matrix($A));
 }
 
 sub det {
@@ -65,17 +66,17 @@ sub permute {
 		my ($indexes, $work) = @_;
 		my $size = $A->size;
 	
-		trace_error("Invalid permutation") if (@indexes != $size);
+		trace_error("Invalid permutation") if (@{ $indexes } != $size);
 
 		if (!defined $work) {
-			$work = @{ $A };
+			@{ $work } = @{ $A };
 		} else {
 			$A->to_array($work);
 		}
 		
 		my $i = $size;
 		while ( --$i >= 0 ) {
-			$A->set_quick($i, $work[ $indexes[ $i ] ]);
+			$A->set_quick($i, $work->[ $indexes->[ $i ] ]);
 		}
 		return $A;
 	} elsif (is_matrix($A)) {

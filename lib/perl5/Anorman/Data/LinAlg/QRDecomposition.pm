@@ -4,16 +4,24 @@ use strict;
 use warnings;
 
 use Anorman::Common;
-use Anorman::Data::LinAlg::Property qw( :matrix );
-use Anorman::Math::Common qw(hypot);
+use Anorman::Data::BLAS qw( :L2 );
+use Anorman::Data::LinAlg::Property qw( :all );
+use Anorman::Data::LinAlg::Householder qw( :all );
+use Anorman::Math::Common qw(hypot min);
 use Anorman::Data;
 
 use overload
 	'""' => \&_stringify;
 
 sub new {
-	my $class = shift;
-	
+	my $class = ref $_[0] || $_[0];
+	my $self  = bless( {}, $class );
+
+	$self->decompose( $_[1] ) if @_ > 1;
+
+	return $self;
+
+=head	
 	check_matrix($_[0]);
 	check_rectangular($_[0]);
 
@@ -56,7 +64,6 @@ sub new {
 
 		$Rdiag->set_quick($k, -$nrm);
 	}
-
 	my $self = {
 		'_QR'    => $QR,
 		'_Rdiag' => $Rdiag,
@@ -65,7 +72,53 @@ sub new {
 	};
 
 	return bless ( $self, ref $class || $class );
+=cut
 }
+
+sub decompose {
+	my $self = shift;
+	my $A    = shift;
+
+	#warn "IN:\n$A\n";
+
+	check_matrix($A);
+
+	my $M = $A->rows;
+	my $N = $A->columns;
+
+	my $n = min($M,$N);
+	my $tau = $A->like_vector($n);
+
+	my $QR = $A->copy;
+
+	my $i = -1;
+	while ( ++$i < $n ) {
+
+		# Compute the Householder transformation to reduce the j-th
+		# column of the matrix to a multiple of the j-th unit vector
+
+		my $c_full = $QR->view_column($i);
+		my $c      = $c_full->view_part($i, $M - $i);
+
+		my $tau_i = householder_transform( $c );
+
+		$tau->set_quick( $i, $tau_i );
+
+		if ( $i + 1 < $N ) {
+			my $m = $QR->view_part($i, $i + 1, $M - $i, $N - ($i + 1));
+			householder_hm( $tau_i, $c, $m );
+		}
+	}
+
+	$self->{'_QR'}  = $QR;
+	$self->{'_tau'} = $tau;
+
+	my $Q = $self->Q;
+	my $R = $self->R;
+
+	#print "QR:\n$QR\nTAU:\n$tau\n\nQ:\n$Q\nR:\n$R\n";
+}
+
 
 sub H {
 	my $self    = shift;
@@ -87,48 +140,52 @@ sub H {
 sub Q {
 	my $self = shift;
 	my $QR   = $self->{'_QR'};
-	my $Q    = $self->{'_QR'}->like;
-	my $n    = $self->{'_n'};
-	my $m    = $self->{'_m'};
+	my $tau  = $self->{'_tau'};
 
-	my $k = $n;
-	while ( --$k >= 0 ) {
-		my $QR_colk = $QR->view_column($k)->view_part($k, $m - $k);
-		$Q->set_quick($k,$k,1);
-		
-		my $j = $k - 1;
-		while ( ++$j < $n ) {
-			unless ($QR->get_quick($k,$k) == 0) {
-				my $Q_colj = $Q->view_column($j)->view_part($k, $m - $k);
-				my $s = $QR_colk->dot_product($Q_colj);
-				$s = -$s / $QR->get_quick($k,$k);
-				$Q_colj->assign( $QR_colk, sub {  $_[0] + $_[1] * $s } ); 
-			}
-		}
-	}
+	my $M = $QR->rows;
+	my $N = $QR->columns;
+
+	my $Q = Anorman::Data->identity_matrix( $M );
+
+	my ($i,$j);
+
+	$i = min($M,$N);
+	while ( --$i >= 0 ) {
+		my $c  = $QR->view_column($i);
+		my $h  = $c->view_part($i, $M - $i);
+		my $m  = $Q->view_part($i, $i, $M - $i, $M - $i);
+		my $ti = $tau->get_quick($i);
+
+		householder_hm($ti, $h, $m);
+	}	
+
 	return $Q;
 }
 
 sub R {
 	my $self  = shift;
 	my $QR    = $self->{'_QR'};
-	my $n     = $self->{'_n'};
-	my $R     = $self->{'_QR'}->like($n,$n);
-	my $Rdiag = $self->{'_Rdiag'};
 
-	my $i = -1;
-	while ( ++$i < $n ) {
-		my $j = -1;
-		while ( ++$j < $n ) {
-			if ($i < $j) {
-				$R->set_quick($i,$j, $QR->get_quick($i,$j));
-			} elsif ($i == $j) {
-				$R->set_quick($i,$j, $Rdiag->get_quick($i));
-			} else {
-				$R->set_quick($i,$j,0);
-			}
+	my $M = $QR->rows;
+	my $N = $QR->columns;
+
+	my $R = $self->{'_QR'}->like($M,$N);
+	
+	my ($i,$j);
+
+	$i = -1;
+	while ( ++$i < $M ) {
+		$j = -1;
+		while ( ++$j < $i && $j < $N ) {
+			$R->set_quick($i,$j,0);
+		}
+
+		$j = $i - 1;
+		while ( ++$j < $N ) {
+			$R->set_quick($i,$j, $QR->get_quick($i,$j))
 		}
 	}
+
 	return $R;
 }
 
@@ -144,6 +201,65 @@ sub has_full_rank {
 	return 1;
 }
 
+sub solve {
+	my $self = shift;
+	my $b    = shift;
+
+	check_vector($b);
+
+	my $QR  = $self->{'_QR'};
+
+	trace_error("Matrix size must match b size") if ($QR->rows != $b->size);
+
+	my $x = $b->copy;
+
+	$self->svx($x);
+
+	return $x;	
+}
+
+sub svx {
+	my $self = shift;
+	my $x    = shift;
+
+	check_vector($x);
+
+	my $QR = $self->{'_QR'};
+
+	trace_error("Matrix size must match x/rhs size") if ($QR->rows != $x->size);
+
+	# Compute rhs = Q^T b
+	$self->QT_vec($x);
+
+	# Solve R x = rhs, storing x in-place
+	blas_trsv( BlasUpper, BlasNoTrans, BlasNonUnit, $QR, $x);
+		
+}
+
+sub QT_vec {
+	my $self = shift;
+	my $v    = shift;
+
+	my $QR  = $self->{'_QR'};
+	my $M   = $QR->rows;
+
+	trace_error("Vector size must be M") if $v->size != $M;
+
+	my $tau = $self->{'_tau'};
+
+	my $i = -1;
+	while ( ++$i < $tau->size ) {
+		my $c = $QR->view_column($i);
+		my $h = $c->view_part($i, $M - $i);
+		my $w = $v->view_part($i, $M - $i);
+
+		my $ti = $tau->get_quick($i);
+
+		householder_hv( $ti, $h, $w );
+	}
+}
+
+=head
 sub solve {
 	my $self = shift;
 	
@@ -198,6 +314,7 @@ sub solve {
 	
 	return $X->view_part(0,0,$n,$nx);
 }
+=cut
 
 sub _stringify {
 	my $self   = shift;

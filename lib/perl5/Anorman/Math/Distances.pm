@@ -1,6 +1,8 @@
 package Anorman::Math::Distances;
 
 use strict;
+use warnings;
+
 use Anorman::Common;
 
 sub new {
@@ -90,8 +92,6 @@ sub _calculate_distances {
 				$dist->apply( $length, $self->{'data'}->[ $i ], $self->{'data'}->[ $j ] );
 		}
 	}
-
-	warn "Done...\n";
 }
 
 sub _index {

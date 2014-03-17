@@ -14,6 +14,7 @@ use Anorman::Common;
 
 use Anorman::ESOM::Config;
 use Anorman::ESOM::Datapoint;
+use Anorman::ESOM::Descriptives;
 use Anorman::ESOM::File;
 use Anorman::ESOM::Grid;
 use Anorman::ESOM::SOM;
@@ -21,7 +22,7 @@ use Anorman::ESOM::BMSearch;
 
 use Anorman::ESOM::ImageRenderer;
 use Anorman::ESOM::UMatrixRenderer;
-use Anorman::ESOM::Projection qw(project classify distances);
+use Anorman::ESOM::Projection qw(project classify bestmatch_distances);
 
 use overload 
 	'""' => \&_stringify;
@@ -68,7 +69,7 @@ sub bestmatches {
 	return $self->{'bm'} if &_has_bm($self);
 
 	if (&_has_wts($self) && &_has_lrn($self)) {
-		$self->{'bm'} = project( $self->{'lrn'}, $self->{'wts'} ); 
+		($self->{'bm'}, $self->{'distances'}) = project( $self->{'lrn'}, $self->{'wts'} ); 
 	} else {
 		$self->{'bm'} = Anorman::ESOM::File::BM->new();
 	}
@@ -76,21 +77,14 @@ sub bestmatches {
 	return $self->{'bm'};
 }
 
-# returns a bestmatch object like above, but containing the calculated deistance between 
-# data vectors and best match neurons
-
-sub bestmatch_distances {
+# returns a vector of calculated bestmatch distances
+sub distances {
 	my $self = shift;
 
 	return $self->{'distances'} if (defined $self->{'distances'});
 
 	if (&_has_lrn($self) && &_has_grid($self)) {
-
-		my $bm   = $self->bestmatches;
-		my $lrn  = $self->training_data;
-		my $grid = $self->grid;
-
-		$self->{'distances'} = distances( $lrn, $grid, $bm );
+		$self->bestmatches;
 	}
 
 	return $self->{'distances'};
@@ -109,6 +103,20 @@ sub data_classes {
 	} 
 
 	return $self->{'cls'};
+}
+
+sub descriptives {
+	my $self = shift;
+
+	return $self->{'descriptives'} if defined $self->{'descriptives'};
+
+	if (&_has_lrn($self)) {
+		$self->{'descriptives'} = Anorman::ESOM::Descriptives->new( $self->_lrn->data );
+	} else {
+		trace_error("You must first load some data");
+	}
+
+	return $self->{'descriptives'};
 }
 
 # return datapoint names
@@ -166,6 +174,8 @@ sub open {
 sub load_data {
 	my $self = shift;
 	my $fn   = shift;
+
+	$self->clear_data;
 
 	my $lrn = Anorman::ESOM::File::Lrn->new( $fn );
 	$lrn->load;
@@ -436,6 +446,8 @@ sub clear_data {
 	delete $self->{'cls'};
 	delete $self->{'lrn'};
 	delete $self->{'distances'};
+	delete $self->{'descriptives'};
+	delete $self->{'datapoints'};
 }
 
 sub clear_classmask {

@@ -12,13 +12,68 @@ use Anorman::Data::LinAlg::Property qw(is_packed is_matrix);
 
 use List::Util qw(min);
 
-our $FORMAT = '%10.4G';
+our $FORMAT = '%10.6G';
 
 sub matrix {
 	my $self = shift;
 
 	require Anorman::Data::Matrix::Dense;
 	return  Anorman::Data::Matrix::Dense->new(@_);
+}
+
+sub general_matrix {
+	require Anorman::Data::Matrix::Dense;
+	
+	my $self = shift;
+	my ($rows, $columns) = @_;
+
+	my ($i,$j);
+	my $m = Anorman::Data::Matrix::Dense->new($rows,$columns);
+
+	for ($i = 0; $i < $rows; $i++) {
+		for ($j=0; $j < $columns; $j++) {
+			$m->set($i,$j, 1.0 / ($i + $j + 1.0));
+		}
+	}
+
+	return $m;
+}
+
+sub hilbert_matrix {
+	require Anorman::Data::Matrix::Dense;
+
+	my $self = shift;
+	my $size = shift;
+
+	my ($i,$j);
+	my $m = Anorman::Data::Matrix::Dense->new($size,$size);
+
+	for ($i = 0; $i < $size; $i++) {
+		for ($j=0; $j < $size; $j++) {
+			$m->set($i,$j, 1.0 / ($i + $j + 1.0));
+		}
+	}
+
+	return $m;
+}
+
+sub vandermonde_matrix {
+	require Anorman::Data::Matrix::Dense;
+
+	my $self = shift;
+	my $size = shift;
+
+	my ($i,$j);
+	my $m = Anorman::Data::Matrix::Dense->new($size,$size);
+
+	for ($i = 0; $i < $size; $i++) {
+		for ($j=0; $j < $size; $j++) {
+			$m->set($i,$j, ($i + 1.0) ** ($size - $j - 1.0));
+		}
+	}
+
+	return $m;
+
 }
 
 sub identity_matrix {

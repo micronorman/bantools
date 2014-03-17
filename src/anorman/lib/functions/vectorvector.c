@@ -10,7 +10,7 @@ double c_vv_aggregate_quick( int size, Vector* a, Vector* b, dd_func aggr, dd_fu
     if (a->size != b->size)
     croak("Different vector sizes");
 
-    double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
+    long double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
     
     int i = size - 1;
     while ( --i >= 0) {
@@ -25,7 +25,7 @@ double c_vv_aggregate_quick_upto( int size, Vector* a, Vector* b, dd_func aggr, 
     if (a->size != b->size)
     croak("Different vector sizes");
     
-    double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
+    long double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
     
     int i = size - 1;
     while ( --i >= 0) {
@@ -38,17 +38,21 @@ double c_vv_aggregate_quick_upto( int size, Vector* a, Vector* b, dd_func aggr, 
 }
 
 double c_vv_covariance( int size, Vector* a, Vector* b ) {
-    double ma = c_v_mean( size, a );
-    double mb = c_v_mean( size, b );
+    const double ma = c_v_mean( size, a );
+    const double mb = c_v_mean( size, b );
    
-    double sum = 0.0;
+    long double covariance = 0;
 
     int i;
     for (i = 0; i < size; i++) {
-        sum += ( c_v_get_quick( a, i ) - ma ) * ( c_v_get_quick( b, i ) - mb );
+        const long double delta1 = c_v_get_quick( a, i ) - ma;
+        const long double delta2 = c_v_get_quick( b, i ) - mb;
+        covariance += ( delta1 * delta2 - covariance) / (i + 1);
+        /* sum += ( c_v_get_quick( a, i ) - ma ) * ( c_v_get_quick( b, i ) - mb ) */;
     }
 
-    return ( sum / ( size - 1 ) );
+    /* return ( sum / ( size - 1 ) )*/;
+    return (double) covariance * ((double)size / (double)(size -1));
 }
 
 void c_vv_plusmult_assign( int size, Vector* a, Vector* b, int multiplicator ) {
@@ -136,10 +140,15 @@ double c_vv_dist_manhattan_upto( int size, Vector* a, Vector* b, double threshol
 /* Euclidean distance */
 double c_vv_dist_euclidean( int size, Vector* a, Vector* b ) {
 
+    return sqrt( c_vv_q_dist_euclidean( size, a, b ) ); 
+}
+
+double c_vv_squared_dist_euclidean( int size, Vector* a, Vector* b ) {
+
     dd_func aggr = (dd_func) &c_plus;
     dd_func    f = (dd_func) &c_square_diff;
 
-    return sqrt( c_vv_aggregate_quick( size, a, b, aggr, f ) ); 
+    return c_vv_aggregate_quick( size, a, b, aggr, f );
 }
 
 /* Euclidean distance with threshold */

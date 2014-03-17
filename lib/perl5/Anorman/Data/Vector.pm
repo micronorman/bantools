@@ -309,7 +309,14 @@ sub _setup {
 
 sub _to_string {
 	my $self = shift;
-	return "{" . join(",", map { $self->get_quick( $_ )|| 0 } (0 .. $self->size - 1)) . "}";
+	my $f    = $Anorman::Data::FORMAT;
+	my $n    = $self->size;
+	my $v;
+
+	my $string = "{" .join(", ", map { defined ($v = $self->get_quick($_)) ? sprintf ( $f, $v ) : 'nan' } (0 .. $n -1)) . "}";
+
+	return $string;
+	#return "{" . join(",", map { $self->get_quick( $_ )|| 0 } (0 .. $self->size - 1)) . "}";
 }
 
 sub _to_short_string {
