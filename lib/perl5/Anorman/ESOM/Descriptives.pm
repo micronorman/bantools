@@ -31,25 +31,11 @@ sub new {
 	return $self;
 }
 
-sub maxima {
-	my $self = shift;
-	return $self->{'_maxima'};
-}
-
-sub minima {
-	my $self = shift;
-	return $self->{'_minima'};
-}
-
-sub stdevs {
-	my $self = shift;
-	return $self->{'_stdevs'};
-}
-
-sub means {
-	my $self = shift;
-	return $self->{'_means'};
-}
+sub maxima { $_[0]->{'_maxima'} }
+sub minima { $_[0]->{'_minima'} }
+sub stdevs { $_[0]->{'_stdevs'} }
+sub means  { $_[0]->{'_means'}  }
+sub size   { $_[0]->{'_size'}   }
 
 sub covariance {
 	my $self = shift;
@@ -122,20 +108,24 @@ sub third_eigenvector {
 
 sub projection {
 	my $self = shift;
+	my $i    = shift;
+
 	$self->_calc_pca unless defined $self->{'_evd'};
 
+	my $ev = $self->get_eigenvector($i);
 
 }
 
 sub _calculate_descriptives {
 	my $self = shift;
-	my $data = $self->{'_data'};
+	my $A    = $self->{'_data'};
 
-	my $columns = $data->columns;
-	my $rows    = $data->rows;
+	my $M = $A->columns;
+	my $N = $A->rows;
+	my $v = $A->like_vector( $M );
 
 	# this pre-loads first row into minima, maxima and sums
-	my $row0   = [ @{ $data->view_row(0) } ];
+	my $row0   = [ @{ $A->view_row(0) } ];
 	my $sums   = [ @{ $row0 } ];
 	my $minima = [ @{ $row0 } ];
 	my $maxima = [ @{ $row0 } ];
@@ -147,14 +137,14 @@ sub _calculate_descriptives {
 	
 	warn "Calculating descriptives...\n" if $VERBOSE;
 
-	$i = $rows;
+	$i = $N;
 
 	# skips first row, since it was already loaded
 	while ( --$i > 0 ) {
 	
-		$j = $columns;
+		$j = $M;
 		while ( --$j >= 0 ) {
-			my $val   = $data->get_quick( $i, $j );
+			my $val   = $A->get_quick( $i, $j );
 
 			$sums->[ $j ]  += $val;
 			$minima->[ $j ] = $minima->[ $j ] < $val ? $minima->[ $j ] : $val;
@@ -163,30 +153,30 @@ sub _calculate_descriptives {
 
 	}
 	
-	$j = $columns;
+	$j = $M;
 	while ( --$j >= 0 ) {
-		$means->[ $j ] = $sums->[ $j ] / $rows;
+		$means->[ $j ] = $sums->[ $j ] / $N;
 	}
 	
-	$i = $rows;
+	$i = $N;
 	while ( --$i >= 0 ) {
 	
-		$j = $columns;
+		$j = $M;
 		while ( --$j >= 0 ) {
-			my $val   = $data->get_quick( $i, $j );
-			my $diff   = $means->[ $j ] - $data->get_quick( $i, $j );
+			my $diff = $means->[ $j ] - $A->get_quick( $i, $j );
 
 			$stdevs->[ $j ] += ($diff * $diff);
 		}
 
 	}
 
-	foreach (@{ $stdevs }) { $_ = sqrt( $_ / ($rows - 1) )};
+	foreach (@{ $stdevs }) { $_ = sqrt( $_ / ($N - 1) )};
 
-	$self->{'_minima'} = Anorman::Data->packed_vector( $minima );
-	$self->{'_maxima'} = Anorman::Data->packed_vector( $maxima );
-	$self->{'_means'}  = Anorman::Data->packed_vector( $means  );
-	$self->{'_stdevs'} = Anorman::Data->packed_vector( $stdevs );
+	$self->{'_minima'} = $v->like->assign( $minima );
+	$self->{'_maxima'} = $v->like->assign( $maxima );
+	$self->{'_means'}  = $v->like->assign( $means  );
+	$self->{'_stdevs'} = $v->like->assign( $stdevs );
+	$self->{'_size'}   = $N;
 }
 
 sub _calc_pca {
@@ -199,11 +189,6 @@ sub _calc_pca {
 	warn "Calculating Eigenvalues...\n" if $VERBOSE;
 	$self->{'_evd'} = Anorman::Data::LinAlg::EigenValueDecomposition->new( $self->{'_cov'} );
 	$self->{'_ev'}  = $self->{'_evd'}->getV;
-}
-
-sub _error {
-	shift;
-	trace_error(@_);
 }
 
 1;

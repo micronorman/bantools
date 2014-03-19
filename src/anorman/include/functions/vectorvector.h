@@ -1,3 +1,6 @@
+#ifndef __ANORMAN_FUNCTIONS_VECTORVECTOR_H__
+#define __ANORMAN_FUNCTIONS_VECTORVECTOR_H__
+
 #include "data.h"
 #include "functions/functions.h"
 
@@ -12,3 +15,5 @@ double c_vv_dist_manhattan( int, Vector*, Vector* );
 double c_vv_dist_euclidean( int, Vector*, Vector* );
 double c_vv_dist_manhattan_upto( int, Vector*, Vector*, double );
 double c_vv_dist_euclidean_upto( int, Vector*, Vector*, double );
+
+#endif

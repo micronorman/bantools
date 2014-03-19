@@ -1,5 +1,6 @@
-#ifndef ANORMAN_FUNCTIONS_FUNCTIONS_H
-#define ANORMAN_FUNCTIONS_FUNCTIONS_H
+#ifndef __ANORMAN_FUNCTIONS_FUNCTIONS_H__
+#define __ANORMAN_FUNCTIONS_FUNCTIONS_H__
+
 /* define function pointers */
 typedef double ( *d_func ) ( double );
 typedef double ( *dd_func ) (double, double );

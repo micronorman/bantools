@@ -104,6 +104,10 @@ sub like_vector {
 	}
 }
 
+sub _plus_assign {
+	warn "COCK!\n";
+}
+
 sub _like_vector {
 	my $self    = shift;
         return Anorman::Data::Vector::DensePacked->new($_[0], $self, $_[1], $_[2]);
@@ -134,27 +138,9 @@ use Inline C => <<'END_OF_C_CODE';
 
 #include "data.h"
 #include "matrix.h"
+#include "perl2c.h"
 
 #include "../lib/matrix.c"
-
-/*
-#define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
-#define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
-*/
-
-#define SVADDR_2PTR( sv_name, ptr_name )            \
-     UV ptr_name = INT2PTR( double*, SvUV( sv_name ) ) 
-
-#define PTR_2SVADDR( ptr_name, sv_name )        \
-    SV* sv_name = newSVuv( PTR2UV( ptr_name ) )
-
-#define ELEMS_BEG( ptr_name, x )               \
-    double* ptr_name =  (double *) x->elements     \
-
-#define ALLOC_ELEMS( slots, sv_name )          \
-    double* _ELEMS;                            \
-    Newxz( _ELEMS, slots, double );            \
-    SV* sv_name = newSVuv(PTR2UV( _ELEMS ))    \
 
 SV* _alloc_elements( SV*, UV );
 
@@ -165,43 +151,33 @@ void static  show_struct( Matrix* );
 
 /* object constructors */
 SV* new_matrix_object( SV* sv_class_name ) {
-
-    /* the central Matrix struct */
+    printf("NEW\n");
     Matrix* m;
-
-    /* set up object variables */
-    char* class_name = SvPV_nolen( sv_class_name );
-    SV*   self       = newSViv(0);
-    SV*   obj        = newSVrv( self, class_name );
+    SV* self;
 
     /* allocate struct memory */
     Newxz(m, 1, Matrix);
 
-    /* set object address */
-    sv_setiv( obj, (IV)m);
-    SvREADONLY_on( obj );
+    const char* class_name = SvPV_nolen( sv_class_name );
+    BLESS_STRUCT( m, self, class_name );
 
     return self;
 }
 
 /* clone a matrix object by making a copy of the underlying struct */
-SV* _struct_clone( SV* self ) {
-    SV_2MATRIX( self, m );
+SV* clone( SV* self ) {
+    printf("CLONE\n");
+    SV_2STRUCT( self, Matrix, m );
+
     Matrix* n;
-
-    char* class_name = sv_reftype( SvRV( self ), TRUE );
-
-    SV*   clone      = newSViv(0);
-    SV*   obj        = newSVrv( clone, class_name );
+    SV* clone;
 
     Newx( n, 1, Matrix );
+    const char* class_name = sv_reftype( SvRV( self ), TRUE );
 
-    StructCopy( m, n, Matrix );
+    n = c_m_alloc_from_matrix( m, 0, 0, m->rows, m->columns );
 
-    sv_setiv( obj, (IV) n );
-    SvREADONLY_on( obj );
-
-    /* TODO: Do something about problems during garbage collection */
+    BLESS_STRUCT( n, clone, class_name ); 
 
     return clone; 
 }
@@ -239,53 +215,59 @@ UV _is_noview (SV* self) {
 NV get_quick(SV* self, IV row, IV column) {
     /* NOTE:  Assumes that index is always
        is within array boundary */
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
     
-    return (NV) c_m_get_quick( m, (int)row, (int)column );
+    return (NV) c_m_get_quick( m, (size_t) row, (size_t) column );
 }
 
 void set_quick(SV* self, IV row, IV column, NV value) {
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
 
-    c_m_set_quick( m, (int)row, (int)column, (double)value );
+    c_m_set_quick( m, (size_t) row, (size_t) column, (double) value );
+}
+
+NV _index( SV* self, IV i, IV j ) {
+    SV_2STRUCT( self, Matrix, m );
+    return (NV) (m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride);
 }
 
 NV sum( SV* self ) {
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
 
-    return c_m_sum( m );
+    return (NV) c_m_sum( m );
 }
 
 /* object initializors */
 void _setup ( SV* self, ... ) {
+    printf("SETUP\n");
     Inline_Stack_Vars;
     
     if ( items != 3 && items != 7) {
         croak("_setup::Wrong number of arguments (%d)", (int) Inline_Stack_Items );
     }
 
-    SV_2MATRIX( self, m);
+    SV_2STRUCT( self, Matrix, m );
 
     m->rows    = (size_t) SvIV( Inline_Stack_Item(1) );
     m->columns = (size_t) SvIV( Inline_Stack_Item(2) );
     
     if ( items == 7 ) {
-        m->row_zero      = (int) SvIV( Inline_Stack_Item(3) );
-        m->column_zero   = (int) SvIV( Inline_Stack_Item(4) );
-        m->row_stride    = (int) SvIV( Inline_Stack_Item(5) );
-        m->column_stride = (int) SvIV( Inline_Stack_Item(6) );
-        m->view_flag     = TRUE;
+        m->row_zero      = (size_t) SvIV( Inline_Stack_Item(3) );
+        m->column_zero   = (size_t) SvIV( Inline_Stack_Item(4) );
+        m->row_stride    = (size_t) SvIV( Inline_Stack_Item(5) );
+        m->column_stride = (size_t) SvIV( Inline_Stack_Item(6) );
+        m->view_flag     = 1;
     } else {
         m->row_zero      = 0;
         m->column_zero   = 0;
-        m->row_stride    = (int) m->columns;
+        m->row_stride    = (size_t) m->columns;
         m->column_stride = 1;
-        m->view_flag     = FALSE;
+        m->view_flag     = 0;
    }
 }
 
 SV* _alloc_elements( SV* self, UV num_elems ) {
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
 
     if ( m->elements != NULL ) {
         croak("Memory already allocated");
@@ -300,7 +282,7 @@ SV* _alloc_elements( SV* self, UV num_elems ) {
 /* elements pointer address manipulation */
 SV* _get_elements_addr (SV* self) {
 
-    SV_2MATRIX( self, m);
+    SV_2STRUCT( self, Matrix, m );
     PTR_2SVADDR( m->elements, sv_addr );
 
     return sv_addr;
@@ -309,19 +291,13 @@ SV* _get_elements_addr (SV* self) {
 void _set_elements_addr (SV* self, SV* sv_addr ) {
 
     SVADDR_2PTR( sv_addr, elems_ptr );
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
 
     if (m->elements == NULL) {
-        m->elements = (double*) elems_ptr;
+        m->elements = elems_ptr;
     } else {
-        PerlIO_printf( PerlIO_stderr(), "Cannot assign (%x) to an already assigned pointer (%p)\n", elems_ptr, m->elements );
+        PerlIO_printf( PerlIO_stderr(), "Cannot assign (%p) to an already assigned pointer (%p)\n", elems_ptr, m->elements );
     }   
-}
-
-IV _index (SV* self, UV row, UV column) {
-    SV_2MATRIX( self, m);
- 
-    return c_m_index( m, (int) row, (int) column );
 }
 
 /* data assignment functions */
@@ -329,32 +305,32 @@ void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
     SV_2MATRIX( self, m );
 
     /* verify number of rows */
-    I32 rows = av_len( array_of_arrays ) + 1;
+    size_t rows = (size_t) av_len( array_of_arrays ) + 1;
     
-    if (rows != (I32) m->rows) {
-        croak("Cannot assign AoA to matrix object: must have %d rows\n", m->rows );
+    if (rows != m->rows) {
+        croak("Cannot assign AoA to matrix object: must have %lu rows\n", m->rows );
         my_exit(1);
     }
         
-    int i        = m->columns * (rows - 1);
-    int row      = m->rows;
-    double* elem = (double *) m->elements;
+    size_t     i = m->columns * (rows - 1);
+    double* elem = m->elements;
 
-    while (--row >= 0) {
+    int row = (int) rows;
+    while( --row >= 0 ) {
 
 	/* fetch a row from AoA and convert to AV* */
         AV* current_row = (AV*) SvIV( *av_fetch( array_of_arrays, row, 0) );
-        I32 columns     = av_len( current_row ) + 1;
+        size_t columns  = (size_t) av_len( current_row ) + 1;
 
         /* verify length */
         if (columns != m->columns) {   
-            PerlIO_printf( PerlIO_stderr(), "Must have same number of colunms (%d) but was %d\n", m->columns, columns );
+            PerlIO_printf( PerlIO_stderr(), "Must have same number of colunms (%lu) but was %lu\n", m->columns, columns );
             my_exit(1);
         }
          
 	/* fill elements */
-        int j = -1;
-        while ( ++j < columns ) {
+        size_t j;
+        for (j = 0; j < columns; j++) {
             double value = (double) SvNV( *av_fetch( current_row, j, 0) );
             elem[ i + j ] = value;
         }
@@ -364,53 +340,52 @@ void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
 }
 
 void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
-    SV_2MATRIX( self, A );
-    SV_2MATRIX( other, B );
+    SV_2STRUCT( self, Matrix, A );
+    SV_2STRUCT( other, Matrix, B );
+
+    printf("LOW-LEVEL ASSIGN\n");
 
     if (A->elements == B->elements) {
+        printf("SAME. Nothing to do\n");
         return;
     }
 
+    dSP;
+
+    ENTER;
+    PUSHMARK( SP );
+    XPUSHs( self );
+    XPUSHs( other );
+    PUTBACK;
+       
+    call_method("Anorman::Data::Matrix::_check_shape", G_VOID );
+
+    LEAVE;
+
     /* straight up memcopy if neither marix is a view */
-    if (A->view_flag == FALSE && B->view_flag == FALSE) {
+    if (!A->view_flag && !B->view_flag) {
+	printf("MEMCPY\n");
         Copy( B->elements, A->elements, (UV) (A->rows * A->columns), double );
         return; 
     }
 
+    printf ("ELEMENT COPY\n");
     c_mm_copy( A, B );
 }
 
 void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* function ) {
-	SV_2MATRIX( self, A );
-	SV_2MATRIX( other, B );
+	SV_2STRUCT( self, Matrix, A );
+	SV_2STRUCT( other, Matrix, B );
 
 	
 	
 }
 
 void _assign_DensePackedMatrix_from_NUMBER ( SV* self, NV value ) {
+    printf("ASSIGN CONSTANT\n");
+    SV_2STRUCT( self, Matrix, m );
 
-    SV_2MATRIX( self, M );
-
-    ELEMS_BEG( elems, M);
-
-    int index = c_m_index( M, 0,0 );
-    int    cs = M->column_stride;
-    int    rs = M->row_stride;
-
-    int row = M->rows;
-    while ( --row >= 0) {
-        int i = index;
-
-        int column = M->columns;
-        while (--column >= 0) {
-            elems[ i ] = value;
-            i += cs;
-        }
-
-        index += rs;
-    }
-
+    c_m_set_all( m, (double) value );
 }
 
 void _mult_matrix_matrix ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv_beta ) {
@@ -436,12 +411,13 @@ void _mult_matrix_matrix ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
         return;
     } 
 
-    SV_2MATRIX( self, A );	
-    SV_2MATRIX( other, B );
-    SV_2MATRIX( result, C);
+    SV_2STRUCT( self,   Matrix, A );	
+    SV_2STRUCT( other,  Matrix, B );
+    SV_2STRUCT( result, Matrix, C );
 
     double alpha = (double) SvNV( sv_alpha );
     double beta  = (double) SvNV( sv_beta );
+
     c_mm_mult( A, B, C, alpha, beta );
 }
 
@@ -468,12 +444,13 @@ void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
         return;
     } 
 
-    SV_2MATRIX( self, A );
-    SV_2VECTOR( other, y );
-    SV_2VECTOR( result, z );
+    SV_2STRUCT( self,   Matrix, A );	
+    SV_2STRUCT( other,  Vector, y );
+    SV_2STRUCT( result, Vector, z );
 
     double alpha = (double) SvNV( sv_alpha );
     double beta  = (double) SvNV( sv_beta );
+
     c_mv_mult( A, y, z, alpha, beta );
 } 
 
@@ -485,35 +462,16 @@ SV* _v_dice( SV* self ) {
     tmp = m->row_stride; m->row_stride = m->column_stride; m->column_stride = tmp;
     tmp = m->row_zero;   m->row_zero = m->column_zero;     m->column_zero = tmp;
 
-    m->view_flag = TRUE;
+    m->view_flag = 1;
     
     SvREFCNT_inc( self );
     return self;
 }
 
-SV* _v_part( SV* self, SV* row, SV* column, SV* height, SV* width ) {
-    SV_2MATRIX( self, m );
+SV* _v_part( SV* self, UV row, UV column, UV height, UV width ) {
+    SV_2STRUCT( self, Matrix, m );
 
-    dSP;
-
-    ENTER;
-    PUSHMARK( SP );
-    XPUSHs( self );
-    XPUSHs( row );
-    XPUSHs( column );
-    XPUSHs( height );
-    XPUSHs( width );
-    PUTBACK;
-
-    call_method("Anorman::Data::Matrix::_check_box", G_VOID );
-
-    LEAVE;
-
-    m->row_zero    += m->row_stride * SvIV( row );
-    m->column_zero += m->column_stride * SvIV( column );
-    m->rows         = SvIV( height );
-    m->columns      = SvIV( width );
-    m->view_flag    = TRUE;
+    c_m_part( m, row, column, height, width );
 
     SvREFCNT_inc( self );	
     return self;
@@ -521,34 +479,10 @@ SV* _v_part( SV* self, SV* row, SV* column, SV* height, SV* width ) {
 
 /* object destruction */
 void DESTROY(SV* self) {
-    SV_2MATRIX( self, m );
+    printf("DESTROY\n");
+    SV_2STRUCT( self, Matrix, m );
 
-    /* do not free matrix elements unless object
-       is not a view */
-    if (m->elements != NULL && m->view_flag != TRUE) {
-        Safefree( m->elements );
-    }
-
-    Safefree( m );
-}
-
-/* DEBUGGING */
-void show_struct( Matrix* m ) {
-    
-    PerlIO_printf( PerlIO_stderr(), "\nContents of Matrix struct:\n" );
-    PerlIO_printf( PerlIO_stderr(), "\trows\t(%p): %d\n", &m->rows, (int) m->rows );
-    PerlIO_printf( PerlIO_stderr(), "\tcols\t(%p): %d\n", &m->columns, (int) m->columns );
-    PerlIO_printf( PerlIO_stderr(), "\tview\t(%p): %d\n", &m->view_flag, (int) m->view_flag );
-    PerlIO_printf( PerlIO_stderr(), "\tr0\t(%p): %d\n",  &m->row_zero, m->row_zero );
-    PerlIO_printf( PerlIO_stderr(), "\tc0\t(%p): %d\n", &m->column_zero, m->row_zero );
-    PerlIO_printf( PerlIO_stderr(), "\trstride\t(%p): %d\n", &m->row_stride, m->row_stride );
-    PerlIO_printf( PerlIO_stderr(), "\tcstride\t(%p): %d\n", &m->column_stride, m->column_stride );
-
-    if (m->elements == NULL) {
-        PerlIO_printf( PerlIO_stderr(), "\telems\t(%p): null\n\n",  &m->elements );
-    } else {
-        PerlIO_printf( PerlIO_stderr(), "\telems\t(%p): [ %p ]\n\n",  &m->elements, m->elements );
-    }
+    c_m_free( m );
 }
 
 END_OF_C_CODE

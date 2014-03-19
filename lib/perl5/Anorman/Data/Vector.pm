@@ -19,6 +19,7 @@ use overload
 	'=='  => \&equals,
 	'@{}' => \&_to_array,
 	'+'   => \&_add,
+	'-'   => \&_minus,
 	'+='  => \&_add_assign;
 
 my %ASSIGN_DISPATCH = (
@@ -366,7 +367,8 @@ sub _add {
 	my $i = $v->size;
 
 	# second argument is vector
-	if (blessed $u) {
+	if (is_vector($u)) {
+		$v->_check_size($u);
 
 		while (--$i >= 0) {
 			$r->set_quick( $i, $v->get_quick( $i ) + $u->get_quick( $i ) );	
@@ -378,9 +380,33 @@ sub _add {
 		while (--$i >= 0) {
 			$r->set_quick( $i, $v->get_quick( $i ) + $u );	
 		}
+	} else {
+		trace_error("Second argument must be either a vector or a number");
 	}
 
 	return $r;
+}
+
+sub _minus {
+	my ($v, $u, $rev_bit) = @_;
+
+	my $r = $v->like;
+	my $i = $v->size;
+
+	if (is_vector($u)) {
+		$v->_check_size($u);
+
+		while ( --$i >= 0 ) {
+			$r->set_quick( $i, $v->get_quick( $i ) - $u->get_quick( $i ) );
+		}
+	} elsif (looks_like_number($u)) {
+		
+		while ( --$i >= 0 ) {
+			$r->set_quick( $i, $v->get_quick( $i ) - $u );
+		}
+	} 
+
+	return $r;	
 }
 
 sub _add_assign {

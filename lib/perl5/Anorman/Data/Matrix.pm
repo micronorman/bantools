@@ -5,6 +5,8 @@ use warnings;
 
 use parent 'Anorman::Data';
 
+use Data::Dumper;
+
 use Anorman::Common qw(sniff_scalar trace_error $VERBOSE $DEBUG);
 use Anorman::Math::Common qw( min max plus minus identity );
 use Anorman::Data::LinAlg::Property qw( :all );
@@ -16,7 +18,13 @@ use Anorman::Data::Matrix::Dense;
 
 use overload
 	'""'  => \&_to_string,
+	'='   => \&cunt,
 	'@{}' => \&_to_array,
+	'-'   => \&_minus,
+	'-='  => \&_minus_assign,
+	'+='  => \&_plus_assign,
+	'*='  => \&_mult_assign,
+	'/='  => \&_div_assign,
 	'=='  => \&equals;
 
 my %ASSIGN_DISPATCH = (
@@ -312,6 +320,44 @@ sub equals {
 	}
 }
 
+sub _minus {
+	my $self = shift;
+	
+	trace_error("Illegal operation. Cannot subtract matrix from constant") if $_[1];
+	
+	my $result = $self->copy;
+	
+	# will check for equality between two matrix objects
+	if (is_matrix( $_[0])) {
+		my $other = shift;
+
+		$result->assign($other, \&minus );
+	# will check if all values of the matrix equals a given value
+	} else {
+		my $value = shift;
+
+		$result->assign( sub { $_[0] - $value } );
+	}
+
+	return $result;
+}
+
+sub _minus_assign {
+	$_[0]->assign($_[1], \&minus);
+}
+
+sub _plus_assign {
+	$_[0]->assign($_[1], \&plus);
+}
+
+sub _mult_assign {
+	$_[0]->assign($_[1], sub { $_[0] * $_[1] });
+}
+
+sub _div_assign {
+	$_[0]->assign($_[1], sub { $_[0] / $_[1] });
+}
+
 sub mult {
 	my ($self, $other, $result, $alpha, $beta) = @_;
 	
@@ -499,7 +545,7 @@ sub _assign_Matrix_from_NUMBER {
 		}
 	}
 
-	1;
+	return $self;
 }
 
 sub _assign_Matrix_from_OBJECT {
@@ -515,7 +561,8 @@ sub _assign_Matrix_from_OBJECT {
 			$self->set_quick($row, $column, $other->get_quick($row,$column));
 		}
 	}
-	1;
+
+	return $self;
 }
 
 sub _assign_Matrix_from_2D_MATRIX {
@@ -539,7 +586,7 @@ sub _assign_Matrix_from_2D_MATRIX {
 		}
 	}
 
-	1;
+	return $self;
 }
 
 sub _assign_Matrix_from_CODE {
@@ -551,7 +598,8 @@ sub _assign_Matrix_from_CODE {
 			$self->set_quick($row, $column, $function->( $self->get_quick($row,$column)) );
 		}
 	}
-	1;
+
+	return $self;
 }
 
 sub _assign_Matrix_from_OBJECT_and_CODE {
@@ -565,6 +613,7 @@ sub _assign_Matrix_from_OBJECT_and_CODE {
 		}
 	}
 	
+	return $self;
 }
 
 sub _to_string {

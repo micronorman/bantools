@@ -8,23 +8,21 @@
  * lordnorman@gmail.com
  */
 
-#ifndef ANORMAN_DATA_H
-#define ANORMAN_DATA_H
+#ifndef __ANORMAN_DATA_H__
+#define __ANORMAN_DATA_H__
 
 #include <stddef.h>
-#include <stdbool.h>
-#include "ppport.h"
 
 struct matrix_struct
 {
     size_t rows;
     size_t columns;
-    double* elements;
-    int row_zero;
-    int column_zero;
-    int row_stride;
-    int column_stride;
-    bool view_flag;
+    size_t row_zero;
+    size_t column_zero;
+    size_t row_stride;
+    size_t column_stride;
+    double *elements;
+    int view_flag;
 };
 
 typedef struct matrix_struct Matrix;
@@ -33,15 +31,15 @@ struct select_matrix_struct
 {
     size_t rows;
     size_t columns;
-    double* elements; 	
-    int row_zero;
-    int column_zero;
-    int row_stride;
-    int column_stride;
-    int offset;
-    int* row_offsets;
-    int* column_offsets;
-    bool view_flag;
+    size_t row_zero;
+    size_t column_zero;
+    size_t row_stride;
+    size_t column_stride;
+    size_t offset;
+    size_t *row_offsets;
+    size_t *column_offsets;
+    double *elements; 	
+    int view_flag;
 };
 
 typedef struct select_matrix_struct SelectedMatrix;
@@ -49,10 +47,10 @@ typedef struct select_matrix_struct SelectedMatrix;
 struct vector_struct
 {
     size_t size;
-    double* elements;
-    int zero;
-    int stride;
-    bool view_flag;
+    size_t zero;
+    size_t stride;
+    double *elements;
+    int view_flag;
 };
 
 typedef struct vector_struct Vector;
@@ -60,14 +58,14 @@ typedef struct vector_struct Vector;
 struct select_vector_struct
 {
     size_t size;
+    size_t zero;
+    size_t stride;
+    size_t offset;
+    size_t *offsets;
     double* elements;
-    int zero;
-    int stride;
-    int offset;
-    int* offsets;
-    bool view_flag;
-}
-;
+    int view_flag;
+};
+
 typedef struct select_vector_struct SelectedVector;
 
 struct intlist_struct
@@ -89,17 +87,12 @@ typedef struct doublelist_struct DoubleList;
 struct intdoublemap_struct
 {
     char* states;
-    int* table;
+    size_t *table;
     double* values;
     int   distinct;
 };
 
 typedef struct intdoublemap_struct IntDoubleMap;
 
-/* Defines. extract struct from Perl scalars */
-#define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
-#define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
-#define SV_2SELECTEDMATRIX( sv, ptr_name )    SelectedMatrix* ptr_name = (SelectedMatrix*) SvIV( SvRV( sv ) )
-#define SV_2SELECTEDVECTOR( sv, ptr_name )    SelectedVector* ptr_name = (SelectedVector*) SvIV( SvRV( sv ) )
 
 #endif

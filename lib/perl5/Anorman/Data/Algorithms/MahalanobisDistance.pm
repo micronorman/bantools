@@ -29,13 +29,13 @@ sub new {
 		check_matrix( $_[0] );
 
 		my $M     = $_[0];
-		my $m     = $M->columns;
-		my $n     = $M->rows;
+		my $m     = $M->rows;
+		my $n     = $M->columns;
 		my @means = ();
 
 		warn "Calculating column means...\n" if $VERBOSE;
 
-		my $j = $m;
+		my $j = $n;
 		while ( --$j >= 0 ) {
 			$means[ $j ] = $M->view_column( $j )->sum / $n;
 		}

@@ -1,82 +1,158 @@
 #include "data.h"
+#include "error.h"
 #include "matrix.h"
+#include "stdio.h"
 
-int c_m_index( Matrix* m, int row, int column ) {
-    return (m->row_zero + row * m->row_stride + m->column_zero + column * m->column_stride);
+Matrix*
+c_m_alloc_from_matrix( Matrix * mm, 
+                       const size_t k1, 
+                       const size_t k2,
+                       const size_t n1,
+                       const size_t n2)
+{
+    Matrix* m;
+
+    if (n1 == 0) {
+        C_ERROR_VAL ("Matrix rows (n1) must be positive integer", C_EINVAL, 0);
+    } else if (n2 == 0) {
+        C_ERROR_VAL ("Matrix columns (n2) must be positive integer", C_EINVAL, 0);
+    } else if (k1 + n1 > mm->rows) {
+        C_ERROR_VAL ("New matrix exceeds height of the original", C_EINVAL, 0);
+    } else if (k2 + n2 > mm->columns) {
+        C_ERROR_VAL ("New matrix exceeds width of the original", C_EINVAL, 0);
+    }
+
+    m = ((Matrix*) malloc (sizeof (Matrix)));
+
+    if (m == 0) {
+        C_ERROR_VAL ("Failed to allocate space for matrix struct", C_ENOMEM, 0);
+    }
+
+    m->elements      = mm->elements;
+    m->rows          = n1;
+    m->columns       = n2;
+    m->row_zero      = k1;
+    m->column_zero   = k2;
+    m->row_stride    = mm->row_stride;
+    m->column_stride = mm->column_stride;
+    m->view_flag     = 1;
+
+    return m;
 }
 
-double c_m_get_quick( Matrix* m, int row, int column) {
-
-    double* elem = (double *) m->elements;
-    return elem[ m->row_zero + row * m->row_stride + m->column_zero + column * m->column_stride ];
+void
+c_m_free( Matrix* m ) {
+       
+    if (!m) {
+        return;
+    }
+    /* do not free elements if
+       struct is a view         */
+    if (m->elements && !m->view_flag) {
+        free( m->elements );
+    }
+   
+    free( m ); 
 }
 
-void c_m_set_quick( Matrix* m, int row, int column, double value ) {
+void
+c_m_set_all( Matrix* m, double x ) {
+    double* elems = m->elements;
 
-    double *elem = (double *) m->elements;
+    const size_t cs = m->column_stride;
+    const size_t rs = m->row_stride;
+    size_t index = c_m_index( m, 0,0 );
 
-    elem[ m->row_zero + row * m->row_stride + m->column_zero + column * m->column_stride ] = value;
+    int row = (int) m->rows;
+    while ( --row >= 0) {
+        size_t i = index;
+
+        int column = (int) m->columns;
+        while (--column >= 0) {
+            elems[ i ] = x;
+            i += cs;
+        }
+
+        index += rs;
+    }
+}
+
+Matrix*
+c_m_part( Matrix* m, 
+          const size_t i, const size_t j,
+          const size_t n1, const size_t n2)
+{
+    if (n1 == 0) {
+        C_ERROR_VAL ("Matrix rows (n1) must be positive integer", C_EINVAL, 0);
+    } else if (n2 == 0) {
+        C_ERROR_VAL ("Matrix columns (n2) must be positive integer", C_EINVAL, 0);
+    } else if (i + n1 > m->rows) {
+        C_ERROR_VAL ("Rows overflow matrix", C_EINVAL, 0);
+    } else if (j + n2 > m->columns) {
+        C_ERROR_VAL ("Columns overflows matrix", C_EINVAL, 0);
+    } else if (i > m->rows) {
+        C_ERROR_VAL ("Row index is out of range", C_EINVAL, 0);
+    } else if (j > m->columns) {
+        C_ERROR_VAL ("Column index is out of range", C_EINVAL, 0);
+    }
+
+    m->rows          = n1;
+    m->columns       = n2;
+    m->row_zero      = i;
+    m->column_zero   = j;
+    m->view_flag     = 1;
+
+    return m;
 }
 
 /* optimized matrix-matrix multiplication (with loop unrolling) */
 Matrix* c_mm_mult ( Matrix* A, Matrix* B, Matrix* C, double alpha, double beta) {
-    int m = A->rows;
-    int n = A->columns;
-    int p = B->columns;
+    const size_t m = A->rows;
+    const size_t n = A->columns;
+    const size_t p = B->columns;
 
-    double* A_elems = A->elements;
-    double* B_elems = B->elements;
+    const double* A_elems = A->elements;
+    const double* B_elems = B->elements;
     double* C_elems = C->elements;
 
-    int cA = A->column_stride;
-    int cB = B->column_stride;
-    int cC = C->column_stride;
+    const size_t cA = A->column_stride;
+    const size_t cB = B->column_stride;
+    const size_t cC = C->column_stride;
 
-    int rA = A->row_stride;
-    int rB = B->row_stride;
-    int rC = C->row_stride;
+    const size_t rA = A->row_stride;
+    const size_t rB = B->row_stride;
+    const size_t rC = C->row_stride;
 
-    int BLOCK_SIZE = 30000;
-    int m_optimal = (BLOCK_SIZE - n) / (n+1);
+    static size_t BLOCK_SIZE = 30000;
+    size_t m_optimal = (BLOCK_SIZE - n) / (n+1);
     if (m_optimal <= 0) m_optimal = 1;
     int blocks = m/m_optimal;
-    int rr = 0;
+    size_t rr = 0;
     if (m % m_optimal != 0) blocks++;
 
     while ( --blocks >= 0 ) {
-        int jB = c_m_index(B,0,0);
-        int indexA = c_m_index(A, rr,0);
-        int jC = c_m_index(C, rr,0);
+        size_t jB =     c_m_index(B,0,0);
+        size_t indexA = c_m_index(A, rr,0);
+        size_t jC =     c_m_index(C, rr,0);
         rr += m_optimal;
         if (blocks == 0) m_optimal += m - rr;
 
-        int j = p;
+        int j = (int) p;
         while ( --j >= 0) {
-            int iA = indexA;
-            int iC = jC;
-            int i = m_optimal;
+            size_t iA = indexA;
+            size_t iC = jC;
+            int i = (int) m_optimal;
             while ( --i >= 0 ) {
-                int kA = iA;
-                int kB = jB;
+                size_t kA = iA;
+                size_t kB = jB;
 
                 long double s = 0.0;
-
-                /*
-                // not unrolled
-                int k = n;
-                while ( --k >=0 ) {
-                    s+= A_elems[ kA ] * B_elems[ kB ];
-                    printf("k: %d, kA: %d, kB: %d, s: %f\n",k,kA,kB,s);
-                    kB += rB;
-                    kA += cA;
-                }
-                */
 
                 // loop unrolled 
                 kA -= cA;
                 kB -= rB;
 
-                int k = n % 4;
+                int k = (int) n % 4;
                 while ( --k >= 0 ) {
                     s += A_elems[ kA += cA ] * B_elems[ kB += rB ];
                 }
@@ -97,30 +173,32 @@ Matrix* c_mm_mult ( Matrix* A, Matrix* B, Matrix* C, double alpha, double beta) 
             jC += cC;
         }
     }
+
     return C;
 }
 
 /* optimized matrix-vector multiplication (with loop unrolling) */
 Vector* c_mv_mult ( Matrix *A, Vector* y, Vector* z, double alpha, double beta ) {
-    double* A_elems = A->elements;
-    double* y_elems = y->elements;
+    const double* A_elems = A->elements;
+    const double* y_elems = y->elements;
     double* z_elems = z->elements;
 
-    int As = A->column_stride;
-    int ys = y->stride;
-    int zs = z->stride;
+    const size_t As = A->column_stride;
+    const size_t ys = y->stride;
+    const size_t zs = z->stride;
 
-    int indexA = c_m_index(A,0,0);
-    int indexy = y->zero;
-    int indexz = z->zero;
+    size_t indexA = c_m_index(A,0,0);
+    size_t indexy = y->zero;
+    size_t indexz = z->zero;
 
-    int cols = A->columns;
-    int row  = A->rows;
+    int cols = (int) A->columns;
+    int row  = (int) A->rows;
     while ( --row >= 0 ) {
         long double sum = 0;
 
-        int i = indexA - As;
-        int j = indexy - ys;
+        size_t i = indexA - As;
+        size_t j = indexy - ys;
+
         int k = cols % 4;
         while ( --k >= 0 ) {
             sum += A_elems[ i += As ] * y_elems[ j += ys ];
@@ -144,21 +222,21 @@ Vector* c_mv_mult ( Matrix *A, Vector* y, Vector* z, double alpha, double beta )
 
 void c_mm_copy( Matrix* A, Matrix* B) {
     double* A_elems = A->elements;
-    double* B_elems = B->elements;
+    const double* B_elems = B->elements;
 
-    int    A_cs = A->column_stride;
-    int    B_cs = B->column_stride;
-    int    A_rs = A->row_stride;
-    int    B_rs = B->row_stride;
-    int B_index = c_m_index( B, 0,0 );
-    int A_index = c_m_index( A, 0,0 );
+    const size_t    A_cs = A->column_stride;
+    const size_t    B_cs = B->column_stride;
+    const size_t    A_rs = A->row_stride;
+    const size_t    B_rs = B->row_stride;
+    size_t B_index = (int) c_m_index( B, 0,0 );
+    size_t A_index = (int) c_m_index( A, 0,0 );
 
-    int row = A->rows;
+    int row = (int) A->rows;
     while ( --row >= 0) {
         int i = A_index;
         int j = B_index;
 
-        int column = A->columns;
+        int column = (int) A->columns;
         while (--column >= 0) {
             A_elems[ i ] = B_elems[ j ];
             i += A_cs;
@@ -173,15 +251,15 @@ void c_mm_copy( Matrix* A, Matrix* B) {
 double c_m_sum( Matrix* m ) {
     double sum = 0;
     
-    double* elem = (double *) m->elements;
+    const double* elem = m->elements;
 	
-    int index = c_m_index(m, 0,0);
-    int    cs = m->column_stride;
-    int    rs = m->row_stride;
+    size_t index = c_m_index(m, 0,0);
+    size_t    cs = m->column_stride;
+    size_t    rs = m->row_stride;
     int   row = (int) m->rows;
 
     while( --row >= 0) {
-        int i      = index;
+        size_t i      = index;
         int column = (int) m->columns;
 
         while( --column >= 0) {       
@@ -194,3 +272,25 @@ double c_m_sum( Matrix* m ) {
 
     return sum;
 }
+
+/* DEBUGGING */
+void c_m_show_struct( Matrix* m ) {
+    
+    fprintf( stderr, "\nContents of Matrix struct: (%p)\n", m );
+    fprintf( stderr, "\trows\t(%p): %lu\n", &m->rows, m->rows );
+    fprintf( stderr, "\tcols\t(%p): %lu\n", &m->columns, m->columns );
+    fprintf( stderr, "\tr0\t(%p): %lu\n",  &m->row_zero, m->row_zero );
+    fprintf( stderr, "\tc0\t(%p): %lu\n", &m->column_zero, m->row_zero );
+    fprintf( stderr, "\trstride\t(%p): %lu\n", &m->row_stride, m->row_stride );
+    fprintf( stderr, "\tcstride\t(%p): %lu\n", &m->column_stride, m->column_stride );
+
+    if (!m->elements) {
+        fprintf( stderr, "\telems\t(%p): null\n\n",  &m->elements );
+    } else {
+        fprintf( stderr, "\telems\t(%p): [ %p ]\n",  &m->elements, m->elements );
+    }
+    
+    fprintf( stderr, "\tview\t(%p): %d\n\n", &m->view_flag, m->view_flag );
+}
+
+

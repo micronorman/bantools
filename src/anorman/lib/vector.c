@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <stddef.h>
 #include "data.h"
+#include "error.h"
 #include "vector.h"
 
 /* quick retrieval and assignement 
@@ -6,143 +9,234 @@
  * all passed index values are within bounds
  */
 
-double c_v_get_quick(Vector* v, int index) {
-    double *elem = (double *) v->elements;
-    return elem[ v->zero + v->stride * index ];
-}
+/* arithmetic operations */
 
-void c_v_set_quick( Vector* v, int index, double value ) {
-    double *elem = (double *) v->elements;
-    elem[ v->zero + v->stride * index ] = value;
-}
+int
+c_vv_add ( Vector *a, Vector *b ) {
+    const size_t N = a->size;
 
-/* fast arithmetic assignment functions */
-void c_vv_plus_assign ( Vector* a, Vector* b ) {
-    int i = (int) a->size;
+    if (N != b->size) {
+        C_ERROR("Vectors must have equal length", C_EINVAL );        
+    } 
 
-    int a_stride = a->stride;
-    int b_stride = b->stride;
+    const size_t a_stride = a->stride;
+    const size_t b_stride = b->stride;
 
-    int a_index = a->zero;
-    int b_index = b->zero;
+    size_t a_index = a->zero;
+    size_t b_index = b->zero;
 
-    double* a_elem = (double*) a->elements;
-    double* b_elem = (double*) b->elements;
+          double *a_elem = a->elements;
+    const double *b_elem = b->elements;
+    
+    size_t i;
 
-    while (--i >= 0) {
+    for(i = 0; i < N; i++ ) {
         a_elem[ a_index ] += b_elem[ b_index ];
         a_index += a_stride;
         b_index += b_stride;
     } 
+
+    return C_SUCCESS;
 }
 
-void c_vv_minus_assign ( Vector* a, Vector* b ) {
-   int i = (int) a->size;
+int
+c_vv_sub ( Vector *a, Vector *b ) {
+    const size_t N = a->size;
 
-    int a_stride = a->stride;
-    int b_stride = b->stride;
+    if (N != b->size) {
+        C_ERROR("Vectors must have equal length", C_EINVAL );        
+    } 
 
-    int a_index = a->zero;
-    int b_index = b->zero;
+    const size_t a_stride = a->stride;
+    const size_t b_stride = b->stride;
 
-    double* a_elem = (double*) a->elements;
-    double* b_elem = (double*) b->elements;
+    size_t a_index = a->zero;
+    size_t b_index = b->zero;
 
-    while (--i >= 0) {
+          double *a_elem = a->elements;
+    const double *b_elem = b->elements;
+    
+    size_t i;
+
+    for(i = 0; i < N; i++ ) {
         a_elem[ a_index ] -= b_elem[ b_index ];
         a_index += a_stride;
         b_index += b_stride;
     } 
+
+    return C_SUCCESS;
 }
 
-void c_vv_mult_assign ( Vector* a, Vector* b ) {
-   int i = (int) a->size;
+int
+c_vv_mul ( Vector *a, Vector *b ) {
+    const size_t N = a->size;
 
-    int a_stride = a->stride;
-    int b_stride = b->stride;
+    if (N != b->size) {
+        C_ERROR("Vectors must have equal length", C_EINVAL );        
+    } 
 
-    int a_index = a->zero;
-    int b_index = b->zero;
+    const size_t a_stride = a->stride;
+    const size_t b_stride = b->stride;
 
-    double* a_elem = (double*) a->elements;
-    double* b_elem = (double*) b->elements;
+    size_t a_index = a->zero;
+    size_t b_index = b->zero;
 
-    while (--i >= 0) {
+          double *a_elem = a->elements;
+    const double *b_elem = b->elements;
+    
+    size_t i;
+
+    for(i = 0; i < N; i++ ) {
         a_elem[ a_index ] *= b_elem[ b_index ];
         a_index += a_stride;
         b_index += b_stride;
     } 
+
+    return C_SUCCESS;
 }
 
-void c_vv_div_assign ( Vector* a, Vector* b ) {
-   int i = (int) a->size;
+int
+c_vv_div ( Vector *a, Vector *b ) {
+    const size_t N = a->size;
 
-    int a_stride = a->stride;
-    int b_stride = b->stride;
+    if (N != b->size) {
+        C_ERROR("Vectors must have equal length", C_EINVAL );        
+    } 
 
-    int a_index = a->zero;
-    int b_index = b->zero;
+    const size_t a_stride = a->stride;
+    const size_t b_stride = b->stride;
 
-    double* a_elem = (double*) a->elements;
-    double* b_elem = (double*) b->elements;
+    size_t a_index = a->zero;
+    size_t b_index = b->zero;
 
-    while (--i >= 0) {
+          double *a_elem = a->elements;
+    const double *b_elem = b->elements;
+    
+    size_t i;
+
+    for(i = 0; i < N; i++ ) {
         a_elem[ a_index ] /= b_elem[ b_index ];
         a_index += a_stride;
         b_index += b_stride;
     } 
+
+    return C_SUCCESS;
 }
 
-void c_vv_assign ( Vector* a, Vector* b ) {
-    int i = (int) a->size;
 
-    int a_stride = a->stride;
-    int b_stride = b->stride;
+int
+c_v_scale ( Vector *a, const double x ) {
+    const size_t N = a->size;
+    const size_t a_stride = a->stride;
 
-    int a_index = a->zero;
-    int b_index = b->zero;
+    size_t a_index = a->zero;
 
-    double* a_elem = (double*) a->elements;
-    double* b_elem = (double*) b->elements;
+    double *a_elem = a->elements;
+    
+    size_t i;
 
-    while (--i >= 0) {
+    for (i = 0; i < N; i++) {
+        a_elem[ a_index ] *= x;
+        a_index += a_stride;
+    }
+
+    return C_SUCCESS; 
+}
+
+int
+c_v_add_constant ( Vector *a, const double x ) {
+    const size_t N = a->size;
+    const size_t a_stride = a->stride;
+
+    size_t a_index = a->zero;
+
+    double *a_elem = a->elements;
+    
+    size_t i;
+
+    for (i = 0; i < N; i++) {
+        a_elem[ a_index ] += x;
+        a_index += a_stride;
+    }
+
+    return C_SUCCESS; 
+}
+
+int
+c_vv_copy ( Vector *a, Vector *b ) {
+    const size_t N = a->size;
+
+    if (N != b->size) {
+        C_ERROR("Vectors must have equal length", C_EINVAL );        
+    } 
+
+    const size_t a_stride = a->stride;
+    const size_t b_stride = b->stride;
+
+    size_t a_index = a->zero;
+    size_t b_index = b->zero;
+
+          double *a_elem = a->elements;
+    const double *b_elem = b->elements;
+    
+    size_t i;
+
+    for(i = 0; i < N; i++ ) {
         a_elem[ a_index ] = b_elem[ b_index ];
         a_index += a_stride;
         b_index += b_stride;
     } 
+
+    return C_SUCCESS;
 }
 
-void c_vn_assign ( Vector* a, double value ) {
-    int i = (int) a->size;
+int
+c_vv_swap ( Vector *a, Vector *b ) {
+    double *a_elems = a->elements;
+    double *b_elems = b->elements;
 
-    int a_stride = a->stride;
-    int a_index = a->zero;
+    const size_t size  = a->size;
+    const size_t a_str = a->stride;
+    const size_t b_str = b->stride;
 
-    double* a_elem = (double*) a->elements;
+    size_t i = c_v_index(a, 0);
+    size_t j = c_v_index(b, 0);
 
-    while (--i >= 0) {
-        a_elem[ a_index ] = value;
-        a_index += a_stride;
-    } 
+    if (a->size != b->size) {
+        C_ERROR("Vector lengths must be equal", C_EINVAL );
+    }
+    
+    size_t k;
+
+    for (k = 0; k < size; k++) {
+        double tmp = a_elems[ i ];
+        a_elems[ i ] = b_elems[ j ];
+        b_elems[ j ] = tmp;
+        i += a_str;
+        j += b_str;
+    }
+
+    return C_SUCCESS;
 }
 
-double c_vv_dot_product ( int size, Vector* a, Vector* b, int from, int length ) {
-    int tail = from + length;
 
-    if (from < 0 || length < 0) return 0;
-    if (size < tail) tail = size;
+double
+c_vv_dot_product ( Vector *a, Vector *b, const size_t from, const size_t length ) {
+    size_t tail = from + length;
+
+    if (a->size < tail) tail = a->size;
     if (b->size < tail) tail = b->size;
 
-    int min = tail - from;
+    const size_t min = tail - from;
 
-    int i = c_v_index(a, from);
-    int j = c_v_index(b, from);
+    size_t i = c_v_index(a, from);
+    size_t j = c_v_index(b, from);
     
-    int a_str = a->stride;
-    int b_str = b->stride;
+    const size_t a_str = a->stride;
+    const size_t b_str = b->stride;
 
-    double* a_elems = (double*) a->elements;
-    double* b_elems = (double*) b->elements;
+    const double *a_elems = a->elements;
+    const double *b_elems = b->elements;
 
     long double sum = 0.0;
 
@@ -150,8 +244,8 @@ double c_vv_dot_product ( int size, Vector* a, Vector* b, int from, int length )
     i -= a_str;
     j -= b_str;
 
-    int k = min / 4;
-    while (--k >=0) {
+    int k;
+    for (k = min / 4; --k >=0; ) {
         sum += a_elems[ i += a_str ] * b_elems[ j += b_str ];
         sum += a_elems[ i += a_str ] * b_elems[ j += b_str ];
         sum += a_elems[ i += a_str ] * b_elems[ j += b_str ];
@@ -167,48 +261,146 @@ double c_vv_dot_product ( int size, Vector* a, Vector* b, int from, int length )
     return sum;
 }
 
-void c_vv_swap ( int size, Vector* a, Vector* b ) {
-
-    /* swap elements between two vectors of equal length */
-    double* a_elems = a->elements;
-    double* b_elems = b->elements;
-
-    int a_str = a->stride;
-    int b_str = b->stride;
-
-    int i = c_v_index(a, 0);
-    int j = c_v_index(b, 0);
-
-    int k = size;
-    while ( --k >= 0) {
-        double tmp = a_elems[ i ];
-        a_elems[ i ] = b_elems[ j ];
-        b_elems[ j ] = tmp;
-        i += a_str;
-        j += b_str;
-    }
-}
-
-int c_v_index ( Vector* v, int rank ) {
-    return v->zero + rank * v->stride;
-}
 
 
 /* quick unary vector functions */
-double c_v_sum( Vector* v ) {
+double
+c_v_sum( Vector *v ) {
     double sum = 0.0;
 
-    int s = v->stride;
-    int i = c_v_index( v, 0 );
+    const size_t s = v->stride;
+    size_t i = c_v_index( v, 0 );
 
-    double* elem = (double*) v->elements;
+    double* elem = v->elements;
 
     int k = (int) v->size;
-
     while (--k >= 0) {
         sum += elem[i];
         i += s;
     }
 
     return sum;
+}
+
+double *
+c_v_alloc( Vector* v, const size_t n ) {
+
+    double* _ELEMS;
+
+    if (n == 0) {
+        C_ERROR_VAL ("Vector length must be positive integer", C_EINVAL, 0);
+    }
+
+    if (v->elements != 0 ) {
+        C_WARNING("Vector already contained allocated elements"); 
+        return v->elements;
+    }
+
+    _ELEMS = (double *) calloc (1, n * sizeof (double));
+
+    if (_ELEMS == 0) {
+        C_ERROR_VAL("Failed to allocate elements for vector", C_ENOMEM, 0);
+    }
+
+    return _ELEMS;
+}
+
+Vector*
+c_v_alloc_from_vector( Vector * w,
+                       const size_t zero,
+                       const size_t n,
+                       const size_t stride) 
+{
+    Vector* v;
+    
+    if (n == 0) {
+        C_ERROR_VAL ("Vector lenth n must be positive integer", C_EINVAL, 0);
+    }
+
+    if (stride == 0) {
+        C_ERROR_VAL ("Stride must be positive integer", C_EINVAL, 0);
+    }
+
+    if (zero + (n - 1) * stride >= w->size) {
+        C_ERROR_VAL ("New vector extends past end of elements", C_EINVAL, 0);
+    }
+
+    v = ((Vector*) malloc (sizeof (Vector)));
+
+    if (v == 0) {
+        C_ERROR_VAL ("Failed to allocate space for vector struct", C_ENOMEM, 0);
+
+    }
+
+    v->elements  = w->elements;
+    v->zero      = w->zero + w->stride * zero;
+    v->size      = n;
+    v->stride    = stride * w->stride;
+    v->view_flag = 1;
+    
+    return v;
+}
+
+void
+c_v_set_all( Vector* v, double x ) {
+    double* const elem = v->elements;
+    const size_t n = v->size;
+    const size_t s = v->stride;
+
+    size_t i = c_v_index( v, 0 );
+
+    size_t k;
+
+    for (k = 0; k < n; k++ ) {
+        elem[ i ] = x;
+        i += s;
+    }
+}
+
+void
+c_v_free( Vector* v ) {
+    
+    if (!v) {
+        return;
+    }
+    /* do not free elements if
+       struct is a view         */
+    if (v->elements && !v->view_flag) {
+        free( v->elements );
+    }
+   
+    free( v );
+}
+
+void
+c_v_part( Vector* v, size_t from, size_t width ) {
+    
+    if (width == 0) {
+        C_ERROR_VOID("Vector length must be positive integer", C_EINVAL );
+    }
+
+    if (from + (width - 1) >= v->size) {
+        C_ERROR_VOID("View would extend past end of vector", C_EINVAL );
+    }
+
+    v->zero      += from * v->stride;
+    v->size       = width;
+    v->view_flag  = 1;
+}
+
+/* Good for debugging */
+void
+c_v_show_struct( Vector* v ) {
+    fprintf(stderr, "\nContents of Vector struct: (%p)\n", v);
+    fprintf(stderr, "\tsize\t(%p): %lu\n", &v->size, v->size );
+    fprintf(stderr, "\toffset\t(%p): %lu\n",  &v->zero, v->zero );
+    fprintf(stderr, "\tstride\t(%p): %lu\n", &v->stride, v->stride );
+
+    if (!v->elements) {
+        fprintf(stderr, "\telems\t(%p): null\n",  &v->elements );
+    } else {
+        fprintf(stderr, "\telems\t(%p): [ %p ]\n",  &v->elements, v->elements );
+    }
+
+    fprintf(stderr, "\tview\t(%p): %i\n\n", &v->view_flag, v->view_flag );
 }

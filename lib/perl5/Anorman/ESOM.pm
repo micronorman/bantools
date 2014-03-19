@@ -5,7 +5,7 @@ package Anorman::ESOM;
 # includes unified method for loading lrn-, wts-, cls-, bm-files
 # etc.
 
-our $VERSION = '0.8.6';
+our $VERSION = '0.9.0';
 
 use strict;
 use warnings;
@@ -55,6 +55,7 @@ sub training_data {
 # return class mask object
 sub class_mask {
 	my $self = shift;
+
 	return $self->{'cmx'} if &_has_cmx( $self );
 
 	$self->{'cmx'} = Anorman::ESOM::File::ClassMask->new( $self->{'classes'} );
@@ -199,6 +200,8 @@ sub load_bestmatches {
 	my $self = shift;
 	my $fn   = shift;
 
+	$self->clear_bestmatches;
+
 	my $bm = Anorman::ESOM::File::BM->new( $fn );
 	$bm->load;
 	$self->add_new_data( $bm ); 
@@ -267,7 +270,7 @@ sub add_new_data {
 	trace_error("Invalid input format") unless $input->isa("Anorman::ESOM::File");
 
 	$self->_check_new_data( $input );
-	warn "Merging " . $input->type . " data into ESOM\n" if $VERBOSE;
+	warn "Merging " . $input->type . " data into ESOM\n" if $DEBUG;
 	$self->{ $input->type } = $input;
 }
 
@@ -468,7 +471,7 @@ sub clear_grid {
 	delete $self->{'distances'};
 }
 
-# When adding new data, verify consistency
+# When adding new data, verify consistency with existing data
 sub _check_new_data {
 	my $self    = shift;
 	my $input   = shift;
