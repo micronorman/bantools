@@ -104,10 +104,6 @@ sub like_vector {
 	}
 }
 
-sub _plus_assign {
-	warn "COCK!\n";
-}
-
 sub _like_vector {
 	my $self    = shift;
         return Anorman::Data::Vector::DensePacked->new($_[0], $self, $_[1], $_[2]);
@@ -129,7 +125,6 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Matrix::DensePacked',
 		ENABLE    => AUTOWRAP =>
-		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -lmatrix',
 		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
 
            );
@@ -143,7 +138,6 @@ use Inline C => <<'END_OF_C_CODE';
 #include "../lib/matrix.c"
 
 SV* _alloc_elements( SV*, UV );
-
 SV*  _get_elements_addr( SV* );
 void _set_elements_addr( SV*, SV* );
 
@@ -151,7 +145,6 @@ void static  show_struct( Matrix* );
 
 /* object constructors */
 SV* new_matrix_object( SV* sv_class_name ) {
-    printf("NEW\n");
     Matrix* m;
     SV* self;
 
@@ -166,17 +159,20 @@ SV* new_matrix_object( SV* sv_class_name ) {
 
 /* clone a matrix object by making a copy of the underlying struct */
 SV* clone( SV* self ) {
-    printf("CLONE\n");
     SV_2STRUCT( self, Matrix, m );
 
     Matrix* n;
     SV* clone;
 
+    /* clone struct */
     Newx( n, 1, Matrix );
+    StructCopy( m, n, Matrix );
+
+    /* protect data elements from freeing */
+    n->view_flag = 1;
+
+    /* make a blessed perl object */
     const char* class_name = sv_reftype( SvRV( self ), TRUE );
-
-    n = c_m_alloc_from_matrix( m, 0, 0, m->rows, m->columns );
-
     BLESS_STRUCT( n, clone, class_name ); 
 
     return clone; 
@@ -212,22 +208,21 @@ UV _is_noview (SV* self) {
 }
 
 
-NV get_quick(SV* self, IV row, IV column) {
-    /* NOTE:  Assumes that index is always
-       is within array boundary */
+NV get_quick(SV* self, UV row, UV column) {
     SV_2STRUCT( self, Matrix, m );
     
     return (NV) c_m_get_quick( m, (size_t) row, (size_t) column );
 }
 
-void set_quick(SV* self, IV row, IV column, NV value) {
+void set_quick(SV* self, UV row, UV column, NV value) {
     SV_2STRUCT( self, Matrix, m );
 
     c_m_set_quick( m, (size_t) row, (size_t) column, (double) value );
 }
 
-NV _index( SV* self, IV i, IV j ) {
+NV _index( SV* self, UV i, UV j ) {
     SV_2STRUCT( self, Matrix, m );
+
     return (NV) (m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride);
 }
 
@@ -239,7 +234,6 @@ NV sum( SV* self ) {
 
 /* object initializors */
 void _setup ( SV* self, ... ) {
-    printf("SETUP\n");
     Inline_Stack_Vars;
     
     if ( items != 3 && items != 7) {
@@ -248,14 +242,14 @@ void _setup ( SV* self, ... ) {
 
     SV_2STRUCT( self, Matrix, m );
 
-    m->rows    = (size_t) SvIV( Inline_Stack_Item(1) );
-    m->columns = (size_t) SvIV( Inline_Stack_Item(2) );
+    m->rows    = (size_t) SvUV( Inline_Stack_Item(1) );
+    m->columns = (size_t) SvUV( Inline_Stack_Item(2) );
     
     if ( items == 7 ) {
-        m->row_zero      = (size_t) SvIV( Inline_Stack_Item(3) );
-        m->column_zero   = (size_t) SvIV( Inline_Stack_Item(4) );
-        m->row_stride    = (size_t) SvIV( Inline_Stack_Item(5) );
-        m->column_stride = (size_t) SvIV( Inline_Stack_Item(6) );
+        m->row_zero      = (size_t) SvUV( Inline_Stack_Item(3) );
+        m->column_zero   = (size_t) SvUV( Inline_Stack_Item(4) );
+        m->row_stride    = (size_t) SvUV( Inline_Stack_Item(5) );
+        m->column_stride = (size_t) SvUV( Inline_Stack_Item(6) );
         m->view_flag     = 1;
     } else {
         m->row_zero      = 0;
@@ -269,7 +263,7 @@ void _setup ( SV* self, ... ) {
 SV* _alloc_elements( SV* self, UV num_elems ) {
     SV_2STRUCT( self, Matrix, m );
 
-    if ( m->elements != NULL ) {
+    if ( m->elements ) {
         croak("Memory already allocated");
     }
 
@@ -293,7 +287,7 @@ void _set_elements_addr (SV* self, SV* sv_addr ) {
     SVADDR_2PTR( sv_addr, elems_ptr );
     SV_2STRUCT( self, Matrix, m );
 
-    if (m->elements == NULL) {
+    if (!m->elements) {
         m->elements = elems_ptr;
     } else {
         PerlIO_printf( PerlIO_stderr(), "Cannot assign (%p) to an already assigned pointer (%p)\n", elems_ptr, m->elements );
@@ -302,7 +296,7 @@ void _set_elements_addr (SV* self, SV* sv_addr ) {
 
 /* data assignment functions */
 void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
 
     /* verify number of rows */
     size_t rows = (size_t) av_len( array_of_arrays ) + 1;
@@ -343,10 +337,7 @@ void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
     SV_2STRUCT( self, Matrix, A );
     SV_2STRUCT( other, Matrix, B );
 
-    printf("LOW-LEVEL ASSIGN\n");
-
     if (A->elements == B->elements) {
-        printf("SAME. Nothing to do\n");
         return;
     }
 
@@ -364,12 +355,10 @@ void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
 
     /* straight up memcopy if neither marix is a view */
     if (!A->view_flag && !B->view_flag) {
-	printf("MEMCPY\n");
         Copy( B->elements, A->elements, (UV) (A->rows * A->columns), double );
         return; 
     }
 
-    printf ("ELEMENT COPY\n");
     c_mm_copy( A, B );
 }
 
@@ -382,7 +371,6 @@ void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* f
 }
 
 void _assign_DensePackedMatrix_from_NUMBER ( SV* self, NV value ) {
-    printf("ASSIGN CONSTANT\n");
     SV_2STRUCT( self, Matrix, m );
 
     c_m_set_all( m, (double) value );
@@ -455,7 +443,7 @@ void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
 } 
 
 SV* _v_dice( SV* self ) {
-    SV_2MATRIX( self, m );
+    SV_2STRUCT( self, Matrix, m );
     int tmp;
     
     tmp = m->rows;       m->rows = m->columns;             m->columns = tmp;
@@ -479,7 +467,6 @@ SV* _v_part( SV* self, UV row, UV column, UV height, UV width ) {
 
 /* object destruction */
 void DESTROY(SV* self) {
-    printf("DESTROY\n");
     SV_2STRUCT( self, Matrix, m );
 
     c_m_free( m );

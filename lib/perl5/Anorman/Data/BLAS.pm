@@ -5,7 +5,6 @@ use warnings;
 
 use Anorman::Common;
 use Anorman::Data::LinAlg::Property qw( :all );
-use Data::Dumper;
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -551,6 +550,8 @@ sub blas_trsv ($$$$$) {
 
 	my $M = $A->rows;
 	my $N = $A->columns;
+	
+	#print "TRSV\nX: $X\nA:\n$A\n";
 
 	if ($M != $N) {
 		trace_error("Matrix must be square");
@@ -941,6 +942,7 @@ sub blas_symm ($$$$$$$) {
 		# Form y := beta * y
 		if ($beta == 0) {
 
+			# $C->assign(0);
 			$i = -1;
 			while ( ++$i < $M ) {
 
@@ -949,9 +951,9 @@ sub blas_symm ($$$$$$$) {
 					$C->set_quick( $i, $j, 0.0);
 				}
 			}
-			# $C->assign(0);
 		} elsif ($beta != 1.0) {
 
+			# $C->assign( sub { $_[0] * $beta } );
 			$i = -1;
 			while ( ++$i < $M ) {
 
@@ -960,7 +962,6 @@ sub blas_symm ($$$$$$$) {
 					$C->set_quick( $i, $j, $C->get_quick( $i, $j) * $beta );
 				}
 			}
-			# $C->assign( sub { $_[0] * $beta } );
 
 		}
 
@@ -968,7 +969,7 @@ sub blas_symm ($$$$$$$) {
 
 		if ($Side = BlasLeft && $UpLo == BlasUpper) {
 
-			# Form C := alpha * A * B
+			# Form C := alpha * A * B + C
 			$i = -1;
 			while ( ++$i < $M ) {
 
@@ -994,7 +995,7 @@ sub blas_symm ($$$$$$$) {
 			}
 		} elsif ($Side == BlasLeft && $UpLo == BlasLower) {
 
-			# Form C := alpha * A * B +C
+			# Form C := alpha * A * B + C
 			$i = -1;
 			while ( ++$i < $M ) {
 
@@ -1022,7 +1023,7 @@ sub blas_symm ($$$$$$$) {
 			}
 		} elsif ($Side == BlasRight && $UpLo == BlasUpper) {
 
-			# Form C := alpha * B * A +C
+			# Form C := alpha * B * A + C
 			$i = -1;
 			while ( ++$i < $M ) {
 
@@ -1049,7 +1050,7 @@ sub blas_symm ($$$$$$$) {
 			}
 		} elsif ($Side == BlasRight && $UpLo == BlasLower) {
 
-			# Form C := alpha * B * A +C
+			# Form C := alpha * B * A + C
 			$i = -1;
 			while ( ++$i < $M ) {
 

@@ -35,7 +35,7 @@ sub decompose {
 	my $p      = [(0 .. $N - 1)];
 
 	my ($i,$j,$k);
-	
+
 	$j = -1;
 	while ( ++$j < $N - 1 ) {
 		my $max     =  abs( $LU->get_quick($j,$j) );
@@ -59,13 +59,10 @@ sub decompose {
 
 		my $ajj = $LU->get_quick($j,$j);
 		if ($ajj != 0) {
-			
 			$i = $j;
 			while ( ++$i < $N ) {
 				my $aij = $LU->get_quick( $i, $j ) / $ajj;
-
 				$LU->set_quick( $i, $j, $aij );
-
 				$k = $j;
 				while ( ++$k < $N ) {
 					my $aik = $LU->get_quick( $i, $k );
@@ -117,17 +114,22 @@ sub invert {
 	my $self = shift;
 	my $LU   = $self->{'LU'};
 
+	print "INVERT:\n";
+
 	trace_error("Matrix is singular") if $self->singular;
 
 	my $N = $LU->rows;
 	my $I = Anorman::Data->identity_matrix( $LU );
 
+	print "I:\n$I\n";
 	my $i = -1;
 	while ( ++$i < $N ) {
 		my $c = $I->view_column($i);
+		print "Ic($i): $c\n";
 		$self->svx( $c );
 	}
 
+	print "I:\n$I\n";
 	return $I;
 }
 
@@ -153,17 +155,21 @@ sub svx {
 	my $LU   = $self->{'LU'};
 	my $p    = $self->{'piv'};
 
+	#warn "SVX:\n\nx: $x\nLU:\n$LU\npiv:" .  join ("," , @{ $self->{'piv'} }) . "\n";
 	trace_error("Matrix size must match solution/rhs size") if $x->size != $LU->rows;
 	trace_error("Matrix is singular") if $self->singular;
 
 	# Apply permutation to RHS
 	Anorman::Data::LinAlg::Algebra::permute( $x, $p );
-
+	
+	#print "PERMUTE: $x\n";
 	# Solve for c using forward-substitution, L c = P b
 	blas_trsv(BlasLower, BlasNoTrans, BlasUnit, $LU, $x);
 
+	#print "TRSV_FWD: $x\n";
 	# Perform back-substitution, U x = c
 	blas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $LU, $x);	
+	#print "TRSV_REV: $x\n";
 }
 
 sub refine {

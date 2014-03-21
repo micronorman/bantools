@@ -258,8 +258,8 @@ use strict;
 use parent -norequire, 'Anorman::ESOM::GrowGrid::Interpolator';
 
 use Anorman::Data::LinAlg::Property qw( :vector );
-use Anorman::Data::Functions::VectorVector qw (vv_add_assign);
-use Anorman::Data::Functions::Vector qw(v_div_assign);
+use Anorman::Data::Functions::VectorVector qw (vv_add);
+use Anorman::Data::Functions::Vector qw(v_scale);
 use Anorman::Data::Vector;
 
 sub interpolate {
@@ -271,20 +271,19 @@ sub interpolate {
 	my @neighbors = $rec_grid->immediate_neighbors( $_[0] );
 
 	my $tmp_neuron = Anorman::Data::Vector::DensePacked->new( $rec_grid->dim );
-	$tmp_neuron->assign(0);
-	my $count = 0;
+	my $count      = 0;
 
 	foreach my $n(@neighbors) {
 		my $neigh_vec = $rec_grid->get_weights->view_row($n);
 		my $probe_val = $neigh_vec->get(0);
 	
 		if ($probe_val == $probe_val) { # any there values here?
-			vv_add_assign( $tmp_neuron, $neigh_vec );
+			vv_add( $tmp_neuron, $neigh_vec );
 			$count++;
 		}
 	}
 
-	v_div_assign( $tmp_neuron, $count ) unless $count == 0;
+	v_scale( $tmp_neuron, 1 / $count ) unless $count == 0;
 
 	return $tmp_neuron;
 }

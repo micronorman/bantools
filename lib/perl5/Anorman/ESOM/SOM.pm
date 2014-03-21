@@ -15,8 +15,6 @@ use Anorman::Math::DistanceFactory;
 use List::Util qw(shuffle);
 use Time::HiRes qw(time);
 
-use Data::Dumper;
-
 my $TRAIN_BEG;
 my $TRAIN_END;
 
@@ -407,22 +405,25 @@ use Inline (C => Config =>
 use Inline C => <<'END_OF_C_CODE';
 
 #include "data.h"
+#include "perl2c.h"
 #include "../lib/vector.c"
 
-#define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
-#define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
-
 void update_neuron( size_t size, double weight, Vector* vector, Vector* neuron ) {
-	double* v_elems = (double *) vector->elements;
-	double* n_elems = (double *) neuron->elements;
+	double* v_elems = vector->elements;
+	double* n_elems = neuron->elements;
 
-        int v_index = c_v_index( vector, 0 );
-        int n_index = c_v_index( neuron, 0 );
+        size_t v_index = c_v_index( vector, 0 );
+        size_t n_index = c_v_index( neuron, 0 );
 	
-        int k = size;
+        int k = (size_t) size;
 	
 	while ( --k >= 0 ) {
-		n_elems[ n_index ] = n_elems[ n_index ] + ( weight * ( v_elems[ v_index ] - n_elems[ n_index ]) );
+		const long double diff = v_elems[ v_index ] - n_elems[ n_index ];
+
+		if (diff != 0) {
+			n_elems[ n_index ] += ( weight * diff );
+		}
+
                 v_index++;
                 n_index++;
 	}
@@ -430,22 +431,23 @@ void update_neuron( size_t size, double weight, Vector* vector, Vector* neuron )
 
 void _fast_update_neighborhood ( SV* vector, char* neighbors, SV* weights, SV* neurons ) {
 	
-    SV_2VECTOR( vector, v );
-    SV_2VECTOR( weights, w );
-    SV_2MATRIX( neurons, grid );
+    SV_2STRUCT( vector, Vector, v );
+    SV_2STRUCT( weights, Vector, w );
+    SV_2STRUCT( neurons, Matrix, grid );
 
     unsigned int *n = (unsigned int *) neighbors;
 
     Vector* neuron;
     Newxz( neuron, 1, Vector);
 
-    neuron->elements = grid->elements;
-    neuron->size     = grid->columns;
-    neuron->stride   = grid->column_stride;
+    neuron->elements  = grid->elements;
+    neuron->size      = grid->columns;
+    neuron->stride    = grid->column_stride;
+    neuron->view_flag = 1;
     
-    double* w_elems = (double*) w->elements;
+    double* w_elems = w->elements;
     
-    int i;
+    size_t i;
     for (i = 0; i < w->size; i++ ) {
         neuron->zero   = n[ i ] * grid->row_stride;
 
@@ -454,7 +456,7 @@ void _fast_update_neighborhood ( SV* vector, char* neighbors, SV* weights, SV* n
         }
     }
 
-    Safefree( neuron );
+    c_v_free( neuron );
 }
 
 END_OF_C_CODE
@@ -484,8 +486,8 @@ package Anorman::ESOM::SOM::KBatch;
 use parent -norequire, 'Anorman::ESOM::SOM';
 
 use Anorman::Common;
-use Anorman::Data::Functions::VectorVector qw(vv_add_assign);
-use Anorman::Data::Functions::Vector qw(v_div_assign);
+use Anorman::Data::Functions::VectorVector qw(vv_add);
+use Anorman::Data::Functions::Vector qw(v_scale);
 
 my $NUM_UPDATES = 0;
 
@@ -576,7 +578,7 @@ sub _add_bestmatch {
 	my $self = shift;
 	my ( $bmh, $vector ) = @_;
 
-	vv_add_assign( $bmh->[0], $vector );
+	vv_add( $bmh->[0], $vector );
 	$bmh->[1]++;
 }
 
@@ -585,7 +587,7 @@ sub _mean_bestmatch {
 	my ( $bmh, $vector ) = @_;
 
 	if ( $bmh->[1] > 1 ) {
-		v_div_assign( $bmh->[0], $bmh->[1] );
+		v_scale( $bmh->[0], 1 / $bmh->[1] );
 		$bmh->[1] = 1;
 	}
 

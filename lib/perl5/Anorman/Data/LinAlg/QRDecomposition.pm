@@ -79,17 +79,14 @@ sub decompose {
 	my $self = shift;
 	my $A    = shift;
 
-	#warn "IN:\n$A\n";
-
 	check_matrix($A);
 
 	my $M = $A->rows;
 	my $N = $A->columns;
 
-	my $n = min($M,$N);
+	my $n   = min($M,$N);
 	my $tau = $A->like_vector($n);
-
-	my $QR = $A->copy;
+	my $QR  = $A->copy;
 
 	my $i = -1;
 	while ( ++$i < $n ) {
@@ -190,14 +187,15 @@ sub R {
 }
 
 sub has_full_rank {
-	my $self  = shift;
-	my $Rdiag = $self->{'_Rdiag'};
-	my $n     = $self->{'_n'};
+	my $self = shift;
+	my $tau  = $self->{'_tau'};
+	my $n    = $self->{'_QR'}->rows;
 	
 	my $j = -1;
 	while ( ++$j < $n ) {
-		return undef if $Rdiag->get_quick($j) == 0;
+		return undef if $tau->get_quick($j) == 0;
 	}
+
 	return 1;
 }
 
@@ -327,7 +325,7 @@ sub _stringify {
 	$string .= "\n\nH:\n"   . $self->H;
 	$string .= "\n\nQ:\n"   . $self->Q;
 	$string .= "\n\nR:\n"   . $self->R;
-	$string .= "\n\nPseudo-inverse(A):\n" . $self->solve( Anorman::Data->identity_matrix( $self->{'_QR'} ) );
+	#$string .= "\n\nPseudo-inverse(A):\n" . $self->solve( Anorman::Data->identity_matrix( $self->{'_QR'} ) );
 	
 	return $string;
 }

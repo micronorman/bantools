@@ -69,6 +69,7 @@ sub householder_hm ($$$) {
 	while ( ++$j < $A->columns ) {
 		my $A1j = $A1->view_column($j);
 		my $wj  = $A1j->dot_product($v1);
+		
 		$wj += $A->get_quick(0,$j);
 
 		{

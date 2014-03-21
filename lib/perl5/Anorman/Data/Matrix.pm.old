@@ -3,12 +3,16 @@ package Anorman::Data::Matrix;
 use strict;
 use warnings;
 
-use Anorman::Common;
-use Anorman::Data::Config qw( :string_rules ); 
-use Anorman::Data::LinAlg::Property qw( :all );
+use parent 'Anorman::Data';
+
+use Anorman::Common qw(sniff_scalar trace_error $VERBOSE $DEBUG);
 use Anorman::Math::Common qw( min max identity );
+use Anorman::Data::LinAlg::Property qw( :all );
 
 use Scalar::Util qw(refaddr blessed looks_like_number);
+
+use Anorman::Data::Matrix::DensePacked;
+use Anorman::Data::Matrix::Dense;
 
 my %oper = (
 	'+' => sub { $_[0] + $_[1] },
@@ -16,6 +20,21 @@ my %oper = (
 	'*' => sub { $_[0] * $_[1] },
 	'/' => sub { $_[0] / $_[1] }
 );
+
+use overload
+	'""'  => \&_to_string,
+	'='   => \&cunt,
+	'@{}' => \&_to_array,
+	'-'   => \&_sub,
+	'+'   => \&_add,
+	'*'   => \&_mul,
+	'/'   => \&_div,
+	'~'   => \&_transpose,
+	'-='  => \&_sub_assign,
+	'+='  => \&_add_assign,
+	'*='  => \&_mul_assign,
+	'/='  => \&_div_assign,
+	'=='  => \&equals;
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'        => \&_assign_Matrix_from_NUMBER,
@@ -25,17 +44,64 @@ my %ASSIGN_DISPATCH = (
 	'CODE'          => \&_assign_Matrix_from_CODE
 );
 
-sub check_shape {
-	my $self = shift;
-	my $columns = $self->columns;
-	my $rows    = $self->rows;
+# basic constructor
+sub new {
+	my $class = ref $_[0] || $_[0];
+	my $self  = {
+	    'rows'    => 0,
+            'columns' => 0,
+            'r0'      => 0,
+            'c0'      => 0,
+            'rstride' => 0,
+            'cstride' => 0,
+            '_ELEMS'  => [],
+            '_VIEW'   => undef
+	};
 
-	foreach my $other(@_) {
-		check_matrix( $other );
-		if ($columns != $other->columns || $rows != $other->rows) {
-			trace_error("Incompatible dimensions " . $self->_to_short_string . " and " . $other->_to_short_string);
-		}
-	}
+	return bless ( $self, $class );
+}
+
+# basic object accessors
+sub rows {
+	return $_[0]->{'rows'};
+}
+
+sub columns {
+	return $_[0]->{'columns'};
+}
+
+sub row_stride {
+	return $_[0]->{'rstride'};
+}
+
+sub column_stride {
+	return $_[0]->{'cstride'};
+}
+
+sub row_zero {
+	return $_[0]->{'r0'};
+}
+
+sub column_zero {
+	return $_[0]->{'c0'};
+}
+
+sub size {
+	return ($_[0]->rows * $_[0]->columns);
+}
+
+sub _is_noview {
+	return (!defined $_[0]->{'_VIEW'});
+}
+
+sub _row_rank {
+	my $self = shift;
+	return $self->column_zero + $_[0] * $self->row_stride;
+}
+
+sub _column_rank {
+	my $self = shift;
+	return $self->column_zero + $_[0] * $self->column_stride;
 }
 
 # universal matrix commands
@@ -43,7 +109,7 @@ sub get {
 	my $self = shift;
 	
 	if ( $_[1] < 0 || $_[1] >= $self->columns || $_[0] < 0 || $_[0] >= $self->rows) {
-		trace_error("Index out of bounds ( $_[0], $_[1] ) "); 
+		$self->_error("Index out of bounds ( $_[0], $_[1] ) "); 
 	}
 
 	return $self->get_quick( $_[0], $_[1] );
@@ -53,7 +119,7 @@ sub set {
 	my $self = shift;
 	
 	if ( $_[1] < 0 || $_[1] >= $self->columns || $_[0] < 0 || $_[0] >= $self->rows) {
-		trace_error("Index out of bounds ( $_[0], $_[1] ) "); 
+		$self->_error("Index out of bounds ( $_[0], $_[1] ) "); 
 	}
 
 	$self->set_quick( $_[0], $_[1], $_[2] );
@@ -66,7 +132,7 @@ sub view_row {
 
 	my $view_size   = $self->columns;
 	my $view_zero   = $self->_index( $_[0], 0 );
-	my $view_stride = $self->_column_stride;
+	my $view_stride = $self->column_stride;
 
 	return $self->_like_vector($view_size, $view_zero, $view_stride);
 }
@@ -78,7 +144,7 @@ sub view_column {
 
 	my $view_size   = $self->rows;
 	my $view_zero   = $self->_index( 0, $_[0] );
-	my $view_stride = $self->_row_stride;
+	my $view_stride = $self->row_stride;
 
 	return $self->_like_vector($view_size, $view_zero, $view_stride);
 }
@@ -88,7 +154,7 @@ sub view_diagonal {
 
 	my $view_size   = min ( $self->rows, $self->columns );
 	my $view_zero   = $self->_index( 0, 0 );
-	my $view_stride = $self->_row_stride + 1;
+	my $view_stride = $self->row_stride + 1;
 
 	return $self->_like_vector($view_size, $view_zero, $view_stride);
 }
@@ -117,9 +183,7 @@ sub view_dice {
 
 sub view_part {
 	my $self = shift;
-
 	my ($row,$column,$height,$width) = @_;
-
 	return $self->_view->_v_part( $row, $column, $height, $width );
 }
 
@@ -147,6 +211,33 @@ sub swap_columns {
 	$self->view_column( $a )->swap( $self->view_column( $b ) );
 }
 
+sub copy {
+	my $self  = shift;
+	my $copy  = $self->like;
+
+	$copy->assign( $self );
+	
+	return $copy;  
+}
+
+sub pack {
+	my $self = shift;
+	my $copy = Anorman::Data::Matrix::DensePacked->new( $self->rows, $self->columns );
+
+	$copy->assign( $self );
+	
+	return $copy;
+}
+
+sub unpack {
+	my $self = shift;
+	my $copy = Anorman::Data::Matrix::Dense->new( $self->rows, $self->columns );
+
+	$copy->assign( $self );
+
+	return $copy;
+}
+
 sub like {
 	my $self = shift;
 
@@ -158,11 +249,9 @@ sub like {
 }
 
 sub assign {
-	# For assigning matrices of different types
-	# Override for similar types
 	my $self = $_[0];
+	warn "MATRIX_ASSIGN\n";
 	my $type = sniff_scalar($_[1]);
-
 	$ASSIGN_DISPATCH{ $type }->( @_ );
 }
 
@@ -182,7 +271,7 @@ sub aggregate {
 	my $loop_func;
 
 	if ($other) {
-		$self->check_shape($other);
+		$self->_check_shape($other);
 		$loop_func = sub { $f->( $self->get_quick($_[0],$_[1]), $other->get_quick($_[0],$_[1]) ) };
 	} else {
 		$loop_func = sub { $f->( $self->get_quick($_[0], $_[1]) ) };
@@ -207,7 +296,7 @@ sub aggregate {
 }
 
 sub normalize {
-	# Normalize matrix in place to [0..1<F8>]
+	# Normalize matrix in place to [0..1]
 	my $self = shift;
 
 	my $min = $self->aggregate( \&min );
@@ -246,6 +335,8 @@ sub _add { my $r = $_[0]->copy; $r->_add_assign($_[1]); $r }
 sub _mul { my $r = $_[0]->copy; $r->_mul_assign($_[1]); $r }
 sub _div { my $r = $_[0]->copy; $r->_div_assign($_[1]); $r }
 
+sub _transpose    { $_[0]->view_dice }
+
 sub _sub_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'-'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] - $v } ) } }
 sub _add_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'+'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] + $v } ) } } 
 sub _mul_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'*'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] * $v } ) } }
@@ -255,7 +346,7 @@ sub _div_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'/'}) : do {my $
 sub mult {
 	my ($self, $other, $result, $alpha, $beta) = @_;
 	
-	trace_error("Can only multiply with vector or matrix") unless (is_vector($other) || is_matrix($other));
+	$self->_error("Can only multiply with vector or matrix") unless (is_vector($other) || is_matrix($other));
 
 	my ($m, $n) = ($self->rows, $self->columns);
 
@@ -266,7 +357,7 @@ sub mult {
 	if (is_vector($other)) {
 		$result = $other->like( $m ) if !defined $result;
 		$self->_error("Incompatible dimensions (A, y, z): " .
-			$self->_to_short_string  . ", " . 
+			$self->_to_short_string . ", " . 
 			$other->_to_short_string . ", " .
                         $result->_to_short_string ) 
 		if ($n != $other->size || $m != $result->size);
@@ -325,8 +416,10 @@ sub _mult_matrix_vector {
 	}
 }
 
+
+
 sub _to_array {
-	# repackages internal matrix into perl array of arays
+	# repackages internal matrix to perl array of arays
 	my $self   = shift;
 	my $values = [[]];
 
@@ -341,6 +434,73 @@ sub _to_array {
 	return $values;
 }
 
+sub _setup {
+	my $self = shift;
+
+	if (@_ != 2 && @_ != 6) {
+		$self->_error("Wrong number of arguments\nUsage: " . __PACKAGE__ .
+                "::_setup( row, columns [, row_zero, column_zero, row_stride, column_stride ]");
+	}
+
+	my ($rows, $columns, $row_zero, $column_zero, $row_stride, $column_stride) = @_;
+
+	if (@_ == 2) {
+		$row_zero      = 0;
+		$column_zero   = 0;
+		$row_stride    = $columns;
+		$column_stride = 1;
+		$self->{'_VIEW'} = undef;
+	} else {
+		$self->{'_VIEW'} = 1;
+	}
+
+	$self->{'rows'}    = $rows;
+	$self->{'columns'} = $columns;
+	$self->{'r0'}      = $row_zero;
+	$self->{'c0'}      = $column_zero;
+	$self->{'rstride'} = $row_stride;
+	$self->{'cstride'} = $column_stride;
+
+}
+
+### CHECKS ###
+
+sub _check_row {
+	if ($_[1] < 0 || $_[1] >= $_[0]->rows) {
+		my ($self, $row) = @_;
+		$self->_error("Row number ($row) out of bounds " . $self->_to_short_string);
+	}
+}
+
+sub _check_column {
+	if ($_[1] < 0 || $_[1] >= $_[0]->columns) {
+		my ($self, $column) = @_;
+		$self->_error("Column number ($column) out of bounds " . $self->_to_short_string );
+	}
+}
+
+sub _check_shape {
+	my $self = shift;
+	my $columns = $self->columns;
+	my $rows    = $self->rows;
+
+	foreach my $other(@_) {
+		check_matrix( $other );
+		if ($columns != $other->columns || $rows != $other->rows) {
+			$self->_error("Incompatible dimensions " . $self->_to_short_string . " and " . $other->_to_short_string);
+		}
+	}
+}
+
+sub _check_box {
+	my $self = shift;
+	my ($row, $column, $height, $width) = @_;
+
+	$self->_error("Out of bounds. " . $self->_to_short_string . ", column: $column, row: $row, width: $width, height: $height")
+	if ($column < 0 || $width < 0 || $column + $width > $self->columns ||
+		$row < 0 || $height < 0 || $row + $height > $self->rows);
+}
+
 sub _have_shared_cells {
 	my ($self, $other) = @_;
 
@@ -348,8 +508,6 @@ sub _have_shared_cells {
 	return 1 if (refaddr($other) == refaddr($self));
 	return $self->_have_shared_cells_raw( $other );
 }
-
-
 
 sub _have_shared_cells_raw {
 	return undef;
@@ -395,20 +553,20 @@ sub _assign_Matrix_from_OBJECT {
 sub _assign_Matrix_from_2D_MATRIX {
 	my $self = shift;
 
-	trace_error("Must have same number of rows (" . $self->rows . ") as matrix object. Rows=" . @{ $_[0] } ) 
+	$self->_error("Must have same number of rows (" . $self->rows . ") as matrix object. Rows=" . @{ $_[0] } ) 
 		if @{ $_[0] } != $self->rows;
 
 	my $M   = $_[0];
 	my $row = $self->rows;
 
-	while ( --$row >= 0 ) { 
+	while (--$row >= 0) { 
 		my $row_ref = $M->[ $row ];
 
 		# Column length sanity check
 		$self->_error("Column length error") if (@{ $row_ref } != $self->columns );
 		
 		my $column = $self->columns;
-		while ( --$column >= 0 ) {
+		while (--$column >= 0) {
 			$self->set_quick( $row, $column, $row_ref->[ $column ] );
 		}
 	}
@@ -449,13 +607,19 @@ sub _to_string {
 	my $rows    = $self->rows;
 	my $columns = $self->columns;
 	my $string  = '';
+	my $format  = $Anorman::Data::FORMAT;
 
+	$string .= sprintf("[ %lu, %lu, %lu, %lu, %lu, %lu, %i ]\n", $self->rows,
+                                                                     $self->columns,
+                                                                     $self->row_zero,
+                                                                     $self->column_zero,
+                                                                     $self->row_stride,
+                                                                     $self->column_stride,
+                                                                     $self->_is_noview);
 	my $row = -1;
 	while (++$row < $rows) {
-		$string .= $MATRIX_ROW_ENDS->[0];
-		$string .= join ($MATRIX_COL_SEPARATOR, map { sprintf( $FORMAT, $_ ) } @{ $self->view_row( $row ) });
-		$string .= $MATRIX_ROW_ENDS->[1];
-		$string .= $MATRIX_ROW_SEPARATOR;
+		$string .=  join ("\t", map { my $v; defined ($v = $self->get_quick( $row, $_)) ? sprintf ( $format, $v ) : 'nan' } (0 .. $columns - 1) ) . "\n" ;
+		#$string .=  join ("\t", map { my $v; defined ($v = $self->get_quick( $row, $_)) ? $v : 'nan' } (0 .. $columns - 1) ) . "\n" ;
 	}
 
 	return $string;
@@ -466,4 +630,51 @@ sub _to_short_string {
 
 	return "[ " . $self->rows . " x " . $self->columns . " ]";
 }
+
+sub _view {
+	my $self = shift;
+	return $self->clone;
+}
+
+sub _v_dice {
+	# self modifying dice view
+	my $self = shift;
+
+	($self->{'rows'},$self->{'columns'}) = ($self->{'columns'},$self->{'rows'});
+	($self->{'r0'},$self->{'c0'}) = ($self->{'c0'},$self->{'r0'});
+	($self->{'rstride'},$self->{'cstride'}) = ($self->{'cstride'},$self->{'rstride'});
+
+	$self->{'_VIEW'} = 1;
+
+	return $self;
+}
+
+sub _v_part {
+	my $self = shift;
+	my ($row,$column,$height,$width) = @_;
+	$self->_check_box($row,$column,$height,$width);
+
+	$self->{'r0'}     += $self->{'rstride'} * $row;
+	$self->{'c0'}     += $self->{'cstride'} * $column;
+	$self->{'rows'}    = $height;
+	$self->{'columns'} = $width;
+	
+	$self->{'_VIEW'} = 1;
+
+	return $self;
+}
+
+sub _dump {
+	my $self = shift;
+
+	printf("\trows\t: %lu\n", $self->rows );
+    	printf("\tcols\t: %lu\n", $self->columns );
+    	printf("\tr0\t: %lu\n",  $self->row_zero );
+    	printf("\tc0\t: %lu\n", $self->column_zero );
+    	printf("\trstride\t: %lu\n", $self->row_stride );
+    	printf("\tcstride\t: %lu\n", $self->column_stride );
+    	printf("\tview\t: %i\n\n", $self->{'_VIEW'} || 0);
+
+}
+
 1;

@@ -123,7 +123,7 @@ sub swap {
 use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Vector::DensePacked',
-		ENABLE    => AUTOWRAP =>
+		AUTOWRAP  => ENABLE =>
 		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -lvector',
 		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
 	   );
@@ -141,7 +141,6 @@ void _set_elements_addr( SV*, SV* );
 
 /* object constructor */
 SV* new_vector_object( SV* sv_class_name ) {
-    printf("NEW\n");
     Vector* v;
     SV*     self;
 
@@ -157,15 +156,19 @@ SV* new_vector_object( SV* sv_class_name ) {
 }
 
 SV* clone( SV* self ) {
-    printf("CLONE\n");
     SV_2STRUCT( self, Vector, v );
 
     Vector* n;
         SV* clone;
 
-    n = c_v_alloc_from_vector( v, 0, v->size, 1 );
-    const char* class_name = sv_reftype( SvRV( self ), TRUE );
+    /* clone struct */
+    Newx( n, 1, Vector );
+    StructCopy( v, n, Vector );
 
+    /* protect data elements from freeing */
+    n->view_flag = 1;
+    
+    const char* class_name = sv_reftype( SvRV( self ), TRUE );
     BLESS_STRUCT( n, clone, class_name );
 
     return clone; 
@@ -201,7 +204,6 @@ void set_quick(SV* self, UV index, NV value) {
 
 /* object initializors */
 void _setup( SV* self, SV* size, ... ) {
-    printf("SETUP\n");
     Inline_Stack_Vars;
 
     if ( Inline_Stack_Items > 2 && Inline_Stack_Items != 4) {
@@ -328,7 +330,6 @@ SV* _v_part( SV* self, SV* index, SV* width ) {
 
 /* object destruction */
 void DESTROY(SV* self) {
-    printf("DESTROY\n");
     SV_2STRUCT( self, Vector, v );
 
     c_v_free( v );

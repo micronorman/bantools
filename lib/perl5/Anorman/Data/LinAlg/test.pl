@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 $Anorman::Common::VERBOSE = 1 if (@ARGV && $ARGV[0] eq '-v');
+$Anorman::Data::Config::PACK_DATA = 0;
 
 use Anorman::Common;
 
@@ -12,6 +13,8 @@ use Anorman::Data::BLAS qw( :L3 );
 use Anorman::Data::LinAlg::QRDecomposition; 
 use Anorman::Data::LinAlg::CholeskyDecomposition;
 use Anorman::Data::LinAlg::LUDecomposition;
+
+use Data::Dumper;
 
 my $EPSILON = 2.2204460492503131e-16;
 
@@ -63,11 +66,11 @@ sub test_LU_solve {
 	my $f;
 	my $s = 0;
 	
-	$f = &test_LU_solve_dim($hilb2, $hilb2_solution, 8.0 * $EPSILON);
+	$f = &test_LU_solve_dim($hilb2, $hilb2_solution, $EPSILON);
 	&test($f,"  LU_solve hilbert(2)");
 	$s += $f;
 
-	$f = &test_LU_solve_dim($hilb3, $hilb3_solution, 64.0 * $EPSILON);
+	$f = &test_LU_solve_dim($hilb3, $hilb3_solution, 32 * $EPSILON);
 	&test($f,"  LU_solve hilbert(3)");
 	$s += $f;
 
@@ -108,7 +111,6 @@ sub test_LU_solve_dim {
 
 	my $lu  = Anorman::Data::LinAlg::LUDecomposition->new( $m );
 	my $rhs = $m->like_vector($dim);
-
 	do { $rhs->set($_, $_ + 1.0 ) } for (0 .. $dim - 1);
 
 	my $x = $lu->solve( $rhs );
@@ -266,6 +268,7 @@ sub test_QR_solve_dim {
 	do { $rhs->set_quick($_, $_ + 1.0) } for (0 .. $dim - 1);
 
 	my $x = $qr->solve($rhs);
+	
 	my $i = -1;
 	while ( ++$i < $dim ) {
 		my $foo = &check( $x->get($i), $actual->[$i], $eps ) ? 1 : 0;

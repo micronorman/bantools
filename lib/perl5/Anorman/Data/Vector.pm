@@ -1,26 +1,12 @@
 package Anorman::Data::Vector;
 
 use strict;
+use warnings;
 
 use Anorman::Common qw(sniff_scalar trace_error);
+use Anorman::Data::Config qw( :string_rules );
 use Scalar::Util qw(blessed looks_like_number refaddr);
 use Anorman::Data::LinAlg::Property qw( :vector );
-use Anorman::Data::Vector::Dense;
-use Anorman::Data::Vector::DensePacked;
-
-use parent 'Anorman::Data';
-
-BEGIN {
-	require 5.006;
-}
-
-use overload
-	'""'  => \&_to_string,
-	'=='  => \&equals,
-	'@{}' => \&_to_array,
-	'+'   => \&_add,
-	'-'   => \&_minus,
-	'+='  => \&_add_assign;
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'      => \&_assign_Vector_from_NUMBER,
@@ -29,41 +15,6 @@ my %ASSIGN_DISPATCH = (
 	'OBJECT+CODE' => \&_assign_Vector_from_OBJECT_and_CODE,
 	'CODE'        => \&_assign_Vector_from_CODE
 );
-
-# constructor (dummy)
-sub new {
-	my $class = ref $_[0] || $_[0];
-	my $self  = {
-	    'size'   => 0,
-            '0'      => 0,
-            'stride' => 0,
-            '_ELEMS' => [],
-            '_VIEW'  => undef
-	};
-
-	return bless ( $self, $class );
-}
-
-# accessors
-sub size {
-	return $_[0]->{'size'};
-}
-
-sub stride {
-	return $_[0]->{'stride'};
-}
-
-sub zero {
-	return $_[0]->{'0'};
-}
-
-sub elements {
-	return $_[0]->{'_ELEMS'};
-}
-
-sub is_noview {
-	return (!defined $_[0]->{'_VIEW'});
-}
 
 # general element retrieval
 sub get {
@@ -91,37 +42,6 @@ sub aggregate {
 	}
 
 	return $a;
-}
-
-# return copy of identical type
-sub copy {
-	my $self = shift;
-	my $copy = $self->like;
-	$copy->assign( $self );
-	return $copy;
-}
-
-sub pack {
-	my $self = shift;
-	return $self->copy if is_packed($self);
-	my $copy = Anorman::Data::Vector::DensePacked->new( $self->size );
-
-	$copy->assign( $self );
-	return $copy;
-}
-
-sub unpack {
-	my $self = shift;
-	return $self->copy if !is_packed($self);
-	my $copy = Anorman::Data::Vector::Dense->new( $self->size );
-
-	$copy->assign( $self );
-	return $copy;
-}
-
-sub _view {
-	my $self = shift;
-	return $self->clone;
 }
 
 sub view_part {
@@ -285,59 +205,21 @@ sub _to_array {
 	return $values;
 }
 
-sub _setup {
-	my $self = shift;
-
-	if (@_ != 1 && @_ != 3) {
-		$self->_error("Wrong number of arguments\nUsage: " . __PACKAGE__ .
-                "::_setup( size [, zero, stride ]");
-	}
-
-	my ($size, $zero, $stride) = @_;
-
-	$self->{'_VIEW'} = 1;
-
-	if (@_ == 1) {
-		$zero   = 0;
-		$stride = 1;
-		$self->{'_VIEW'} = undef;
-	}
-
-	$self->{'size'}   = $size;
-	$self->{'0'}      = $zero;
-	$self->{'stride'} = $stride;
-}
-
 sub _to_string {
-	my $self = shift;
-	my $f    = $Anorman::Data::FORMAT;
-	my $n    = $self->size;
-	my $v;
+	my $self   = shift;
+	my $n      = $self->size;
+	my $string = '';
 
-	my $string = "{" .join(", ", map { defined ($v = $self->get_quick($_)) ? sprintf ( $f, $v ) : 'nan' } (0 .. $n -1)) . "}";
+	$string .= $VECTOR_ENDS->[0];
+	$string .= join($VECTOR_SEPARATOR, map { sprintf( $FORMAT, $_ ) } @{ $self });
+	$string .= $VECTOR_ENDS->[1];
 
 	return $string;
-	#return "{" . join(",", map { $self->get_quick( $_ )|| 0 } (0 .. $self->size - 1)) . "}";
 }
 
 sub _to_short_string {
 	my $self = shift;
 	return "[ " . $self->size . " ]";
-}
-
-sub _check_index {
-	if ($_[1] >= $_[0]->size) {
-		my $self = shift;
-		$self->_error("Index $_[0] out of bounds");
-	}
-}
-
-sub _check_range {
-	if ($_[1] < 0 || $_[1] +  $_[2] > $_[0]->size) {
-		my $self = shift;
-		my $size = $self->size;
-		$self->_error("Index range out of bounds. Index: $_[0], Width: $_[1], Size: $size");
-	}
 }
 
 sub _check_size {
@@ -347,17 +229,6 @@ sub _check_size {
 	} 
 }
 
-sub _v_part {
-	my $self = shift;
-
-	$self->_check_range(@_);
-
-	$self->{'0'}    += $self->{'stride'} * $_[0];
-	$self->{'size'}  = $_[1];
-	$self->{'_VIEW'} = 1;
-
-	return $self;
-}
 
 sub _add {
 	my ($v, $u, $rev_bit) = @_;
@@ -387,7 +258,7 @@ sub _add {
 	return $r;
 }
 
-sub _minus {
+sub _sub {
 	my ($v, $u, $rev_bit) = @_;
 
 	my $r = $v->like;
@@ -409,6 +280,14 @@ sub _minus {
 	return $r;	
 }
 
+sub _div {
+
+}
+
+sub _mul {
+
+}
+
 sub _add_assign {
 	my ($v, $u, $rev_bit) = @_;
 	my $i = $v->size;
@@ -422,16 +301,14 @@ sub _add_assign {
 			$v->set_quick( $i, $v->get_quick( $i ) + $u );	
 		}
 	} else {
-		$v->_error("Function was passed something illegal");
+		trace_error("Function was passed something illegal");
 	}
 
 	return $v;
 }
 
-sub _error {
-	shift;
-	trace_error(@_);
-}
-
+sub _sub_assign {}
+sub _mul_assign {}
+sub _div_assign {}
 
 1;

@@ -4,7 +4,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Exporter;
 
-@EXPORT_OK = qw(log10 log2 hypot min max plus minus sqrt identity square quiet_sqrt);
+@EXPORT_OK = qw(log10 log2 hypot min max plus minus mult div sqrt identity square quiet_sqrt);
 
 @ISA = qw(Exporter);
 
@@ -43,6 +43,8 @@ sub min        (@) { $_[0] < $_[1] ? $_[0] : $_[1] };
 sub max        (@) { $_[0] > $_[1] ? $_[0] : $_[1] };
 sub plus       (@) { $_[0] + $_[1] };
 sub minus      (@) { $_[0] - $_[1] };
+sub mult       (@) { $_[0] * $_[1] };
+sub div        (@) { $_[0] / $_[1] };
 
 #====== STATISTICS FUNCTIONS ======
 

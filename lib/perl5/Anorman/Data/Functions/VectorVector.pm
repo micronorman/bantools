@@ -7,7 +7,7 @@ use Anorman::Common;
 
 use vars qw(@ISA @EXPORTER @EXPORT_OK);
 
-@EXPORT_OK = qw(vv_covariance vv_add_assign vv_minus_assign vv_dist_euclidean vv_squared_dist_euclidean);
+@EXPORT_OK = qw(vv_covariance vv_add vv_minus vv_dist_euclidean vv_squared_dist_euclidean);
 @ISA       = qw(Exporter);
 
 
@@ -21,6 +21,7 @@ use Inline (C => Config =>
 use Inline C => <<'END_OF_C_CODE';
 
 #include "data.h"
+#include "perl2c.h"
 #include "vector.h"
 #include "functions/vector.h"
 #include "functions/vectorvector.h"
@@ -30,69 +31,53 @@ use Inline C => <<'END_OF_C_CODE';
 #include "../lib/functions/vector.c"
 #include "../lib/functions/vectorvector.c"
 
-#define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
-
-static void _check_size( Vector*, Vector* );
-
-/* perl to C interface */
+/*  C function wrappers */
 
 NV vv_covariance ( SV* self, SV* other ) {
 
-    SV_2VECTOR( self, u );	
-    SV_2VECTOR( other, v );	
+    SV_2STRUCT( self, Vector, u );	
+    SV_2STRUCT( other, Vector, v );	
 
-    _check_size( u, v);	
     return (NV) c_vv_covariance( u->size, u, v );
 }
 
 NV vv_squared_dist_euclidean( SV* self, SV* other ) {
     
-    SV_2VECTOR( self, u );
-    SV_2VECTOR( other, v );
-    _check_size( u, v );
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
 
     return (NV) c_vv_squared_dist_euclidean( u->size, u, v );
 }
 
 NV vv_dist_euclidean( SV* self, SV* other ) {
 
-    SV_2VECTOR( self, u );
-    SV_2VECTOR( other, v );
-    _check_size( u, v);	
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
 
     return (NV) c_vv_dist_euclidean( u->size, u, v );
 }
 
 NV vv_dist_euclidean_upto( SV* self, SV* other, NV threshold ) {
 
-    SV_2VECTOR( self, u );
-    SV_2VECTOR( other, v );
-    _check_size( u, v);	
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
 
-    return (NV) c_vv_dist_euclidean_upto( u->size, u, v, (double) threshold );
+    return (NV) c_vv_dist_euclidean_upto( u->size, u, v, threshold );
   
 }
 
-void vv_minus_assign( SV* self, SV* other ) {
-    SV_2VECTOR( self, u );
-    SV_2VECTOR( other, v );
-    _check_size( u, v );
+void vv_minus( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
 
-    c_vv_minus_assign( u, v );
+    c_vv_sub( u, v );
 }
 
-void vv_add_assign ( SV* self, SV* other ) {
-    SV_2VECTOR( self, u );
-    SV_2VECTOR( other, v );
-    _check_size( u, v);
+void vv_add( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
 
-    c_vv_plusmult_assign( u->size, u, v, 1 );
-}
-
-void _check_size( Vector* u, Vector* v ) {
-    if (u->size != v->size) {
-	    croak("Vectors (u,v) have different sizes");
-    }
+    c_vv_add( u, v );
 }
 
 END_OF_C_CODE
