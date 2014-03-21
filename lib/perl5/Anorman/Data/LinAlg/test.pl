@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 $Anorman::Common::VERBOSE = 1 if (@ARGV && $ARGV[0] eq '-v');
-$Anorman::Data::Config::PACK_DATA = 0;
+$Anorman::Data::Config::PACK_DATA = 1;
 
 use Anorman::Common;
 

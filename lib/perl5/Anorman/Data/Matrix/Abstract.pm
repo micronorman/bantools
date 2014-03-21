@@ -20,6 +20,10 @@ sub new {
 
 	return $self;
 }
+# Universal object accesors
+sub _elements  {  $_[0]->{'_ELEMS'} }
+sub _is_view   {  $_[0]->{'_VIEW'}  }
+sub _is_noview { !$_[0]->{'_VIEW'}  }
 
 # basic object accessors
 sub rows           { $_[0]->{'rows'}    };
@@ -113,6 +117,19 @@ sub _v_part {
 	$self->{'columns'} = $width;
 
 	return $self;
+}
+
+sub _clone_self {
+	my $class = ref $_[0];
+	my $clone = {};
+
+	%{ $clone } = %{ $_[0] };
+	
+	return bless ( $clone, $class );
+}
+
+sub _set_view {
+	$_[0]->{'_VIEW'} = 1;	
 }
 
 1;

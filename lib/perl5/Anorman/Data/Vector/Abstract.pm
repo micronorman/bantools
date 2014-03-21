@@ -14,6 +14,11 @@ sub new {
 	return $self;
 }
 
+# Universal object accesors
+sub _elements  {  $_[0]->{'_ELEMS'} }
+sub _is_view   {  $_[0]->{'_VIEW'}  }
+sub _is_noview { !$_[0]->{'_VIEW'}  }
+
 # basic vector object accesors
 sub size    { $_[0]->{'size'}   };
 sub _zero   { $_[0]->{'zero'}   };

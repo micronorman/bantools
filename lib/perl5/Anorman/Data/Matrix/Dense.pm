@@ -9,8 +9,6 @@ use Anorman::Common qw(trace_error sniff_scalar);
 use Anorman::Data::Vector::Dense;
 use Anorman::Data::Matrix::SelectedDense;
 
-use Data::Dumper;
-
 my %ASSIGN_DISPATCH = (
 	'NUMBER'        => \&_assign_DenseMatrix_from_NUMBER,
 	'2D_MATRIX'     => \&_assign_DenseMatrix_from_2D_MATRIX,
@@ -65,7 +63,6 @@ sub _new_from_dims {
 	# Allocate a fresh matrix
 	if (@_ == 2) {
 		$self->_setup($rows, $columns);
-
 		$self->{'_ELEMS'} = [ (0) x ($rows * $columns) ];
 
 	# Set up view on existing matrix elements
@@ -174,7 +171,7 @@ sub _assign_DenseMatrix_from_2D_MATRIX {
 
 	my ($self, $M) = @_;
 
-	if ($self->_is_no_view) {
+	if ($self->_is_noview) {
 		trace_error("Must have same number of rows (" . $self->rows . ") as matrix object. Rows=" . @{ $M } ) 
 			if @{ $M } != $self->{'rows'};
 
@@ -209,7 +206,7 @@ sub _assign_DenseMatrix_from_OBJECT {
 
 	$self->check_shape( $other );
 
-	if ($self->_is_no_view && $other->_is_no_view) {
+	if ($self->_is_noview && $other->_is_noview) {
 		@{ $self->{'_ELEMS'} } = @{ $other->{'_ELEMS'} };
 		return 1;
 	}

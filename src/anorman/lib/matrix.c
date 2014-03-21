@@ -31,8 +31,8 @@ c_m_alloc_from_matrix( Matrix * mm,
     m->elements      = mm->elements;
     m->rows          = n1;
     m->columns       = n2;
-    m->row_zero      = k1;
-    m->column_zero   = k2;
+    m->row_zero      = k1 * mm->row_stride;
+    m->column_zero   = k2 * mm->column_stride;
     m->row_stride    = mm->row_stride;
     m->column_stride = mm->column_stride;
     m->view_flag     = 1;
@@ -98,10 +98,10 @@ c_m_part( Matrix* m,
 
     m->rows          = n1;
     m->columns       = n2;
-    m->row_zero      = i;
-    m->column_zero   = j;
+    m->row_zero     += i * m->row_stride;
+    m->column_zero  += j * m->column_stride;
     m->view_flag     = 1;
-
+    
     return m;
 }
 
@@ -280,7 +280,7 @@ void c_m_show_struct( Matrix* m ) {
     fprintf( stderr, "\trows\t(%p): %lu\n", &m->rows, m->rows );
     fprintf( stderr, "\tcols\t(%p): %lu\n", &m->columns, m->columns );
     fprintf( stderr, "\tr0\t(%p): %lu\n",  &m->row_zero, m->row_zero );
-    fprintf( stderr, "\tc0\t(%p): %lu\n", &m->column_zero, m->row_zero );
+    fprintf( stderr, "\tc0\t(%p): %lu\n", &m->column_zero, m->column_zero );
     fprintf( stderr, "\trstride\t(%p): %lu\n", &m->row_stride, m->row_stride );
     fprintf( stderr, "\tcstride\t(%p): %lu\n", &m->column_stride, m->column_stride );
 

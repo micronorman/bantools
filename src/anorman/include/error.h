@@ -38,7 +38,7 @@ void c_stream_printf( const char *, const char *, int, const char * );
     return ; \
     } while (0)
     
-#define GSL_ERROR_NULL(reason, c_errno) GSL_ERROR_VAL(reason, gsl_errno, 0)
+#define C_ERROR_NULL(reason, c_errno) C_ERROR_VAL(reason, c_errno, 0)
 
 #define C_WARNING(reason) \
     do { \

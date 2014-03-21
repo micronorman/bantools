@@ -1,7 +1,7 @@
 package Anorman::Data::Matrix::DensePacked;
 
 use strict;
-use parent 'Anorman::Data::Matrix';
+use parent qw(Anorman::Data::Abstract Anorman::Data::Matrix);
 
 use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::LinAlg::Property qw(is_packed);
@@ -16,57 +16,63 @@ my %ASSIGN_DISPATCH = (
 	'CODE'        => \&Anorman::Data::Matrix::_assign_Matrix_from_CODE
 );
 
-
 sub new {
 	my $that = shift;
 	
 	trace_error("Wrong number of arguments") if (@_ != 1 && @_ != 2 && @_ != 7);
 
 	my $class = ref $that || $that;
-	my $self  = $class->new_matrix_object();
+	my $self  = $class->_new_abstract_matrix;
+
+	if (@_ == 1) {
+		$self->_new_from_AoA(@_);
+	} else {
+		$self->_new_from_dims(@_);
+	}
+
+	return $self;
+}
+
+sub _new_from_AoA {
+	my $self = shift;
+
+	trace_error("Not a reference to Array of Arrays\n" )
+		if sniff_scalar($_[0]) ne '2D_MATRIX';
+
+	my $rows    = @{ $_[0] };
+	my $columns = @{ $_[0] } == 0 ? 0 : @{ $_[0]->[0] };
+
+	$self->_new_from_dims( $rows, $columns );
+	$self->_assign_DenseMatrix_from_2D_MATRIX( $_[0] );
+}
+
+sub _new_from_dims {
+	my $self = shift;
 
 	my ( $rows,
              $columns,
+	     $elements,
              $row_zero,
              $column_zero,
              $row_stride,
              $column_stride
-           );
+           ) = @_;
 
-
-	if (@_ == 1) {
-		my $type = sniff_scalar($_[0]);
-		if ($type eq '2D_MATRIX') {
-			my $M    = shift;
-			$rows    = @{ $M };
-			$columns = @{ $M} == 0 ? 0 : @{ $M->[0] };
-			
-			$self->_setup( $rows, $columns);
-			$self->_set_elements_addr( $self->_alloc_elements( $rows * $columns ) );
-			$self->_assign_DensePackedMatrix_from_2D_MATRIX( $M );
-		} else {
-			$self->_error("Argument error. Input is not a matrix reference");
-		}
-
-	} elsif (@_ == 2) {
-		# construct new empty matrix
-	    	my ($rows, $columns) = @_;
-
+	# Allocate a fresh matrix
+	if (@_ == 2) {
 		$self->_setup($rows, $columns);
-		$self->_set_elements_addr( $self->_alloc_elements( $rows * $columns ) );
-	} else {
-		# set up view
-		my $other;
+		$self->_set_elements( $self->_allocate_elements( $rows * $columns ));
 
-		($rows, $columns, $other, $row_zero, $column_zero, $row_stride, $column_stride) = @_;
+	# Set up view on existing matrix elements
+	} else {  
+		$self->_setup( $rows, $columns, $row_zero, $column_zero, $row_stride, $column_stride );
 
-		$self->_setup($rows, $columns, $row_zero, $column_zero, $row_stride, $column_stride);
-		
-                # assign address pointer to view
-		$self->_set_elements_addr( $other->_get_elements_addr );
+		trace_error("Invalid data elements. Must be an unsiged integer")
+			unless sniff_scalar($elements) eq 'NUMBER';
+
+		$self->_set_elements( $elements );
+		$self->_set_view( 1 );
 	}
-
-	return $self;
 }
 
 sub assign {
@@ -75,7 +81,7 @@ sub assign {
 
 	# pass to parent class if matrices are different types
 	if ($type eq 'OBJECT') {
-		$self->_check_shape( $_[0] );
+		$self->check_shape( $_[0] );
 		return $self->SUPER::assign($_[0]) if ref $_[0] ne 'Anorman::Data::Matrix::DensePacked';
 	}
 
@@ -106,19 +112,19 @@ sub like_vector {
 
 sub _like_vector {
 	my $self    = shift;
-        return Anorman::Data::Vector::DensePacked->new($_[0], $self, $_[1], $_[2]);
+        return Anorman::Data::Vector::DensePacked->new($_[0], $self->_elements, $_[1], $_[2]);
 }
 
 sub _view_selection_like {
 	my $self = shift;
-	return Anorman::Data::Matrix::SelectedDensePacked->new( $self->_get_elements_addr, $_[0], $_[1], 0 );
+	return Anorman::Data::Matrix::SelectedDensePacked->new( $self->_elements, $_[0], $_[1], 0 );
 }
 
 sub _have_shared_cells_raw {
 	my ($self, $other) = @_;
 
 	return undef unless (is_packed($self) && is_packed($other));
-	return $self->_get_elements_addr == $other->_get_elements_addr;
+	return $self->_elements == $other->_elements;
 }
 
 use Inline (C => Config =>
@@ -131,20 +137,21 @@ use Inline (C => Config =>
 
 use Inline C => <<'END_OF_C_CODE';
 
+#include <stdio.h>
+#include <limits.h>
 #include "data.h"
 #include "matrix.h"
 #include "perl2c.h"
+#include "error.h"
 
 #include "../lib/matrix.c"
 
-SV* _alloc_elements( SV*, UV );
-SV*  _get_elements_addr( SV* );
-void _set_elements_addr( SV*, SV* );
-
-void static  show_struct( Matrix* );
+/*===========================================================================
+ Abstract matrix functions
+ ============================================================================*/
 
 /* object constructors */
-SV* new_matrix_object( SV* sv_class_name ) {
+SV* _new_abstract_matrix( SV* sv_class_name ) {
     Matrix* m;
     SV* self;
 
@@ -157,8 +164,8 @@ SV* new_matrix_object( SV* sv_class_name ) {
     return self;
 }
 
-/* clone a matrix object by making a copy of the underlying struct */
-SV* clone( SV* self ) {
+/* clone a matrix object by making and blessing a copy of the underlying struct */
+SV* _clone_self( SV* self ) {
     SV_2STRUCT( self, Matrix, m );
 
     Matrix* n;
@@ -167,9 +174,6 @@ SV* clone( SV* self ) {
     /* clone struct */
     Newx( n, 1, Matrix );
     StructCopy( m, n, Matrix );
-
-    /* protect data elements from freeing */
-    n->view_flag = 1;
 
     /* make a blessed perl object */
     const char* class_name = sv_reftype( SvRV( self ), TRUE );
@@ -191,22 +195,177 @@ UV row_zero(SV* self) {
     return (UV) ((Matrix*)SvIV(SvRV(self)))->row_zero;
 }
 
-UV column_zero(SV* self) {
+UV _column_zero(SV* self) {
     return (UV) ((Matrix*)SvIV(SvRV(self)))->column_zero;
 }
 
-IV row_stride(SV* self) {
+IV _row_stride(SV* self) {
     return (IV) ((Matrix*)SvIV(SvRV(self)))->row_stride;
 }
 
-IV column_stride(SV* self) {
+IV _column_stride(SV* self) {
     return (IV) ((Matrix*)SvIV(SvRV(self)))->column_stride;
 }
 
-UV _is_noview (SV* self) {
-    return (UV) (((Matrix*)SvIV(SvRV(self)))->view_flag == FALSE);
+UV _is_view (SV* self) {
+    return (UV) ((Matrix*)SvIV(SvRV(self)))->view_flag;
 }
 
+UV _is_noview (SV* self) {
+    return (UV) (((Matrix*)SvIV(SvRV(self)))->view_flag == 0);
+}
+
+void _set_view(SV* self, IV flag) {
+    ((Matrix*)SvIV(SvRV(self)))->view_flag = (int) flag;
+}
+
+UV size (SV* self) {
+    SV_2STRUCT( self, Matrix, m );
+    
+   return (UV) (m->rows * m->columns);
+}
+
+UV _row_rank (SV* self, UV rank) {
+    SV_2STRUCT( self, Matrix, m);
+
+    return m->row_zero + (size_t) rank * m->row_stride;
+}
+
+UV _row_offset (SV* self, UV index ) {
+    return index;
+}
+
+UV _column_rank (SV* self, UV rank) {
+    SV_2STRUCT( self, Matrix, m);
+
+    return m->column_zero + (size_t) rank * m->column_stride;
+}
+
+UV _column_offset (SV* self, UV index ) {
+    return index;
+}
+
+SV* _elements (SV* self) {
+
+    SV_2STRUCT( self, Matrix, m );
+    PTR_2SVADDR( m->elements, sv_addr );
+
+    return sv_addr;
+}
+
+
+void _set_elements (SV* self, SV* sv_addr ) {
+
+    SVADDR_2PTR( sv_addr, elems_ptr );
+    SV_2STRUCT( self, Matrix, m );
+
+    if (!m->elements) {
+        m->elements = elems_ptr;
+    } else {
+        C_ERROR_VOID("This matrix was already assigned an elements pointer", C_EINVAL );
+    }   
+}
+
+/* object initializors */
+
+void _setup ( SV* self, ... ) {
+    Inline_Stack_Vars;
+    
+    SV_2STRUCT( self, Matrix, m );
+
+    m->rows    = (size_t) SvUV( Inline_Stack_Item(1) );
+    m->columns = (size_t) SvUV( Inline_Stack_Item(2) );
+    
+    if ( items == 7 ) {
+        m->row_zero      = (size_t) SvUV( Inline_Stack_Item(3) );
+        m->column_zero   = (size_t) SvUV( Inline_Stack_Item(4) );
+        m->row_stride    = (size_t) SvUV( Inline_Stack_Item(5) );
+        m->column_stride = (size_t) SvUV( Inline_Stack_Item(6) );
+        m->view_flag     = 1;
+    } else {
+        m->row_zero      = 0;
+        m->column_zero   = 0;
+        m->row_stride    = (size_t) m->columns;
+        m->column_stride = 1;
+        m->view_flag     = 0;
+   }
+
+    if ((m->rows * m->columns) > LONG_MAX) {
+        C_ERROR_VOID("Matrix is too large", C_EINVAL );
+    }
+}
+
+
+/* Consistency checks */
+
+void _check_row ( SV* self, IV index ) {
+    SV_2STRUCT( self, Matrix, m );
+
+    if (index < 0 || index >= (IV) m->rows) {
+        char reason[80];
+        sprintf(reason, "Row number (%li) is out of bounds", index);
+        C_ERROR_VOID( reason, C_EINVAL );
+    }
+}
+
+void _check_column ( SV* self, IV index ) {
+    SV_2STRUCT( self, Matrix, m );
+
+    if (index < 0 || index >= (IV) m->columns) {
+        char reason[80];
+        sprintf(reason, "Column number (%li) is out of bounds", index);
+        C_ERROR_VOID( reason , C_EINVAL );
+    }
+}
+
+void _check_box ( SV* self, IV row, IV column, IV width, IV height )  {
+    SV_2STRUCT( self, Matrix, m );
+    if (column < 0 || width < 0 || column + width > (IV) m->columns 
+        || row < 0 || height < 0 || row + height > (IV) m->rows)
+    {
+        char reason[80];
+        sprintf( reason, "Out of bounds: [ %lu x %lu ], column: %li row: %li, width: %li, height: %li",
+                 m->rows, m->columns, column, row, width, height);
+        C_ERROR_VOID( reason, C_EINVAL );
+
+    }
+}
+ 
+
+/* In-place mutators */
+
+SV* _v_dice( SV* self ) {
+    SV_2STRUCT( self, Matrix, m );
+    int tmp;
+    
+    tmp = m->rows;       m->rows = m->columns;             m->columns = tmp;
+    tmp = m->row_stride; m->row_stride = m->column_stride; m->column_stride = tmp;
+    tmp = m->row_zero;   m->row_zero = m->column_zero;     m->column_zero = tmp;
+
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _v_part( SV* self, UV row, UV column, UV height, UV width ) {
+    SV_2STRUCT( self, Matrix, m );
+
+    c_m_part( m, row, column, height, width );
+
+    SvREFCNT_inc( self );	
+    return self;
+}
+
+/* Matrix destruction */
+void DESTROY(SV* self) {
+    SV_2STRUCT( self, Matrix, m );
+
+    c_m_free( m );
+}
+
+
+/*===========================================================================
+ DenseMatrix Functions
+ ============================================================================*/  
 
 NV get_quick(SV* self, UV row, UV column) {
     SV_2STRUCT( self, Matrix, m );
@@ -226,45 +385,11 @@ NV _index( SV* self, UV i, UV j ) {
     return (NV) (m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride);
 }
 
-NV sum( SV* self ) {
-    SV_2STRUCT( self, Matrix, m );
-
-    return (NV) c_m_sum( m );
-}
-
-/* object initializors */
-void _setup ( SV* self, ... ) {
-    Inline_Stack_Vars;
-    
-    if ( items != 3 && items != 7) {
-        croak("_setup::Wrong number of arguments (%d)", (int) Inline_Stack_Items );
-    }
-
-    SV_2STRUCT( self, Matrix, m );
-
-    m->rows    = (size_t) SvUV( Inline_Stack_Item(1) );
-    m->columns = (size_t) SvUV( Inline_Stack_Item(2) );
-    
-    if ( items == 7 ) {
-        m->row_zero      = (size_t) SvUV( Inline_Stack_Item(3) );
-        m->column_zero   = (size_t) SvUV( Inline_Stack_Item(4) );
-        m->row_stride    = (size_t) SvUV( Inline_Stack_Item(5) );
-        m->column_stride = (size_t) SvUV( Inline_Stack_Item(6) );
-        m->view_flag     = 1;
-    } else {
-        m->row_zero      = 0;
-        m->column_zero   = 0;
-        m->row_stride    = (size_t) m->columns;
-        m->column_stride = 1;
-        m->view_flag     = 0;
-   }
-}
-
-SV* _alloc_elements( SV* self, UV num_elems ) {
+SV* _allocate_elements( SV* self, UV num_elems ) {
     SV_2STRUCT( self, Matrix, m );
 
     if ( m->elements ) {
-        croak("Memory already allocated");
+        C_ERROR_NULL("Memory already allocated", C_EINVAL);
     }
 
     ALLOC_ELEMS( num_elems, sv_addr );
@@ -272,27 +397,6 @@ SV* _alloc_elements( SV* self, UV num_elems ) {
     return sv_addr;
 }
 
-
-/* elements pointer address manipulation */
-SV* _get_elements_addr (SV* self) {
-
-    SV_2STRUCT( self, Matrix, m );
-    PTR_2SVADDR( m->elements, sv_addr );
-
-    return sv_addr;
-}
-
-void _set_elements_addr (SV* self, SV* sv_addr ) {
-
-    SVADDR_2PTR( sv_addr, elems_ptr );
-    SV_2STRUCT( self, Matrix, m );
-
-    if (!m->elements) {
-        m->elements = elems_ptr;
-    } else {
-        PerlIO_printf( PerlIO_stderr(), "Cannot assign (%p) to an already assigned pointer (%p)\n", elems_ptr, m->elements );
-    }   
-}
 
 /* data assignment functions */
 void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
@@ -302,8 +406,9 @@ void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
     size_t rows = (size_t) av_len( array_of_arrays ) + 1;
     
     if (rows != m->rows) {
-        croak("Cannot assign AoA to matrix object: must have %lu rows\n", m->rows );
-        my_exit(1);
+        char reason[80]; 
+        sprintf( reason, "Cannot assign AoA to matrix object: must have %lu rows\n", m->rows);
+        C_ERROR_VOID( reason, C_EINVAL );
     }
         
     size_t     i = m->columns * (rows - 1);
@@ -317,9 +422,10 @@ void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
         size_t columns  = (size_t) av_len( current_row ) + 1;
 
         /* verify length */
-        if (columns != m->columns) {   
-            PerlIO_printf( PerlIO_stderr(), "Must have same number of colunms (%lu) but was %lu\n", m->columns, columns );
-            my_exit(1);
+        if (columns != m->columns) {
+            char reason[80];
+            sprintf(reason, "Must have same number of colunms (%lu) but was %lu\n", m->columns, columns);
+            C_ERROR_VOID( reason, C_EINVAL );
         }
          
 	/* fill elements */
@@ -349,7 +455,7 @@ void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
     XPUSHs( other );
     PUTBACK;
        
-    call_method("Anorman::Data::Matrix::_check_shape", G_VOID );
+    call_method("Anorman::Data::Matrix::check_shape", G_VOID );
 
     LEAVE;
 
@@ -374,6 +480,12 @@ void _assign_DensePackedMatrix_from_NUMBER ( SV* self, NV value ) {
     SV_2STRUCT( self, Matrix, m );
 
     c_m_set_all( m, (double) value );
+}
+
+NV sum( SV* self ) {
+    SV_2STRUCT( self, Matrix, m );
+
+    return (NV) c_m_sum( m );
 }
 
 void _mult_matrix_matrix ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv_beta ) {
@@ -442,34 +554,10 @@ void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
     c_mv_mult( A, y, z, alpha, beta );
 } 
 
-SV* _v_dice( SV* self ) {
-    SV_2STRUCT( self, Matrix, m );
-    int tmp;
-    
-    tmp = m->rows;       m->rows = m->columns;             m->columns = tmp;
-    tmp = m->row_stride; m->row_stride = m->column_stride; m->column_stride = tmp;
-    tmp = m->row_zero;   m->row_zero = m->column_zero;     m->column_zero = tmp;
-
-    m->view_flag = 1;
-    
-    SvREFCNT_inc( self );
-    return self;
-}
-
-SV* _v_part( SV* self, UV row, UV column, UV height, UV width ) {
+void _dump( SV* self ) {
     SV_2STRUCT( self, Matrix, m );
 
-    c_m_part( m, row, column, height, width );
-
-    SvREFCNT_inc( self );	
-    return self;
-}
-
-/* object destruction */
-void DESTROY(SV* self) {
-    SV_2STRUCT( self, Matrix, m );
-
-    c_m_free( m );
+    c_m_show_struct( m );
 }
 
 END_OF_C_CODE

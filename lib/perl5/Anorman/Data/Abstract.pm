@@ -3,6 +3,8 @@ package Anorman::Data::Abstract;
 use strict;
 use warnings;
 
+use Anorman::Common;
+
 use overload
 	'""'  => '_to_string',
 	'@{}' => '_to_array',
@@ -24,20 +26,11 @@ sub new {
 	return bless ( { _VIEW => 0 }, $class );
 }
 
-
-sub _elements   {  $_[0]->{'_ELEMS'} }
-sub _is_view    {  $_[0]->{'_VIEW'}  }
-sub _is_no_view { !$_[0]->{'_VIEW'}  }
-
 sub clone {
 	my $self  = shift;
-	my $class = ref $self;
+	my $clone = $self->_clone_self;
 
-	my $clone = {};
-	%{ $clone } = %{ $self };
-	bless ( $clone, $class );
-
-	$clone->{'_VIEW'} = 1;
+	$clone->_set_view(1);
 
 	return $clone;
 }
@@ -50,6 +43,17 @@ sub copy {
 
 	return $copy;
 }
+
+sub _clone_self {
+	my $class = ref $_[0];
+	my $clone = {};
+
+	%{ $clone } = %{ $_[0] };
+	
+	return bless ( $clone, $class );
+}
+
+sub _set_view   { $_[0]->{'_VIEW'} = 1 }
 
 1;
 

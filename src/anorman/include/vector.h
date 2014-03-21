@@ -25,7 +25,7 @@ double c_vv_dot_product ( Vector* a, Vector* b, size_t from, size_t length );
 
 double* c_v_alloc( Vector*, const size_t );
 void c_v_set_all( Vector*, double );
-
+void c_v_free( Vector* );
 
 double* 
 c_v_ptr(Vector *v, const size_t rank) {

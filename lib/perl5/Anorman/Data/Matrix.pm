@@ -349,8 +349,6 @@ sub _have_shared_cells {
 	return $self->_have_shared_cells_raw( $other );
 }
 
-
-
 sub _have_shared_cells_raw {
 	return undef;
 }
@@ -466,4 +464,5 @@ sub _to_short_string {
 
 	return "[ " . $self->rows . " x " . $self->columns . " ]";
 }
+
 1;

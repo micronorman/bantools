@@ -227,7 +227,7 @@ c_vv_dot_product ( Vector *a, Vector *b, const size_t from, const size_t length 
     if (a->size < tail) tail = a->size;
     if (b->size < tail) tail = b->size;
 
-    const size_t min = tail - from;
+    const int min = (int) tail - from;
 
     size_t i = c_v_index(a, from);
     size_t j = c_v_index(b, from);
@@ -238,7 +238,7 @@ c_vv_dot_product ( Vector *a, Vector *b, const size_t from, const size_t length 
     const double *a_elems = a->elements;
     const double *b_elems = b->elements;
 
-    long double sum = 0.0;
+    double sum = 0.0;
 
     /* loop unrolled for speed */
     i -= a_str;
@@ -284,7 +284,6 @@ c_v_sum( Vector *v ) {
 
 double *
 c_v_alloc( Vector* v, const size_t n ) {
-
     double* _ELEMS;
 
     if (n == 0) {

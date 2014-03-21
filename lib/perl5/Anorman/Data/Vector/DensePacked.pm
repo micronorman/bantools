@@ -3,7 +3,7 @@ package Anorman::Data::Vector::DensePacked;
 use strict;
 use warnings;
 
-use parent 'Anorman::Data::Vector';
+use parent qw(Anorman::Data::Abstract Anorman::Data::Vector);
 
 use Anorman::Common qw(sniff_scalar);
 use Anorman::Data::LinAlg::Property qw( :vector );
@@ -17,39 +17,48 @@ my %ASSIGN_DISPATCH = (
 	'CODE'        => \&Anorman::Data::Vector::_assign_Vector_from_CODE
 );
 
-use overload 
-	'+=' => \&_plus_assign;
-
 sub new {
-    my $class = shift;
-    
-    $class->_error("Wrong number of arguments") if (@_ != 1 && @_ != 4);
+	my $that  = shift;
+	my $class = ref $that || $that;
 
-    my $self = &new_vector_object( ref $class || $class );
+	trace_error("Wrong number of arguments") if (@_ != 1 && @_ != 4);
 
-    if (@_ == 1) {
-	my $type = sniff_scalar($_[0]);
-    	if ($type eq 'ARRAY') {
-		my $size = @{ $_[0] };
-		$self->_setup( $size );
-		$self->_set_elements_addr( $self->_alloc_elements( $size ) );
-		$self->_assign_DensePackedVector_from_ARRAY( $_[0] );
-	} elsif ($type eq 'NUMBER'){
-                # construct empty vector
-		my $size = $_[0];
-		$self->_setup($size);
-		$self->_set_elements_addr( $self->_alloc_elements( $size ) );
+	my $self = $class->_new_abstract_Vector;
+
+	if (ref $_[0] eq 'ARRAY') {
+		$self->_new_from_array(@_);
+	} else {
+		$self->_new_from_dims(@_);
 	}
 
-    } else {
-    	# set up view
-	my ($size, $other, $zero, $stride) = @_;
-	
-	$self->_setup($size, $zero, $stride);
-	$self->_set_elements_addr( $other->_get_elements_addr );
-    }
+	return $self;
+}
 
-    return $self;
+sub _new_from_array {
+	my $self = shift;
+	my $size = @{ $_[0] };
+
+	$self->_new_from_dims( $size );
+	$self->_assign_DenseVector_from_ARRAY( $_[0] );
+}
+
+sub _new_from_dims {
+	my $self = shift;
+
+	my ($size, $elements, $zero, $stride) = @_;
+
+	if (@_ == 1) {
+		$self->_setup( $size );
+		$self->_set_elements( $self->_allocate_elements( $size ) );
+	} else {
+		$self->_setup( $size, $zero, $stride );
+		
+		trace_error("Invalid data elements. Must be an unsigned integer")
+			unless sniff_scalar($elements) eq 'NUMBER';
+
+		$self->_set_elements( $elements );
+		$self->_set_view(1);
+	}
 }
 
 sub assign {
@@ -129,87 +138,112 @@ use Inline (C => Config =>
 	   );
 use Inline C => <<'END_OF_C_CODE';
 
+#include <limits.h>
+#include <stdio.h>
+#include "error.h"
 #include "data.h"
 #include "perl2c.h"
 #include "vector.h"
 
 #include "../lib/vector.c"
 
-SV* _alloc_elements( SV*, UV );
-SV*  _get_elements_addr( SV* );
-void _set_elements_addr( SV*, SV* );
 
-/* object constructor */
-SV* new_vector_object( SV* sv_class_name ) {
+/*===========================================================================
+ Abstract Vectorfunctions
+ ============================================================================*/
+
+/* object constructors */
+SV* _new_abstract_Vector( SV* sv_class_name ) {
     Vector* v;
-    SV*     self;
+    SV* self;
 
     /* allocate struct memory */
     Newxz(v, 1, Vector);
 
-     /* extract class name */
     const char* class_name = SvPV_nolen( sv_class_name );
-
     BLESS_STRUCT( v, self, class_name );
-    
+
     return self;
 }
 
-SV* clone( SV* self ) {
+/* clone a Vectorobject by making and blessing a copy of the underlying struct */
+SV* _clone_self( SV* self ) {
     SV_2STRUCT( self, Vector, v );
 
     Vector* n;
-        SV* clone;
+    SV* clone;
 
     /* clone struct */
-    Newx( n, 1, Vector );
-    StructCopy( v, n, Vector );
+    Newx( n, 1, Vector);
+    StructCopy( v, n, Vector);
 
-    /* protect data elements from freeing */
-    n->view_flag = 1;
-    
+    /* make a blessed perl object */
     const char* class_name = sv_reftype( SvRV( self ), TRUE );
-    BLESS_STRUCT( n, clone, class_name );
+    BLESS_STRUCT( n, clone, class_name ); 
 
     return clone; 
 }
 
-/* object accessors */
-IV size(SV* self) {
-    return (IV) ((Vector*)SvIV(SvRV(self)))->size;
+/* object accessors (for perl calls) */
+UV size (SV* self) {
+    SV_2STRUCT( self, Vector, v );
+    
+   return (UV) v->size;
 }
 
-IV stride(SV* self) {
+UV _zero(SV* self) {
+    return (UV) ((Vector*)SvIV(SvRV(self)))->zero;
+}
+
+IV _stride(SV* self) {
     return (IV) ((Vector*)SvIV(SvRV(self)))->stride;
 }
 
-IV zero(SV* self) {
-    return (IV) ((Vector*)SvIV(SvRV(self)))->zero;
+UV _is_view (SV* self) {
+    return (UV) ((Vector*)SvIV(SvRV(self)))->view_flag;
 }
 
-IV is_noview (SV* self) {
-    return (IV) (((Vector*)SvIV(SvRV(self)))->view_flag == 0);
+UV _is_noview (SV* self) {
+    return (UV) (((Vector*)SvIV(SvRV(self)))->view_flag == 0);
 }
 
+void _set_view(SV* self, IV flag) {
+    ((Vector*)SvIV(SvRV(self)))->view_flag = (int) flag;
+}
 
-NV get_quick(SV* self, UV index) {
+UV _offset (SV* self, UV index ) {
+    return index;
+}
+
+UV _rank (SV* self, UV rank) {
+    SV_2STRUCT( self, Vector, v);
+
+    return v->zero + (size_t) rank * v->stride;
+}
+
+SV* _elements (SV* self) {
     SV_2STRUCT( self, Vector, v );
-    return (NV) c_v_get_quick( v, (size_t) index );
+    PTR_2SVADDR( v->elements, sv_addr );
+
+    return sv_addr;
 }
 
-void set_quick(SV* self, UV index, NV value) {
+void _set_elements (SV* self, SV* sv_addr ) {
+    SVADDR_2PTR( sv_addr, elems_ptr );
     SV_2STRUCT( self, Vector, v );
-    c_v_set_quick( v, (size_t) index, (double) value );
+
+    if (!v->elements) {
+        v->elements = elems_ptr;
+    } else {
+        C_ERROR_VOID("This Vector was already assigned an elements pointer", C_EINVAL );
+    }   
 }
 
 /* object initializors */
-void _setup( SV* self, SV* size, ... ) {
+
+void _setup ( SV* self, SV* size, ... ) {
     Inline_Stack_Vars;
-
-    if ( Inline_Stack_Items > 2 && Inline_Stack_Items != 4) {
-        croak("_setup::Wrong number of arguments (%d)", (int) Inline_Stack_Items );
-    }
-
+    
     SV_2STRUCT( self, Vector, v );
     
     v->size = (size_t) SvUV( size );
@@ -222,59 +256,96 @@ void _setup( SV* self, SV* size, ... ) {
         v->zero      = 0;
         v->stride    = 1;
         v->view_flag = 0;
-    }    
+    }  
+
+    if (v->size > LONG_MAX) {
+        C_ERROR_VOID("Vector is too large", C_EINVAL );
+    }
 }
 
 
-SV* _alloc_elements( SV* self, UV num_elems ) {
+/* Consistency checks */
+
+void _check_index ( SV* self, IV index ) {
+    SV_2STRUCT( self, Vector, v );
+
+    if (index < 0 || index >= (IV) v->size) {
+        char reason[80];
+        sprintf(reason, "Index (%li) is out of bounds", index);
+        C_ERROR_VOID( reason, C_EINVAL );
+    }
+}
+
+void _check_range ( SV* self, IV from, IV length )  {
+    SV_2STRUCT( self, Vector, v );
+    if (from < 0 || length < 0 || from + length > (IV) v->size) 
+    {
+        char reason[80];
+        sprintf( reason, "Index range out of bounds: from: %li, length: %li, size: %li",
+                 from, length, v->size);
+        C_ERROR_VOID( reason, C_EINVAL );
+
+    }
+}
+ 
+SV* _v_part( SV* self, UV index, UV width ) {
+    SV_2STRUCT( self, Vector, v );
+
+    c_v_part( v, index, width );
+
+    SvREFCNT_inc( self );	
+    return self;
+}
+
+/* object destruction */
+void DESTROY(SV* self) {
+    SV_2STRUCT( self, Vector, v );
+
+    c_v_free( v );
+}
+/*===========================================================================
+  DenseVector functions
+  ===========================================================================*/
+
+NV get_quick(SV* self, UV index) {
+    SV_2STRUCT( self, Vector, v );
+    return (NV) c_v_get_quick( v, (size_t) index );
+}
+
+void set_quick(SV* self, UV index, NV value) {
+    SV_2STRUCT( self, Vector, v );
+    c_v_set_quick( v, (size_t) index, (double) value );
+}
+
+SV* _allocate_elements( SV* self, UV num_elems ) {
     SV_2STRUCT( self, Vector, v );
 
     if ( v->elements != NULL ) {
-        croak("Memory already allocated");
+        C_ERROR_NULL("Memory already allocated", C_ENOMEM );
     }
 
     ALLOC_ELEMS( num_elems, sv_addr );
         
     return sv_addr;
 }
-/* elements pointer address manipulation */
-SV* _get_elements_addr (SV* self) {
-
-    SV_2STRUCT( self, Vector, v );
-    PTR_2SVADDR( v->elements, sv_addr );
-
-    return sv_addr;
-}
-
-void _set_elements_addr (SV* self, SV* sv_addr ) {
-
-    SVADDR_2PTR( sv_addr, elems_ptr );
-    SV_2STRUCT( self, Vector, v );
-
-    /* some sanity checls */
-    if (v->elements == 0) {
-        v->elements = elems_ptr;
-    } else {
-        PerlIO_printf( PerlIO_stderr(), "Cannot assign (%p) to an already assigned pointer (%p)\n", elems_ptr, v->elements );
-    }   
-}
-
 /* data assignment functions */
 void _assign_DensePackedVector_from_ARRAY( SV* self, AV* array ) {
     
     SV_2STRUCT( self, Vector, v );
  
     /* verify size */
-    size_t size       = (size_t) av_len( array ) + 1;
+    size_t size  = (size_t) av_len( array ) + 1;
 
     if (size != v->size) {
-        PerlIO_printf( PerlIO_stderr(), "Cannot assign array to vector object: must have %d elements\n", (int) v->size );
-        my_exit(1);
+        char reason[80];
+        sprintf( reason, "Cannot assign array to vector object: must have %lu elements\n", v->size );
+        C_ERROR_VOID( reason, C_EINVAL );
     }
 
-    int i = size;
+    int i = (long int) size;
     while ( --i >= 0 ) {
         double value = SvNV( *av_fetch( array, i , 0) );
+
         c_v_set_quick( v, i, value );
     }
 }
@@ -318,21 +389,10 @@ NV sum( SV* self ) {
     return c_v_sum( v );
 }
 
-SV* _v_part( SV* self, SV* index, SV* width ) {
-    SV_2STRUCT( self, Vector, v );
+void _dump( SV* self ) {
+    SV_2STRUCT( self, Vector, v);
 
-    c_v_part( v, SvUV( index ), SvUV( width ) );
-
-    SvREFCNT_inc( self );	
-    
-    return self;
-}
-
-/* object destruction */
-void DESTROY(SV* self) {
-    SV_2STRUCT( self, Vector, v );
-
-    c_v_free( v );
+    c_v_show_struct( v );
 }
 
 END_OF_C_CODE

@@ -41,8 +41,6 @@ sub _new_from_array {
 
 	$self->_new_from_dims( $size );
 	$self->_assign_DenseVector_from_ARRAY( $_[0] );
-
-	return $self;
 }
 
 sub _new_from_dims {
@@ -62,8 +60,6 @@ sub _new_from_dims {
 		$self->{'_ELEMS'} = $elements;
 		$self->{'_VIEW'}  = 1;
 	}
-
-	return $self;
 }
 
 sub assign {
@@ -205,7 +201,7 @@ sub sum {
 sub _assign_DenseVector_from_ARRAY {
 	my ($self,$V) = @_;
 
-	if ($self->_is_no_view) {
+	if ($self->_is_noview) {
 		trace_error("Cannot assign values to vector object. Must have " . $self->{'size'} . " elements but has " . @{ $V })
 			if (@{ $V } != $self->{'size'});
 		# direct array copy
@@ -229,7 +225,7 @@ sub _assign_DenseVector_from_OBJECT {
 	$self->_check_size( $other );
 
 	# optimized element copying
-	if ($self->_is_no_view && $other->_is_no_view) {
+	if ($self->_is_noview && $other->_is_noview) {
 		@{ $self->{'_ELEMS'} } = @{ $other->{'_ELEMS'} };	
 	}
 

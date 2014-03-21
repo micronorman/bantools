@@ -11,6 +11,8 @@ size_t c_m_index( Matrix*, const size_t, const size_t );
 double c_m_get_quick( Matrix*, const size_t, const size_t );
 void c_m_set_quick( Matrix*, const size_t, const size_t, const double);
 
+void c_m_show_struct( Matrix* );
+
 /* Declarations */
 
 size_t c_m_index( Matrix* m, const size_t i, const size_t j ) {
