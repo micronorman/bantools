@@ -2,18 +2,20 @@ package Anorman::Data::Vector::SelectedDensePacked;
 
 use strict;
 
-use parent 'Anorman::Data::Vector';
-
-use Anorman::Data::Vector::SelectedDensePacked;
-use Anorman::Data::LinAlg::Property qw(is_packed);
+use parent qw(Anorman::Data::Vector::Abstract Anorman::Data::Vector);
+use Anorman::Data::Vector::DensePacked;
+use Anorman::Data::LinAlg::Property qw( :vector );
 
 sub new {
-	my $class = shift;
+	my $that  = shift;
+	my $class = ref $that || $that;
 
 	if (@_ != 2 && @_ != 6) {
 		$class->_error("Wrong number of arguments");
 	}
 	
+	my $self = $class->_bless_vector_struct();
+
 	my ( 
              $size,
 	     $elems,
@@ -22,10 +24,8 @@ sub new {
              $offsets,
 	     $offset
            );
-
-	my $self = &new_selectedvector_object( ref($class) || $class );
 	
-	if (@_ == 4) {
+	if (@_ == 2) {
 		$zero      = 0;
 		$stride    = 1;
 		
@@ -42,15 +42,18 @@ sub new {
                  $offset) = @_;
 	}		
 
-	$self->_setup( $size, $zero, $stride, $offset, $offsets );
-	$self->_set_elements_addr( $elems );
+	$self->_setup( $size, $zero, $stride );
+	$self->_set_offsets( $offset, $offsets );
+	$self->_set_elements( $elems );
+
+	$self->_set_view(1);
 
 	return $self;
 }
 
 sub _view_selection_like {
 	my $self = shift;
-	return $self->new( $self->_get_elements_addr, $self->offsets );
+	return $self->new( $self->_elements, $self->offsets );
 }
 
 sub like {
@@ -66,7 +69,7 @@ sub _like_vector {
 sub _have_shared_cells_raw {
 	my ($self, $other) = @_;
 
-	return undef unless (is_packed($self) && is_packed($other));
+	return undef unless (is_vector($other) && is_packed($other));
 	return $self->_get_elements_addr == $other->_get_elements_addr;
 }
 
@@ -80,208 +83,263 @@ use Inline (C => Config =>
            );
 use Inline C => <<'END_OF_C_CODE';
 
+#include <stdio.h>
+#include "error.h"
 #include "data.h"
+#include "perl2c.h"
+#include "vector.h"
 
-#define SV_2SELECTEDVECTOR( sv, ptr_name )    SelectedVector* ptr_name = (SelectedVector*) SvIV( SvRV( sv ) )
+#include "../lib/vector.c"
 
-#define SVADDR_2PTR( sv_name, ptr_name )            \
-     UV ptr_name = INT2PTR( double*, SvUV( sv_name ) ) 
-
-#define PTR_2SVADDR( ptr_name, sv_name )        \
-    SV* sv_name = newSVuv( PTR2UV( ptr_name ) )
-
-SV*  _get_elements_addr( SV* );
-void _set_elements_addr( SV*, SV* );
-
-void static  show_struct( SelectedVector* );
+/*===========================================================================
+ Abstract Vector functions
+ ============================================================================*/
 
 /* object constructors */
-SV* new_selectedvector_object( SV* sv_class_name ) {
+SV* _bless_vector_struct( SV* sv_class_name ) {
 
-    /* the central Vector struct */
-    SelectedVector* m;
-
-    /* set up object variables */
-    char* class_name = SvPV_nolen( sv_class_name );
-    SV*   self       = newSViv(0);
-    SV*   obj        = newSVrv( self, class_name );
+    Vector* v;
+    SV* self;
 
     /* allocate struct memory */
-    Newxz(m, 1, SelectedVector);
+    Newxz(v, 1, Vector);
 
-    /* set object address */
-    sv_setiv( obj, (IV)m);
-    SvREADONLY_on( obj );
+    const char* class_name = SvPV_nolen( sv_class_name );
+    BLESS_STRUCT( v, self, class_name );
 
     return self;
 }
 
+/* clone a Vectorobject by making and blessing a copy of the underlying struct */
+SV* _clone_self( SV* self ) {
+    SV_2STRUCT( self, Vector, v );
+
+    Vector* n;
+    SV* clone;
+
+    /* clone struct */
+    Newx( n, 1, Vector);
+    StructCopy( v, n, Vector);
+
+    /* make a blessed perl object */
+    const char* class_name = sv_reftype( SvRV( self ), TRUE );
+    BLESS_STRUCT( n, clone, class_name ); 
+
+    return clone; 
+}
+
 /* object accessors (for perl calls) */
-UV size(SV* self) {
-    return (UV) ((SelectedVector*)SvIV(SvRV(self)))->size;
-}
-
-UV zero(SV* self) {
-    return (UV) ((SelectedVector*)SvIV(SvRV(self)))->zero;
-}
-
-IV stride(SV* self) {
-    return (IV) ((SelectedVector*)SvIV(SvRV(self)))->stride;
-}
-
-IV offset(SV* self) {
-    return (IV) ((SelectedVector*)SvIV(SvRV(self)))->offset;
-}
-
-SV* offsets(SV* self) {
+UV size (SV* self) {
+    SV_2STRUCT( self, Vector, v );
     
-    SV_2SELECTEDVECTOR( self, v );
+   return (UV) v->size;
+}
 
-    AV* av_offsets = newAV();
+UV _zero(SV* self) {
+    return (UV) ((Vector*)SvIV(SvRV(self)))->zero;
+}
 
-    int* offsets = (int*) v->offsets;
+IV _stride(SV* self) {
+    return (IV) ((Vector*)SvIV(SvRV(self)))->stride;
+}
 
-    int i;
-    for (i = 0; i < v->size; i++) {
-        av_push( av_offsets, newSViv( offsets[ i ] ) );
-    }
-
-    return newRV_noinc((SV*) av_offsets );
+UV _is_view (SV* self) {
+    return (UV) ((Vector*)SvIV(SvRV(self)))->view_flag;
 }
 
 UV _is_noview (SV* self) {
-    return (UV) (((SelectedVector*)SvIV(SvRV(self)))->view_flag == FALSE);
+    return (UV) (((Vector*)SvIV(SvRV(self)))->view_flag == 0);
 }
 
-NV get_quick(SV* self, IV index) {
-    /* NOTE:  Assumes that index is always
-       is within array boundary */
-    SV_2SELECTEDVECTOR( self, v );
-   
-       int* offs  = (int*) v->offsets;
-    double* elems = (double*) v->elements;
+void _set_view(SV* self, IV flag) {
+    ((Vector*)SvIV(SvRV(self)))->view_flag = (int) flag;
+}
 
-    return (NV) elems[ v->offset + offs[ v->zero + index * v->stride ] ];
+/*
+UV _offset (SV* self, UV index ) {
+    return index;
+}
+
+UV _rank (SV* self, UV rank) {
+    SV_2STRUCT( self, Vector, v);
+
+    return v->zero + (size_t) rank * v->stride;
+}
+*/
+
+/* object initializors */
+
+void _setup ( SV* self, SV* size, ... ) {
+    Inline_Stack_Vars;
+    
+    SV_2STRUCT( self, Vector, v );
+    
+    v->size = (size_t) SvUV( size );
+
+    if ( items == 4 ) {
+        v->zero      = (size_t) SvUV( Inline_Stack_Item(2) );
+        v->stride    = (size_t) SvUV( Inline_Stack_Item(3) );
+        v->view_flag = 1;
+    } else {
+        v->zero      = 0;
+        v->stride    = 1;
+        v->view_flag = 0;
+    }  
+
+    if (v->size > MAX_NUM_ELEMENTS) {
+        C_ERROR_VOID("Vector is too large", C_EINVAL );
+    }
+}
+
+
+/* Consistency checks */
+
+void _check_index ( SV* self, IV index ) {
+    SV_2STRUCT( self, Vector, v );
+
+    if (index < 0 || index >= (IV) v->size) {
+        char reason[80];
+        sprintf(reason, "Index (%li) is out of bounds", index);
+        C_ERROR_VOID( reason, C_EINVAL );
+    }
+}
+
+void _check_range ( SV* self, IV from, IV length )  {
+    SV_2STRUCT( self, Vector, v );
+    if (from < 0 || length < 0 || from + length > (IV) v->size) 
+    {
+        char reason[80];
+        sprintf( reason, "Index range out of bounds: from: %li, length: %li, size: %li",
+                 from, length, v->size);
+        C_ERROR_VOID( reason, C_EINVAL );
+
+    }
+}
+ 
+SV* _v_part( SV* self, UV index, UV width ) {
+    SV_2STRUCT( self, Vector, v );
+
+    c_v_part( v, index, width );
+
+    SvREFCNT_inc( self );	
+    return self;
+}
+
+/* object destruction */
+void DESTROY(SV* self) {
+    SV_2STRUCT( self, Vector, v );
+
+    c_v_free( v );
+}
+
+/*===========================================================================
+ SelectedDenseVector functions
+ ============================================================================*/
+
+NV get_quick(SV* self, IV index) {
+    SV_2STRUCT( self, Vector, v );
+   
+    size_t* offs  = v->offsets->offsets;
+    double* elems = v->elements;
+
+    return (NV) elems[ v->offsets->offset + offs[ v->zero + index * v->stride ] ];
 }
 
 void set_quick(SV* self, IV index, NV value) {
-    SV_2SELECTEDVECTOR( self, v );
+    SV_2STRUCT( self, Vector, v );
+   
+    size_t* offs  = v->offsets->offsets;
+    double* elems = v->elements;
 
-       int* offs = (int*) v->offsets;
-    double* elems = (double*) v->elements;
-
-    elems[ v->offset + offs[ v->zero + index * v->stride ] ] = (double) value;
+    elems[ v->offsets->offset + offs[ v->zero + index * v->stride ] ] = (double) value;
 }
 
-/* object initializors */
-void _setup ( SV* self,
-              UV size,
-              UV zero,
-              IV stride,
-              IV offset,
-              AV* av_offsets
-            ) {
-
-    SV_2SELECTEDVECTOR( self, v );
-
-    v->size      = (size_t) size;
-    v->zero      = (int) zero;
-    v->stride    = (int) stride;
-    v->offset    = (int) offset;
-    v->view_flag = TRUE;
-
-    int* offsets;   
-
-    int length = av_len( av_offsets ) + 1;
-
-    /* allocate memory for offsets */
-    Newx( offsets, length, int ); 
-
-    /* assign offsets */
-    int i = length;
-    while ( --i >= 0 ) {
-        offsets[ i ] = (int) SvIV( *av_fetch( av_offsets, i, 0) );
-    }
-
-    v->offsets = (char*) offsets;
-
-}
-
-/* elements pointer address manipulation */
-SV* _get_elements_addr (SV* self) {
-
-    SV_2SELECTEDVECTOR( self, v );
+SV* _elements (SV* self) {
+    SV_2STRUCT( self, Vector, v );
     PTR_2SVADDR( v->elements, sv_addr );
 
     return sv_addr;
 }
 
-void _set_elements_addr (SV* self, SV* sv_addr ) {
-
+void _set_elements (SV* self, SV* sv_addr ) {
     SVADDR_2PTR( sv_addr, elems_ptr );
-    SV_2SELECTEDVECTOR( self, v );
+    SV_2STRUCT( self, Vector, v );
 
-    /* some sanity checks */
-    if (v->elements == NULL) {
-        v->elements = (double*) elems_ptr;
+    if (!v->elements) {
+        v->elements = elems_ptr;
     } else {
-        PerlIO_printf( PerlIO_stderr(), "Cannot assign (%x) to an already assigned pointer (%p)\n", elems_ptr, v->elements );
-    }
+        C_ERROR_VOID("This Vector was already assigned an elements pointer", C_EINVAL );
+    }   
 }
 
 IV _index (SV* self, UV rank ) {
-    SV_2SELECTEDVECTOR( self, v );
+    SV_2STRUCT( self, Vector, v );
 
-    int* offsets = (int*) v->offsets;
+    size_t* offsets = v->offsets->offsets;
  
-    return v->offset + offsets[ v->zero + rank * v->stride ];
+    return v->offsets->offset + offsets[ v->zero + rank * v->stride ];
 }
 
 IV _offset (SV* self, IV abs_rank ) {
-    SV_2SELECTEDVECTOR( self, v );
+    SV_2STRUCT(self, Vector, v);
 
-    int* offsets = (int*) v->offsets;
+    size_t* offsets = v->offsets->offsets;
 
-    return (IV) offsets[ abs_rank ];
+    return (IV) offsets[ (size_t) abs_rank ];
 }
 
+void _get_offsets( SV* self ) {
+    SV_2STRUCT( self, Vector, v );
 
+    UV offset;
+    AV* av_offsets    = newAV();
 
-/* object destruction */
-void DESTROY(SV* self) {
-    SV_2SELECTEDVECTOR( self, v );
+    size_t* offsets    = v->offsets->offsets;
 
-    /* do not free matrix elements unless object
-       is not a view */
-    if (v->elements != NULL && v->view_flag != TRUE) {
-        Safefree( v->elements );
+    size_t i;
+    for (i = 0; i < v->size; i++) {
+        av_push( av_offsets, newSViv( offsets[ i ] ) );
     }
 
-    Safefree( v->offsets );
-    Safefree( v );
-}
-
-/* DEBUGGING */
-void show_struct( SelectedVector* v ) {
+    Inline_Stack_Vars;
+    Inline_Stack_Reset;
     
-    PerlIO_printf( PerlIO_stderr(), "\nContents of Vector struct:\n" );
-    PerlIO_printf( PerlIO_stderr(), "\tsize\t(%p): %d\n", &v->size, (int) v->size );
-    PerlIO_printf( PerlIO_stderr(), "\tview\t(%p): %d\n", &v->view_flag, (int) v->view_flag );
-    PerlIO_printf( PerlIO_stderr(), "\t0\t(%p): %d\n",  &v->zero, v->zero );
-    PerlIO_printf( PerlIO_stderr(), "\tstride\t(%p): %d\n", &v->stride, v->stride );
-    PerlIO_printf( PerlIO_stderr(), "\toffset\t(%p): %d\n", &v->offset, v->offset );
+    Inline_Stack_Push( sv_2mortal(newSVuv( v->offsets->offset )));
+    Inline_Stack_Push( newRV_noinc((SV*) av_offsets ));
+    
+    Inline_Stack_Done;
+}
 
-    if (v->offsets == NULL) {
-        PerlIO_printf( PerlIO_stderr(), "\toffsets\t(%p): null\n",  &v->offsets );
-    } else {
-        PerlIO_printf( PerlIO_stderr(), "\toffsets\t(%p): [ %p ]\n",  &v->offsets, v->offsets );
+void _set_offsets( SV* self, UV offset, AV* av_offsets) {
+    SV_2STRUCT( self, Vector, v);
+
+    size_t* offsets;   
+    size_t o_size = av_len( av_offsets ) + 1;
+
+    /* allocate memory for row and column offsets */
+    Newx( offsets, o_size, size_t ); 
+
+    /* fill array with row offsets */
+    size_t i;
+    for (i = 0; i < o_size; i++ ) {
+        offsets[ i ] = (size_t) SvUV( *av_fetch( av_offsets, i, 0) );
     }
 
-    if (v->elements == NULL) {
-        PerlIO_printf( PerlIO_stderr(), "\telems\t(%p): null\n\n",  &v->elements );
-    } else {
-        PerlIO_printf( PerlIO_stderr(), "\telems\t(%p): [ %p ]\n\n",  &v->elements, v->elements );
-    }
+    VectorOffsets* vo_ptr;
+
+    /* Allocate struct space for matrix offsets */
+    Newx( vo_ptr, 1, VectorOffsets );
+
+    v->offsets = vo_ptr;
+
+    v->offsets->offset = (size_t) offset;
+    v->offsets->offsets = offsets;
+}
+
+void _dump (SV* self) {
+    SV_2STRUCT(self, Vector, v);
+
+    c_v_show_struct( v );
 }
 
 END_OF_C_CODE

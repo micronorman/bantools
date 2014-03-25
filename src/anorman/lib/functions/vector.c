@@ -43,6 +43,10 @@ double c_v_variance( size_t size, Vector* v ) {
             - mean * c_v_aggregate( size, v, &c_plus, &c_identity )) / (double) (size - 1);
 }
 
+double c_v_stdev( size_t size, Vector* v ) {
+    return sqrt( c_v_variance( size, v ) );
+}
+
 double c_v_variance2( size_t size, Vector* v ) {
     long double variance = 0;
 
@@ -62,5 +66,13 @@ double c_v_variance2( size_t size, Vector* v ) {
     }
 
     return (double) variance * ((double)size / (double)(size -1));
+}
+
+double c_v_min( size_t size, Vector* v ) {
+    return( c_v_aggregate( size, v, &c_min, &c_identity ) );
+}
+
+double c_v_max( size_t size, Vector* v ) {
+    return( c_v_aggregate( size, v, &c_max, &c_identity ) );
 }
 

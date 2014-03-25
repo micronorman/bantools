@@ -1,13 +1,138 @@
 package Anorman::Data::Functions::Vector;
 
-use strict;
 use warnings;
+use strict;
+no strict "refs";
 
-use vars qw(@ISA @EXPORT_OK);
 use Anorman::Common;
+use Anorman::Data::Config;
+use Anorman::Math::Functions;
 
-@EXPORT_OK = qw(v_variance v_variance2 v_scale v_add_constant v_mean v_sum v_stdev);
-@ISA = qw(Exporter);
+my $F = Anorman::Math::Functions->new;
+my %FUNCTIONS = ();
+
+if ($Anorman::Data::Config::PACK_DATA == 1) {
+	warn "ASSIGNING XS FUNCTIONS\n" if $DEBUG;
+
+	my %UNARY_XS_FUNCTIONS = (
+		'max'		=> \&XS_max,
+		'min'		=> \&XS_min,
+		'mean'		=> \&XS_mean,
+		'sum'		=> \&XS_sum,
+		'variance'	=> \&XS_variance,
+		'stdev'		=> \&XS_stdev
+	);
+
+	my %DISTANCE_XS_FUNCTIONS = (
+		'MANHATTAN'	=> \&XS_manhattan_distance,
+		'EUCLID'	=> \&XS_euclidean_distance,
+		'LQUARTER'	=> &XS_LP(0.25),
+		'LTHIRD'	=> &XS_LP(1.0/3.0),
+		'LHALF'		=> &XS_LP(0.5),
+		'LP1'		=> &XS_LP(1),
+		'LP2'		=> &XS_LP(2),
+		'LP3'		=> &XS_LP(3),
+		'LP4'		=> &XS_LP(4),
+		'MAXIMUM'	=> \&XS_maximum_distance,
+		'CANBERRA'	=> \&XS_canberra_distance,
+		'BRAY_CURTIS'	=> \&XS_bray_curtis_distance,
+		'CORRELATION'	=> \&XS_correlation_distance
+	);
+
+	my %BINARY_XS_FUNCTIONS = (
+		'covariance'	=> \&XS_covariance,
+		'correlation'	=> \&XS_correlation,
+		'dot_product'	=> \&XS_dot_product
+	);
+
+	%FUNCTIONS = (
+		%UNARY_XS_FUNCTIONS,
+		%BINARY_XS_FUNCTIONS,
+		%DISTANCE_XS_FUNCTIONS
+	);	
+} else {
+	warn "ASSIGNING PP FUNCTIONS\n" if $DEBUG;
+
+	my %UNARY_PP_FUNCTIONS = (
+		'max'		=> sub { $_[0]->aggregate( $F->max , $F->identity ) },
+		'min'		=> sub { $_[0]->aggregate( $F->min , $F->identity ) },
+		'mean'		=> sub { $_[0]->aggregate( $F->plus, $F->identity ) / $_[0]->size },
+		'sum'		=> sub { $_[0]->aggregate( $F->plus, $F->identity ) },
+		'variance'	=> sub { my $mean = &mean->($_[0]);
+					return ($_[0]->aggregate( $F->plus, $F->square)
+					- $mean * $_[0]->aggregate($F->plus, $F->identity))/($_[0]->size - 1) },
+		'stdev'		=> sub { sqrt( &variance->($_[0]) ) }
+	);
+
+
+	my %BINARY_PP_FUNCTIONS = (
+		'covariance'	=> sub { my $size = $_[0]->size;
+	                                 my $sum = 0;
+	                                 my $ma = &mean->($_[0]);
+	                                 my $mb = &mean->($_[1]);
+	
+					 my $i = -1;
+	                                 while( ++$i < $size ) {
+	                                 	$sum+= ($_[0]->get_quick($i) - $ma) * ($_[1]->get_quick($i) - $mb)
+					 }
+	
+					 return $sum / ($size - 1) 
+				       },
+		'correlation'	=> sub { my $sa = &stdev->($_[0]);
+	                                 my $sb = &stdev->($_[1]);
+	
+	                                 return &covariance->($_[0],$_[1])/($sa*$sb)
+	                               }, 
+		'dot_product'	=> sub { $_[0]->aggregate($_[1], $F->plus, $F->mult ) }
+	);
+
+
+	my %DISTANCE_PP_FUNCTIONS = (
+		'MANHATTAN'	=> sub { $_[0]->aggregate( $_[1], $F->plus, $F->chain( $F->abs, $F->minus)) },
+		'EUCLID'	=> sub { sqrt( $_[0]->aggregate($_[1], $F->plus, $F->chain( $F->square, $F->minus))) },
+		'LQUARTER'	=> &LP(0.25),
+		'LTHIRD'	=> &LP(1.0/3.0),
+		'LHALF'		=> &LP(0.5),
+		'LP1'		=> &LP(1),
+		'LP2'		=> &LP(2),
+		'LP3'		=> &LP(3),
+		'LP4'		=> &LP(4),
+		'MAXIMUM'	=> sub { $_[0]->aggregate( $_[1], $F->max, $F->chain($F->abs, $F->minus )) },
+		'CANBERRA'	=> sub { $_[0]->aggregate( $_[1], $F->plus, sub { abs($_[0] - $_[1]) / abs($_[0] + $_[1]) } )},
+		'BRAY_CURTIS'	=> sub { $_[0]->aggregate( $_[1], $F->plus, $F->chain($F->abs, $F->minus)) /
+					 $_[0]->aggregate( $_[1], $F->plus, $F->plus) },
+		'CORRELATION'	=> sub { 1 - &correlation->($_[0],$_[1]) }
+	);
+
+
+	%FUNCTIONS = (
+		%UNARY_PP_FUNCTIONS,
+		%BINARY_PP_FUNCTIONS,
+		%DISTANCE_PP_FUNCTIONS
+	);	
+}
+
+
+while (my ($k,$v) = each %FUNCTIONS) {
+	*$k = sub { return $v };
+}
+
+sub new { bless ( {}, $_[0] ) }
+
+sub LP {
+	my $p = $_[0];
+	return sub { ($_[0]->aggregate($_[1], $F->plus,
+                                       $F->chain( $F->pow($p),
+                                                  $F->chain($F->abs, $F->minus))))
+                      ** (1/$p)
+                   }
+}
+
+sub XS_LP {
+	# OK, it's a semi-perl method...
+	my $p = $_[0];
+	return sub { &XS_LP_distance( $_[0], $_[1], $p ) };
+}
 
 use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
@@ -21,49 +146,132 @@ use Inline C => <<'END_OF_C_CODE';
 #include "data.h"
 #include "vector.h"
 #include "perl2c.h"
+#include "functions/functions.h"
 #include "functions/vector.h"
+#include "functions/vectorvector.h"
 
 #include "../lib/vector.c"
 #include "../lib/functions/vector.c"
+#include "../lib/functions/vectorvector.c"
 #include "../lib/functions/functions.c"
 
-NV v_variance ( SV* self ) {
+NV XS_max (SV* self) {
+    SV_2STRUCT( self, Vector, v );
+    return (NV) c_v_max( v->size, v );
+}
+
+NV XS_min (SV* self) {
+    SV_2STRUCT( self, Vector, v );
+    return (NV) c_v_min( v->size, v );
+}
+
+NV XS_variance ( SV* self ) {
     SV_2STRUCT( self, Vector, v );
     return (NV) c_v_variance( v->size, v );
 }
 
-NV v_variance2 ( SV* self ) {
+NV XS_variance2 ( SV* self ) {
     SV_2STRUCT( self, Vector, v );
     return (NV) c_v_variance2( v->size, v );
 }
 
-NV v_mean ( SV* self ) {
+NV XS_mean ( SV* self ) {
     SV_2STRUCT( self, Vector, v );
     return (NV) c_v_mean( v->size, v );
 }
 
-NV v_sum ( SV* self ) {
+NV XS_sum ( SV* self ) {
     SV_2STRUCT( self, Vector, v );
     return (NV) c_v_sum( v );
 }
 
-NV v_stdev ( SV* self ) {
+NV XS_stdev ( SV* self ) {
     SV_2STRUCT( self, Vector, v );
     return (NV) sqrt( c_v_variance2( v->size, v ) );
 }
 
-IV v_scale ( SV* self, NV value ) {
-    SV_2STRUCT( self, Vector, v );
+NV XS_covariance ( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );	
+    SV_2STRUCT( other, Vector, v );	
 
-    return (IV) c_v_scale( v, value );
+    return (NV) c_vv_covariance( u->size, u, v );
 }
 
-IV v_add_constant( SV* self, NV value ) {
-    SV_2STRUCT( self, Vector, v);
+NV XS_correlation ( SV* self, SV* other ) {
 
-    return (IV) c_v_add_constant( v, value ); 
+    SV_2STRUCT( self, Vector, u );	
+    SV_2STRUCT( other, Vector, v );	
+
+    return (NV) c_vv_correlation( u->size, u, v );
 }
 
+NV XS_dot_product( SV* self, SV* other ) {
+
+    SV_2STRUCT( self, Vector, u );	
+    SV_2STRUCT( other, Vector, v );	
+
+    return (NV) c_vv_dot_product(u, v, 0, u->size );
+}
+
+NV XS_manhattan_distance( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    return (NV) c_vv_aggregate_quick( u->size, u, v, &c_plus, &c_abs_diff );
+}
+
+NV XS_euclidean_distance( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    return (NV) sqrt( c_vv_aggregate_quick( u->size, u, v, &c_plus, &c_square_diff ) );
+}
+
+NV XS_maximum_distance( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    return (NV) c_vv_aggregate_quick( u->size, u, v, &c_max, &c_abs_diff );    
+}
+
+NV XS_bray_curtis_distance( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    return (NV) c_vv_aggregate_quick( u->size, u, v, &c_plus, &c_abs_diff ) /
+                c_vv_aggregate_quick( u->size, u, v, &c_plus, &c_plus );    
+}
+
+NV XS_correlation_distance( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    return (NV) ( 1 - c_vv_correlation( u->size, u, v ) );    
+}
+
+NV XS_LP_distance( SV* self, SV* other, SV* p_value ) {
+    SV_2STRUCT(  self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    const size_t size = u->size;
+    const double p    = SvNV( p_value );
+
+    double result = c_p_diff( c_v_get_quick( u, 0 ), c_v_get_quick( v, 0 ), p );
+    
+    size_t i;
+    for (i = 1; i < size; i++ ) {
+        result += c_p_diff( c_v_get_quick( u, i ), c_v_get_quick( v, i ), p );
+    }
+
+    return (NV) pow( result, 1 / p );
+}
+
+NV XS_canberra_distance( SV* self, SV* other ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+
+    return (NV) c_vv_aggregate_quick( u->size, u, v, &c_plus, &c_canberra_diff );
+}
 END_OF_C_CODE
 
 1;

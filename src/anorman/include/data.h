@@ -13,86 +13,82 @@
 
 #include <stddef.h>
 
-struct matrix_struct
-{
-    size_t rows;
-    size_t columns;
-    size_t row_zero;
-    size_t column_zero;
-    size_t row_stride;
-    size_t column_stride;
-    double *elements;
-    int view_flag;
-};
-
-typedef struct matrix_struct Matrix;
-
-struct select_matrix_struct
-{
-    size_t rows;
-    size_t columns;
-    size_t row_zero;
-    size_t column_zero;
-    size_t row_stride;
-    size_t column_stride;
-    size_t offset;
-    size_t *row_offsets;
-    size_t *column_offsets;
-    double *elements; 	
-    int view_flag;
-};
-
-typedef struct select_matrix_struct SelectedMatrix;
-
-struct vector_struct
-{
-    size_t size;
-    size_t zero;
-    size_t stride;
-    double *elements;
-    int view_flag;
-};
-
-typedef struct vector_struct Vector;
-
-struct select_vector_struct
-{
-    size_t size;
-    size_t zero;
-    size_t stride;
-    size_t offset;
-    size_t *offsets;
-    double* elements;
-    int view_flag;
-};
-
-typedef struct select_vector_struct SelectedVector;
+#define MAX_NUM_ELEMENTS 2147483647
 
 struct intlist_struct
 {
     size_t size;
-    int* elements;
+    int*   elements;
 };
-
-typedef struct intlist_struct IntList;
 
 struct doublelist_struct
 {
-    size_t size;
+    size_t  size;
     double* elements;
 };
 
+typedef struct intlist_struct IntList;
 typedef struct doublelist_struct DoubleList;
 
-struct intdoublemap_struct
+struct int_double_map_struct
 {
-    char* states;
-    size_t *table;
-    double* values;
-    int   distinct;
+    uint8_t  * states;
+    size_t   * values;
+    double   * table;
+    size_t   low_water_mark;
+    size_t   high_water_mark;
+    double   min_load_factor;
+    double   max_load_factor;
 };
 
-typedef struct intdoublemap_struct IntDoubleMap;
+typedef struct int_double_map_struct IntDoubleMap;
 
+
+struct vector_offsets_struct
+{
+    size_t  offset;
+    size_t* offsets;
+};
+
+typedef struct vector_offsets_struct VectorOffsets;
+
+struct vector_struct
+{
+           size_t size;
+           size_t zero;
+           size_t stride;
+           double * elements;
+    VectorOffsets * offsets;
+     IntDoubleMap * hash_map;
+              int view_flag;
+};
+
+typedef struct vector_struct Vector;
+
+
+struct matrix_offsets_struct
+{
+    size_t offset;
+    size_t *row_offsets;
+    size_t *column_offsets;
+};
+
+typedef struct matrix_offsets_struct MatrixOffsets;
+
+struct matrix_struct
+{
+           size_t rows;
+           size_t columns;
+           size_t row_zero;
+           size_t column_zero;
+           size_t row_stride;
+           size_t column_stride;
+           double * elements;
+    MatrixOffsets * offsets;
+     IntDoubleMap * hash_map;
+              int view_flag;
+};
+
+typedef struct matrix_struct Matrix;
 
 #endif

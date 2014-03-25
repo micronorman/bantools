@@ -46,6 +46,13 @@ double c_vv_covariance( size_t size, Vector* a, Vector* b ) {
     return covariance * ((double)size / (double)(size -1));
 }
 
+double c_vv_correlation( size_t size, Vector* a, Vector* b ) {
+    const double sa = c_v_stdev( size, a );
+    const double sb = c_v_stdev( size, b );
+
+    return c_vv_covariance( size, a, b ) / (sa * sb);
+}
+
 void c_vv_plusmult_assign( size_t size, Vector* a, Vector* b, double multiplicator ) {
     double* const a_elems = a->elements;
     double* const b_elems = b->elements;

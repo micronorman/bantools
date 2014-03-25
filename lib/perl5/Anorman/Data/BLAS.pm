@@ -68,9 +68,8 @@ use constant {
 
 %EXPORT_TAGS = ( 
 
-L1 => [ qw(BlasNoTrans BlasTrans BlasConjTrans BlasUpper BlasLower
-           BlasNonUnit BlasUnit BlasLeft BlasRight blas_dot blas_nrm2
-           blas_asum blas_iamax blas_swap blas_copy blas_axpy blas_scal) ],
+L1 => [ qw(blas_dot blas_nrm2 blas_asum blas_iamax blas_swap blas_copy
+           blas_axpy blas_scal) ],
 
 L2 => [ qw(BlasNoTrans BlasTrans BlasConjTrans BlasUpper BlasLower
            BlasNonUnit BlasUnit BlasLeft BlasRight blas_gemv blas_symv
@@ -256,27 +255,16 @@ sub blas_axpy ($$$) {
 		while ( ++$i < $N ) {
 			$Y->set_quick($i, $Y->get_quick($i) + $alpha * $X->get_quick($i) );
 		}
-
 	} else {
 		trace_error("Invalid length");
 	}
 }
 
-sub blas_rotg {
-	...
-}
+sub blas_rotg  {...}
+sub blas_rot   {...}
+sub blas_rotmg {...}
+sub blas_rotm  {...}
 
-sub blas_rot {
-	...
-}
-
-sub blas_rotmg {
-	...
-}
-
-sub blas_rotm {
-	...
-}
 
 # Scale vector
 
@@ -802,8 +790,8 @@ sub blas_syr2 {
 sub blas_gemm ($$$$$$$) {
 	my ($TransA, $TransB, $alpha, $A, $B, $beta, $C) = @_;
 
-	my $M = $C->rows;
-	my $N = $C->columns;
+	my $M  = $C->rows;
+	my $N  = $C->columns;
 	my $MA = ($TransA == BlasNoTrans) ? $A->rows    : $A->columns;
 	my $NA = ($TransA == BlasNoTrans) ? $A->columns : $A->rows;
 	my $MB = ($TransB == BlasNoTrans) ? $B->rows    : $B->columns;

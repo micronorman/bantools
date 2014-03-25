@@ -4,6 +4,7 @@ use strict;
 
 use parent qw(Anorman::Data::Vector::Abstract Anorman::Data::Vector);
 
+use Anorman::Data::Matrix::Dense;
 use Anorman::Data::LinAlg::Property qw( :vector );
 use Anorman::Common qw(sniff_scalar trace_error);
 
@@ -18,7 +19,6 @@ my %ASSIGN_DISPATCH = (
 sub new {
 	my $that  = shift;
 	my $class = ref $that || $that;
-	my $self  = $class->SUPER::new();
 
 	if (@_ != 1 && @_ != 4) {
 		trace_error("Wrong number of arguments");
@@ -93,6 +93,10 @@ sub like {
 	return defined $_[0] ? $self->new( $_[0] ) : $self->new( $self->size );
 }
 
+sub like_matrix {
+	return Anorman::Data::Matrix::Dense->new($_[1],$_[2]);
+}
+
 sub dot_product {
 	my ($self,$other, $from, $length) = @_;
 
@@ -153,10 +157,9 @@ sub swap {
 	my ($self, $other) = @_;
 	
 	check_vector( $other );
+	$self->SUPER::swap( $other ) unless $other->isa('Anorman::Data::Vector::Dense');
 	return if ($self == $other);
 	$self->_check_size( $other );
-
-	$self->SUPER::swap( $other ) unless $other->isa('Anorman::Data::Vector::Dense');
 
 	# optimized element swapping
 	my $A_elems =  $self->{'_ELEMS'};
@@ -192,9 +195,14 @@ sub sum {
 		$sum += $elems->[ $i ];
 		$i += $s;
 	}
+
 	return $sum;
 }
 
+sub _add_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]+$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]+$v })} 
+sub _sub_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]-$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]-$v })} 
+sub _mul_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]*$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]*$v })}
+sub _div_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]/$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]/$v })}
 
 # Assignment functions
 
@@ -226,7 +234,8 @@ sub _assign_DenseVector_from_OBJECT {
 
 	# optimized element copying
 	if ($self->_is_noview && $other->_is_noview) {
-		@{ $self->{'_ELEMS'} } = @{ $other->{'_ELEMS'} };	
+		@{ $self->{'_ELEMS'} } = @{ $other->{'_ELEMS'} };
+		return 1;	
 	}
 
 	my $A_elems =  $self->{'_ELEMS'};
@@ -234,11 +243,10 @@ sub _assign_DenseVector_from_OBJECT {
 	my $A_str   =  $self->{'stride'};
 	my $B_str   = $other->{'stride'};
 		
-	my $i = $self->_index( 0 );
+	my $i =  $self->_index( 0 );
 	my $j = $other->_index( 0 );
 
 	my $k = $self->size;
-
 	while (--$k >= 0) {
 		$A_elems->[ $i ] = $B_elems->[ $j ];
 		$i += $A_str;
@@ -308,7 +316,6 @@ sub _assign_DenseVector_from_CODE {
 
 	1;
 }
-
 
 sub _have_shared_cells_raw {
 	my ($self, $other) = @_;

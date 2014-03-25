@@ -7,7 +7,7 @@ use Anorman::Common;
 
 use vars qw(@ISA @EXPORTER @EXPORT_OK);
 
-@EXPORT_OK = qw(vv_covariance vv_add vv_minus vv_dist_euclidean vv_squared_dist_euclidean);
+@EXPORT_OK = qw(vv_covariance vv_dist_euclidean vv_squared_dist_euclidean);
 @ISA       = qw(Exporter);
 
 
@@ -65,7 +65,7 @@ NV vv_dist_euclidean_upto( SV* self, SV* other, NV threshold ) {
     return (NV) c_vv_dist_euclidean_upto( u->size, u, v, threshold );
   
 }
-
+/*
 void vv_minus( SV* self, SV* other ) {
     SV_2STRUCT( self, Vector, u );
     SV_2STRUCT( other, Vector, v );
@@ -79,7 +79,7 @@ void vv_add( SV* self, SV* other ) {
 
     c_vv_add( u, v );
 }
-
+*/
 END_OF_C_CODE
 
 1;

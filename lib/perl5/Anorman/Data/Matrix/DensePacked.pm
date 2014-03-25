@@ -1,7 +1,9 @@
 package Anorman::Data::Matrix::DensePacked;
 
 use strict;
-use parent qw(Anorman::Data::Abstract Anorman::Data::Matrix);
+use warnings;
+
+use parent qw(Anorman::Data::Matrix::Abstract Anorman::Data::Matrix);
 
 use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::LinAlg::Property qw(is_packed);
@@ -13,7 +15,7 @@ my %ASSIGN_DISPATCH = (
 	'2D_MATRIX'   => \&_assign_DensePackedMatrix_from_2D_MATRIX,
 	'OBJECT'      => \&_assign_DensePackedMatrix_from_OBJECT,
 	'OBJECT+CODE' => \&Anorman::Data::Matrix::_assign_Matrix_from_OBJECT_and_CODE,	
-	'CODE'        => \&Anorman::Data::Matrix::_assign_Matrix_from_CODE
+	'CODE'        => \&_assign_DensePackedMatrix_from_CODE
 );
 
 sub new {
@@ -22,7 +24,7 @@ sub new {
 	trace_error("Wrong number of arguments") if (@_ != 1 && @_ != 2 && @_ != 7);
 
 	my $class = ref $that || $that;
-	my $self  = $class->_new_abstract_matrix;
+	my $self  = $class->_bless_matrix_struct;
 
 	if (@_ == 1) {
 		$self->_new_from_AoA(@_);
@@ -43,7 +45,7 @@ sub _new_from_AoA {
 	my $columns = @{ $_[0] } == 0 ? 0 : @{ $_[0]->[0] };
 
 	$self->_new_from_dims( $rows, $columns );
-	$self->_assign_DenseMatrix_from_2D_MATRIX( $_[0] );
+	$self->_assign_DensePackedMatrix_from_2D_MATRIX( $_[0] );
 }
 
 sub _new_from_dims {
@@ -138,12 +140,10 @@ use Inline (C => Config =>
 use Inline C => <<'END_OF_C_CODE';
 
 #include <stdio.h>
-#include <limits.h>
 #include "data.h"
 #include "matrix.h"
 #include "perl2c.h"
 #include "error.h"
-
 #include "../lib/matrix.c"
 
 /*===========================================================================
@@ -151,7 +151,7 @@ use Inline C => <<'END_OF_C_CODE';
  ============================================================================*/
 
 /* object constructors */
-SV* _new_abstract_matrix( SV* sv_class_name ) {
+SV* _bless_matrix_struct( SV* sv_class_name ) {
     Matrix* m;
     SV* self;
 
@@ -191,7 +191,7 @@ UV columns(SV* self) {
     return (UV) ((Matrix*)SvIV(SvRV(self)))->columns;
 }
 
-UV row_zero(SV* self) {
+UV _row_zero(SV* self) {
     return (UV) ((Matrix*)SvIV(SvRV(self)))->row_zero;
 }
 
@@ -245,26 +245,7 @@ UV _column_offset (SV* self, UV index ) {
     return index;
 }
 
-SV* _elements (SV* self) {
 
-    SV_2STRUCT( self, Matrix, m );
-    PTR_2SVADDR( m->elements, sv_addr );
-
-    return sv_addr;
-}
-
-
-void _set_elements (SV* self, SV* sv_addr ) {
-
-    SVADDR_2PTR( sv_addr, elems_ptr );
-    SV_2STRUCT( self, Matrix, m );
-
-    if (!m->elements) {
-        m->elements = elems_ptr;
-    } else {
-        C_ERROR_VOID("This matrix was already assigned an elements pointer", C_EINVAL );
-    }   
-}
 
 /* object initializors */
 
@@ -290,7 +271,7 @@ void _setup ( SV* self, ... ) {
         m->view_flag     = 0;
    }
 
-    if ((m->rows * m->columns) > LONG_MAX) {
+    if ((m->rows * m->columns) > MAX_NUM_ELEMENTS) {
         C_ERROR_VOID("Matrix is too large", C_EINVAL );
     }
 }
@@ -362,6 +343,12 @@ void DESTROY(SV* self) {
     c_m_free( m );
 }
 
+void _dump( SV* self ) {
+    SV_2STRUCT( self, Matrix, m );
+
+    c_m_show_struct( m );
+}
+
 
 /*===========================================================================
  DenseMatrix Functions
@@ -385,6 +372,26 @@ NV _index( SV* self, UV i, UV j ) {
     return (NV) (m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride);
 }
 
+SV* _elements (SV* self) {
+
+    SV_2STRUCT( self, Matrix, m );
+    PTR_2SVADDR( m->elements, sv_addr );
+
+    return sv_addr;
+}
+
+void _set_elements (SV* self, SV* sv_addr ) {
+
+    SVADDR_2PTR( sv_addr, elems_ptr );
+    SV_2STRUCT( self, Matrix, m );
+
+    if (!m->elements) {
+        m->elements = elems_ptr;
+    } else {
+        C_ERROR_VOID("This matrix was already assigned an elements pointer", C_EINVAL );
+    }   
+}
+
 SV* _allocate_elements( SV* self, UV num_elems ) {
     SV_2STRUCT( self, Matrix, m );
 
@@ -396,7 +403,61 @@ SV* _allocate_elements( SV* self, UV num_elems ) {
         
     return sv_addr;
 }
+SV* _sub_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Matrix, u );
 
+    if (!SvROK(other)) {
+        c_m_add_constant( u, -( SvNV( other )));
+    } else {
+        SV_2STRUCT( other, Matrix, v );
+        c_mm_sub( u, v );
+    }
+    
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _add_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Matrix, u );
+
+    if (!SvROK(other)) {
+        c_m_add_constant( u, SvNV( other ));
+    } else {
+        SV_2STRUCT( other, Matrix, v );
+        c_mm_add( u, v );
+    }
+
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _div_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Matrix, u );
+
+    if (!SvROK(other)) {
+        c_m_scale( u, 1 / SvNV( other ) );
+    } else {
+        SV_2STRUCT( other, Matrix, v );
+        c_mm_div( u, v );
+    }
+
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _mul_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Matrix, u );
+
+    if (!SvROK(other)) {
+        c_m_scale( u, SvNV( other ) );
+    } else {
+        SV_2STRUCT( other, Matrix, v );
+        c_mm_mul( u, v );
+    }
+
+    SvREFCNT_inc( self );
+    return self;
+}
 
 /* data assignment functions */
 void _assign_DensePackedMatrix_from_2D_MATRIX(SV* self, AV* array_of_arrays ) {
@@ -455,7 +516,7 @@ void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
     XPUSHs( other );
     PUTBACK;
        
-    call_method("Anorman::Data::Matrix::check_shape", G_VOID );
+    call_method("Anorman::Data::Matrix::Abstract::check_shape", G_VOID );
 
     LEAVE;
 
@@ -466,6 +527,45 @@ void _assign_DensePackedMatrix_from_OBJECT ( SV* self, SV* other ) {
     }
 
     c_mm_copy( A, B );
+}
+
+void _assign_DensePackedMatrix_from_CODE( SV* self, SV* code ) {
+    HV *stash;
+    GV *gv;
+    CV* cv = sv_2cv( code, &stash, &gv, 0);
+
+    if (cv == Nullcv) {
+         C_ERROR_VOID("Not a subroutine reference", C_EINVAL );
+    }
+
+    SV_2STRUCT( self, Matrix, m );
+
+    double* elems = m->elements;
+    size_t index = c_m_index(m, 0,0);
+
+    const size_t cs = m->column_stride;
+    const size_t rs = m->row_stride;
+
+    size_t row,column;
+    for (row = 0; row < m->rows; row++ ) {
+        size_t i = index;
+        for (column = 0; column < m->columns; column++ ) {
+            dSP;
+
+            PUSHMARK(SP);
+            XPUSHs( sv_2mortal( newSVnv( elems[ i ])));
+            PUTBACK;
+
+            call_sv((SV*)cv, G_SCALAR);
+            elems[ i ] =  SvNV( *PL_stack_sp );
+
+            FREETMPS;
+
+            i += cs;
+        }
+
+        index += rs;
+    }
 }
 
 void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* function ) {
@@ -488,7 +588,14 @@ NV sum( SV* self ) {
     return (NV) c_m_sum( m );
 }
 
-void _mult_matrix_matrix ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv_beta ) {
+void _mult_matrix_matrix ( SV* self, 
+                           SV* other,
+                           SV* result,
+                           SV* sv_alpha,
+                           SV* sv_beta,
+                           SV* sv_transA,
+                           SV* sv_transB )
+{
 
     /* call parent method if data is not in packed format */
     if ( strEQ( sv_reftype( SvRV(self), TRUE), sv_reftype( SvRV(other), TRUE) ) == FALSE ) {
@@ -502,6 +609,8 @@ void _mult_matrix_matrix ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
         XPUSHs( result );
         XPUSHs( sv_alpha );
         XPUSHs( sv_beta );
+	XPUSHs( sv_transA );
+	XPUSHs( sv_transB );
         PUTBACK;
        
         call_method("Anorman::Data::Matrix::_mult_matrix_matrix", G_VOID );
@@ -521,7 +630,7 @@ void _mult_matrix_matrix ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
     c_mm_mult( A, B, C, alpha, beta );
 }
 
-void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv_beta ) {
+void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv_beta, SV* sv_transA ) {
 
     /* call parent method if matrix is not packed */
     if ( strEQ( sv_reftype( SvRV(self), TRUE), sv_reftype( SvRV(other), TRUE) ) == FALSE ) {
@@ -535,6 +644,7 @@ void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
         XPUSHs( result );
         XPUSHs( sv_alpha );
         XPUSHs( sv_beta );
+        XPUSHs( sv_transA );
         PUTBACK;
        
         call_method("Anorman::Data::Matrix::_mult_matrix_vector", G_VOID );
@@ -553,12 +663,6 @@ void _mult_matrix_vector ( SV* self, SV* other, SV* result, SV* sv_alpha, SV* sv
 
     c_mv_mult( A, y, z, alpha, beta );
 } 
-
-void _dump( SV* self ) {
-    SV_2STRUCT( self, Matrix, m );
-
-    c_m_show_struct( m );
-}
 
 END_OF_C_CODE
 

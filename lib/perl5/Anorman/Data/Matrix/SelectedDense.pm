@@ -1,20 +1,27 @@
 package Anorman::Data::Matrix::SelectedDense;
 
-use parent 'Anorman::Data::Matrix';
+use strict;
+use warnings;
+
+use Anorman::Common;
+
+use parent qw(Anorman::Data::Matrix::Abstract Anorman::Data::Matrix);
 
 use Anorman::Data::Vector::SelectedDense;
 
 sub new {
-	my $class = shift;
+	my $that  = shift;
+	my $class = ref $that || $that;
+
 
 	if (@_ != 4 && @_ != 10) {
-		$class->_error("Wrong number of arguments");
+		trace_error("Wrong number of arguments");
 	}
 	
 	my ( 
              $rows,
              $columns,
-	     $elems,
+	     $elements,
              $row_zero,
              $column_zero,
              $row_stride,
@@ -24,7 +31,11 @@ sub new {
 	     $offset
            );
 
-	my $self = $class->SUPER::new();
+	my $self = bless( { '_ELEMS'   => undef,
+	                    'roffsets' => [],
+	                    'coffsets' => [],
+	                    'offset'   => undef
+	                  }, $class );
 	
 	if (@_ == 4) {
 		$row_zero      = 0;
@@ -34,7 +45,7 @@ sub new {
 		
 		($rows,
 		 $columns,
-		 $elems,
+		 $elements,
 		 $row_offsets,
 		 $column_offsets,
 		 $offset ) = ( scalar @{ $_[1] }, scalar @{ $_[2] }, $_[0], $_[1], $_[2], $_[3] ); 
@@ -42,7 +53,7 @@ sub new {
 		warn "Huh?";
 		($rows,
                  $columns,
-                 $elems,
+                 $elements,
                  $row_zero,
                  $column_zero,
                  $row_stride,
@@ -54,7 +65,7 @@ sub new {
 
 	$self->_setup( $rows, $columns, $row_zero, $column_zero, $row_stride, $column_stride );
 
-	$self->{'_ELEMS'}   = $elems;
+	$self->{'_ELEMS'}   = $elements;
 	$self->{'roffsets'} = $row_offsets;
 	$self->{'coffsets'} = $column_offsets;
 	$self->{'offset'}   = $offset;
@@ -72,8 +83,10 @@ sub _index {
 }
 
 sub _have_shared_cells_raw {
-	return ($_[0]->{'_ELEMS'} eq $_[1]->{'_ELEMS'});
-
+	if ($_[0]->isa('Anorman::Data::Matrix::SelectedDensePacked') 
+	    || $_[0]->isa('Anorman::Data::Matrix:::Dense')) {
+		return ($_[0]->{'_ELEMS'} eq $_[1]->{'_ELEMS'});
+	}
 }
 
 sub _setup {
@@ -89,15 +102,8 @@ sub _setup {
 	}
 }
 
-sub _column_offset {
-	my $self = shift;
-	return $self->{'coffsets'}->[ $_[0] ];
-}
-
-sub _row_offset {
-	my $self = shift;
-	return $self->{'roffsets'}->[ $_[0] ];
-}
+sub _column_offset { $_[0]->{'coffsets'}->[ $_[1] ] }
+sub _row_offset    { $_[0]->{'roffsets'}->[ $_[1] ] }
 
 sub view_row {
 	my $self = shift;
@@ -135,5 +141,41 @@ sub set_quick {
                         ] = $_[2];
 }
 
+sub _v_dice {
+	my $self = shift;
+
+	$self->SUPER::_v_dice();
+
+	# Swap offsets between rows and columns
+	($self->{'roffsets'},$self->{'coffsets'}) = ($self->{'coffsets'},$self->{'roffsets'});
+
+	$self->{'_VIEW'} = 0;
+
+	return $self;
+}
+
+sub _dump {
+	my $elems = defined $_[0]->{'_ELEMS'} ? $_[0]->{'_ELEMS'} : 'NULL';
+	my ($type)  = ref ($_[0]) =~ /\:\:(\w+)$/;
+	printf STDERR ("%s Matrix dump: HASH(0x%p)\n", $type, $_[0]);
+	printf STDERR ("\trows\t\t: %lu\n",    $_[0]->{'rows'}     );
+    	printf STDERR ("\tcols\t\t: %lu\n",    $_[0]->{'columns'}  );
+    	printf STDERR ("\tr0\t\t: %lu\n",      $_[0]->{'r0'}       );
+    	printf STDERR ("\tc0\t\t: %lu\n",      $_[0]->{'c0'}       );
+    	printf STDERR ("\trstride\t\t: %lu\n", $_[0]->{'rstride'}  );
+    	printf STDERR ("\troffsets\t: %s\n",   $_[0]->{'roffsets'} );
+    	printf STDERR ("\tcstride\t\t: %lu\n", $_[0]->{'cstride'}  );
+    	printf STDERR ("\tcoffsets\t: %s\n",   $_[0]->{'coffsets'} );
+    	printf STDERR ("\toffset\t\t: %lu\n",  $_[0]->{'offset'}   );
+
+	if ($elems ne 'NULL') {
+		printf STDERR ("\telements[%lu]\t: %s\n",  scalar @{ $elems }, $elems );
+	} else {
+		printf STDERR ("\telements[%lu]\t: %s\n",  0,$elems );
+
+	}
+    	printf STDERR ("\tview\t\t: %i\n\n",   $_[0]->{'_VIEW'}    );
+
+}
 
 1;

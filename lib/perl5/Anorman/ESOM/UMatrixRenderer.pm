@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Anorman::Common;
-use Anorman::Data::Matrix;
+use Anorman::Data;
 
 sub new {
 	my $that  = shift;
@@ -28,7 +28,7 @@ sub render {
 		my $w  = $grid->columns;
 		my $df = $grid->distance_function;
 
-		my $matrix = Anorman::Data::Matrix::DensePacked->new( $h, $w );
+		my $matrix = Anorman::Data->matrix( $h, $w );
 		warn "Calculating U-Matrix heights ...\n" if $VERBOSE;
 		
 		my $row = $h;

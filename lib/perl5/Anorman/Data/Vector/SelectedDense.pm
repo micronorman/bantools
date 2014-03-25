@@ -1,12 +1,18 @@
 package Anorman::Data::Vector::SelectedDense;
 
-use parent 'Anorman::Data::Vector';
+use strict;
+use warnings;
+
+use Anorman::Common;
+
+use parent qw (Anorman::Data::Vector::Abstract Anorman::Data::Vector);
 
 sub new {
-	my $class = ref ($_[0]) ? ref shift : shift;
+	my $that  = shift;
+	my $class = ref $that || $that;
 
 	if (@_ != 2 && @_ != 6) {
-		$class->_error("Wrong number of arguments");
+		trace_error("Wrong number of arguments");
 	}
 	
 	my ( 
@@ -18,7 +24,8 @@ sub new {
 	     $offset
            );
 	
-	my $self = $class->SUPER::new();
+	my $self = bless( { '_ELEMS' => undef, 'offsets' => [], 'offset' => undef }, $class );
+
 	if (@_ == 2) {
 		$zero      = 0;
 		$stride    = 1;
@@ -75,17 +82,30 @@ sub _setup {
 
 sub get_quick {
 	my $s = shift;
-	return $s->{'_ELEMS'}->[ $s->{'offset'} + $s->{'offsets'}->[ $s->{'0'} + $_[0] * $s->{'stride'} ] ];
+	return $s->{'_ELEMS'}->[ $s->{'offset'} + $s->{'offsets'}->[ $s->{'zero'} + $_[0] * $s->{'stride'} ] ];
 }
 
 sub set_quick {
 	my $s = shift;
-	$s->{'_ELEMS'}->[ $s->{'offset'} + $s->{'offsets'}->[ $s->{'0'} + $_[0] * $s->{'stride'} ] ] = $_[1];
+	$s->{'_ELEMS'}->[ $s->{'offset'} + $s->{'offsets'}->[ $s->{'zero'} + $_[0] * $s->{'stride'} ] ] = $_[1];
 }
 
 sub _view_selection_like {
 	my $self = shift;
 	return $self->new($self->{'_ELEMS'}, $_[0] );
+}
+
+sub _dump {
+	my $elems = defined $_[0]->{'_ELEMS'} ? $_[0]->{'_ELEMS'} : 'NULL';
+	my ($type)  = ref ($_[0]) =~ /\:\:(\w+)$/;
+	printf STDERR ("%s Vector dump: HASH(0x%p)\n", $type, $_[0]);
+	printf STDERR ("\tsize\t\t: %lu\n",   $_[0]->{'size'}    );
+    	printf STDERR ("\tzero\t\t: %lu\n",   $_[0]->{'zero'}    );
+    	printf STDERR ("\tstride\t\t: %lu\n", $_[0]->{'stride'}  );
+    	printf STDERR ("\toffsets\t: %s\n",   $_[0]->{'offsets'} );
+	printf STDERR ("\telements\t: %s\n",  $elems             );
+    	printf STDERR ("\tview\t\t: %i\n\n",  $_[0]->{'_VIEW'}   );
+
 }
 
 1;

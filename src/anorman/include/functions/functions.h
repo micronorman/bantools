@@ -12,6 +12,9 @@ double c_divide ( double, double );
 double c_max ( double, double );
 double c_min ( double, double );
 double c_abs_diff( double, double );
+double c_square_diff( double, double );
+double c_p_diff(double,double,double);
+double c_canberra_diff( double, double );
 
 double c_identity( double );
 double c_abs( double );

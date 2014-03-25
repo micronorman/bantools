@@ -7,6 +7,8 @@ use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::Config qw( :string_rules );
 use Scalar::Util qw(blessed looks_like_number refaddr);
 use Anorman::Data::LinAlg::Property qw( :vector );
+use Anorman::Math::Functions;
+use Anorman::Data::Functions::Vector;
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'      => \&_assign_Vector_from_NUMBER,
@@ -16,7 +18,8 @@ my %ASSIGN_DISPATCH = (
 	'CODE'        => \&_assign_Vector_from_CODE
 );
 
-# general element retrieval
+# Universal matrix get/set commands. Performs sanity check on indexes
+
 sub get {
 	my $self = shift;
 	$self->_check_index( $_[0] );
@@ -31,18 +34,53 @@ sub set {
 
 sub aggregate {
 	my $self = shift;
+	$self->aggregate( $_[0], Anorman::Math::Functions::identity ) if @_ == 1;
 
-	my ($aggr,$f) = @_;
+	my $a;
 
-	my $i = $self->size - 1;
-	my $a = $f->( $self->get_quick( $i ) );
+	if (@_ == 2) {
+		my ($aggr,$f) = @_;
 
-	while ( --$i >= 0 ) {
-		$a = $aggr->( $a, $f->( $self->get_quick($i) ) );
+		my $i = $self->size - 1;
+		
+		$a = $f->( $self->get_quick( $i ) );
+
+		while ( --$i >= 0 ) {
+			$a = $aggr->( $a, $f->( $self->get_quick($i) ) );
+		}
+	} elsif (@_ == 3) {
+		my ($other, $aggr, $f) = @_;
+		
+		$self->_check_size($other);
+		
+		my $i = $self->size - 1;
+		
+		$a = $f->( $self->get_quick( $i ), $other->get_quick( $i ) );
+
+		while ( --$i >= 0 ) {
+			$a = $aggr->( $a, $f->( $self->get_quick($i), $other->get_quick($i) ) );
+		}
 	}
-
+		
 	return $a;
 }
+
+sub normalize {
+	my $self = shift;
+	my $F = Anorman::Math::Functions->new();
+	my $max = $self->aggregate($F->max, $F->identity);
+	my $min = $self->aggregate($F->min, $F->identity);
+
+	return if ($max == 1 && $min == 0);
+
+	$self->assign( $F->minus($min) );
+	$self->assign( $F->div($max-$min));
+}
+
+sub ztrans {
+
+}
+
 
 sub view_part {
 	my $self = shift;
@@ -168,7 +206,7 @@ sub dot_product {
 
 	my $tail = $from + $length;
 
-	$tail = $self->size  if ($self->size < $tail);
+	$tail =  $self->size if ( $self->size < $tail);
 	$tail = $other->size if ($other->size < $tail);
 
 	$length = $tail - $from;
@@ -189,7 +227,7 @@ sub sum {
 	my $self = shift;
 	return 0 if $self->size == 0;
 
-	return $self->aggregate( sub { return $_[0] + $_[1] }, sub { shift } ); 
+	return $self->aggregate( Anorman::Math::Functions::plus, Anorman::Math::Functions::identity ); 
 }
 
 # (semi)private methods
@@ -228,87 +266,5 @@ sub _check_size {
 		$self->_error("Vectors have different sizes: (" . $self->size . " and " . $other->size . ")" );
 	} 
 }
-
-
-sub _add {
-	my ($v, $u, $rev_bit) = @_;
-	
-	# set up result vector
-	my $r = $v->like;
-	my $i = $v->size;
-
-	# second argument is vector
-	if (is_vector($u)) {
-		$v->_check_size($u);
-
-		while (--$i >= 0) {
-			$r->set_quick( $i, $v->get_quick( $i ) + $u->get_quick( $i ) );	
-		}
-
-	# second argument is number
-	} elsif (looks_like_number $u) {
-
-		while (--$i >= 0) {
-			$r->set_quick( $i, $v->get_quick( $i ) + $u );	
-		}
-	} else {
-		trace_error("Second argument must be either a vector or a number");
-	}
-
-	return $r;
-}
-
-sub _sub {
-	my ($v, $u, $rev_bit) = @_;
-
-	my $r = $v->like;
-	my $i = $v->size;
-
-	if (is_vector($u)) {
-		$v->_check_size($u);
-
-		while ( --$i >= 0 ) {
-			$r->set_quick( $i, $v->get_quick( $i ) - $u->get_quick( $i ) );
-		}
-	} elsif (looks_like_number($u)) {
-		
-		while ( --$i >= 0 ) {
-			$r->set_quick( $i, $v->get_quick( $i ) - $u );
-		}
-	} 
-
-	return $r;	
-}
-
-sub _div {
-
-}
-
-sub _mul {
-
-}
-
-sub _add_assign {
-	my ($v, $u, $rev_bit) = @_;
-	my $i = $v->size;
-
-	if (blessed $u) {
-		while (--$i >= 0) {
-			$v->set_quick( $i, $v->get_quick( $i ) + $u->get_quick( $i ) );	
-		}
-	} elsif (looks_like_number $u) {
-		while (--$i >= 0) {
-			$v->set_quick( $i, $v->get_quick( $i ) + $u );	
-		}
-	} else {
-		trace_error("Function was passed something illegal");
-	}
-
-	return $v;
-}
-
-sub _sub_assign {}
-sub _mul_assign {}
-sub _div_assign {}
 
 1;

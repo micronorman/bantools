@@ -6,6 +6,7 @@ use warnings;
 use parent 'Anorman::ESOM::File';
 
 use Anorman::Common;
+use Anorman::Data;
 use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::ESOM::Config;
 
@@ -18,9 +19,7 @@ sub data {
 	if (is_matrix($data)) {
 		$self->{'data'} = $data;
 	} else {
-		$self->{'data'} = $Anorman::ESOM::Config::PACK_MATRIX_DATA ? 
-		Anorman::Data->packed_matrix($data) : 
-		Anorman::Data->matrix($data);
+		$self->{'data'} = Anorman::Data->matrix($data);
 	}
 }
 
@@ -56,9 +55,7 @@ sub _init {
 
 	trace_error("Invalid matrix dimensions") unless (defined $rows && defined $columns);
 
-	$self->{'data'} = $Anorman::ESOM::Config::PACK_MATRIX_DATA ? 
-		Anorman::Data->packed_matrix($rows, $columns) : 
-		Anorman::Data->matrix($rows,$columns);
+	$self->{'data'} = Anorman::Data->matrix($rows,$columns);
 }
 
 1;

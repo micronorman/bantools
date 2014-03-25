@@ -10,6 +10,8 @@ use Anorman::Data::LinAlg::Property qw(is_matrix);
 use Math::Random::MT::Auto qw(gaussian);
 use Math::Random::MT::Auto::Range;
 
+use Data::Dumper;
+
 sub new {
 	my $class = shift;
 

@@ -292,7 +292,7 @@ sub data {
 
 		# Initialize bestmatches and permutations
 		$#{ $self->{'_bestmatches'} }  = $data->rows - 1;
-		$self->{'_distances'} = Anorman::Data->packed_vector( $data->rows );
+		$self->{'_distances'} = Anorman::Data->vector( $data->rows );
 		$self->{'_permutation'} = [ 0 .. $data->rows - 1 ];
 	} else {
 		return $self->{'data'};
@@ -486,8 +486,6 @@ package Anorman::ESOM::SOM::KBatch;
 use parent -norequire, 'Anorman::ESOM::SOM';
 
 use Anorman::Common;
-use Anorman::Data::Functions::VectorVector qw(vv_add);
-use Anorman::Data::Functions::Vector qw(v_scale);
 
 my $NUM_UPDATES = 0;
 
@@ -578,7 +576,8 @@ sub _add_bestmatch {
 	my $self = shift;
 	my ( $bmh, $vector ) = @_;
 
-	vv_add( $bmh->[0], $vector );
+	# Add new vector and increase the vector count
+	$bmh->[0] += $vector;
 	$bmh->[1]++;
 }
 
@@ -586,8 +585,9 @@ sub _mean_bestmatch {
 	my $self = shift;
 	my ( $bmh, $vector ) = @_;
 
+	# Return the mean of the pooled bestmatch vectors
 	if ( $bmh->[1] > 1 ) {
-		v_scale( $bmh->[0], 1 / $bmh->[1] );
+		$bmh->[0] /= $bmh->[1];
 		$bmh->[1] = 1;
 	}
 

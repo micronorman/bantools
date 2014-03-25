@@ -14,7 +14,6 @@ use Anorman::Common;
 
 use Anorman::Math::Common qw(quiet_sqrt);
 use Anorman::Data::Algorithms::Statistic;
-use Anorman::Data::Functions::VectorVector qw(vv_minus_assign vv_squared_dist_euclidean);
 use Anorman::Data::LinAlg::CholeskyDecomposition;
 use Anorman::Data::LinAlg::LUDecomposition;
 use Anorman::Data::LinAlg::QRDecomposition;
@@ -37,12 +36,12 @@ sub new {
 
 		my $j = $n;
 		while ( --$j >= 0 ) {
-			$means[ $j ] = $M->view_column( $j )->sum / $n;
+			$means[ $j ] = $M->view_column( $j )->sum / $m;
 		}
-		
-		$self->means( $M->like_vector($m)->assign( \@means ) );
+	
+		$self->means( $M->like_vector($n)->assign( \@means ) );
 
-		warn "Calculating covariance matrix...\n" if $VERBOSE;
+		warn "Calculating covariance matrix from " . $M->_to_short_string . " data set...\n" if $VERBOSE;
 		my $cov  = Anorman::Data::Algorithms::Statistic::covariance($M);
 
 		$self->covariance( $cov );	
@@ -121,20 +120,9 @@ sub GSID {
 
 	trace_error("Input vector has wrong length") if $v->size != $self->{'_n'};
 	
-	my $diff = $v->copy;
-	vv_minus_assign( $diff, $self->{'means'} );
+	my $diff = $v - $self->{'means'};
 
 	return $self->{'_decomp'}->solve( $diff )->dot_product( $diff );
-}
-
-sub SQEUC {
-	my ($self, $v) = @_;
-
-	trace_error("Input vector has wrong length") if $v->size != $self->{'_n'};
-	
-	my $diff = $v->copy;
-
-	return vv_squared_dist_euclidean( $v, $self->{'means'} );
 }
 
 1;

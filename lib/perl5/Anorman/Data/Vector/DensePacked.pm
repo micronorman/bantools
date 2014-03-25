@@ -3,7 +3,7 @@ package Anorman::Data::Vector::DensePacked;
 use strict;
 use warnings;
 
-use parent qw(Anorman::Data::Abstract Anorman::Data::Vector);
+use parent qw(Anorman::Data::Vector::Abstract Anorman::Data::Vector);
 
 use Anorman::Common qw(sniff_scalar);
 use Anorman::Data::LinAlg::Property qw( :vector );
@@ -13,8 +13,8 @@ my %ASSIGN_DISPATCH = (
 	'NUMBER'      => \&_assign_DensePackedVector_from_NUMBER,
 	'ARRAY'       => \&_assign_DensePackedVector_from_ARRAY,
 	'OBJECT'      => \&_assign_DensePackedVector_from_OBJECT,
-	'OBJECT+CODE' => \&Anorman::Data::Vector::_assign_Vector_from_OBJECT_and_CODE,
-	'CODE'        => \&Anorman::Data::Vector::_assign_Vector_from_CODE
+	'OBJECT+CODE' => \&_assign_DensePackedVector_from_OBJECT_and_CODE,
+	'CODE'        => \&_assign_DensePackedVector_from_CODE
 );
 
 sub new {
@@ -23,7 +23,7 @@ sub new {
 
 	trace_error("Wrong number of arguments") if (@_ != 1 && @_ != 4);
 
-	my $self = $class->_new_abstract_Vector;
+	my $self = $class->_bless_vector_struct();
 
 	if (ref $_[0] eq 'ARRAY') {
 		$self->_new_from_array(@_);
@@ -122,11 +122,7 @@ sub swap {
 	#$self->_check_size( $other );
 
 	$self->SUPER::swap( $other ) if ref $other ne 'Anorman::Data::Vector::DensePacked';
-
 	$self->_packed_swap($other);
-
-
-	1;
 }
 
 use Inline (C => Config =>
@@ -138,7 +134,6 @@ use Inline (C => Config =>
 	   );
 use Inline C => <<'END_OF_C_CODE';
 
-#include <limits.h>
 #include <stdio.h>
 #include "error.h"
 #include "data.h"
@@ -147,13 +142,15 @@ use Inline C => <<'END_OF_C_CODE';
 
 #include "../lib/vector.c"
 
+void _dump( SV* self );
 
 /*===========================================================================
  Abstract Vectorfunctions
  ============================================================================*/
 
 /* object constructors */
-SV* _new_abstract_Vector( SV* sv_class_name ) {
+SV* _bless_vector_struct( SV* sv_class_name ) {
+
     Vector* v;
     SV* self;
 
@@ -221,24 +218,6 @@ UV _rank (SV* self, UV rank) {
     return v->zero + (size_t) rank * v->stride;
 }
 
-SV* _elements (SV* self) {
-    SV_2STRUCT( self, Vector, v );
-    PTR_2SVADDR( v->elements, sv_addr );
-
-    return sv_addr;
-}
-
-void _set_elements (SV* self, SV* sv_addr ) {
-    SVADDR_2PTR( sv_addr, elems_ptr );
-    SV_2STRUCT( self, Vector, v );
-
-    if (!v->elements) {
-        v->elements = elems_ptr;
-    } else {
-        C_ERROR_VOID("This Vector was already assigned an elements pointer", C_EINVAL );
-    }   
-}
-
 /* object initializors */
 
 void _setup ( SV* self, SV* size, ... ) {
@@ -258,7 +237,7 @@ void _setup ( SV* self, SV* size, ... ) {
         v->view_flag = 0;
     }  
 
-    if (v->size > LONG_MAX) {
+    if (v->size > MAX_NUM_ELEMENTS) {
         C_ERROR_VOID("Vector is too large", C_EINVAL );
     }
 }
@@ -303,6 +282,8 @@ void DESTROY(SV* self) {
 
     c_v_free( v );
 }
+
+
 /*===========================================================================
   DenseVector functions
   ===========================================================================*/
@@ -328,6 +309,25 @@ SV* _allocate_elements( SV* self, UV num_elems ) {
         
     return sv_addr;
 }
+
+SV* _elements (SV* self) {
+    SV_2STRUCT( self, Vector, v );
+    PTR_2SVADDR( v->elements, sv_addr );
+
+    return sv_addr;
+}
+
+void _set_elements (SV* self, SV* sv_addr ) {
+    SVADDR_2PTR( sv_addr, elems_ptr );
+    SV_2STRUCT( self, Vector, v );
+
+    if (!v->elements) {
+        v->elements = elems_ptr;
+    } else {
+        C_ERROR_VOID("This Vector was already assigned an elements pointer", C_EINVAL );
+    }   
+}
+
 /* data assignment functions */
 void _assign_DensePackedVector_from_ARRAY( SV* self, AV* array ) {
     
@@ -338,7 +338,7 @@ void _assign_DensePackedVector_from_ARRAY( SV* self, AV* array ) {
 
     if (size != v->size) {
         char reason[80];
-        sprintf( reason, "Cannot assign array to vector object: must have %lu elements\n", v->size );
+        sprintf( reason, "Cannot assign %lu-element array to vector object: must have %lu elements\n", size, v->size );
         C_ERROR_VOID( reason, C_EINVAL );
     }
 
@@ -375,6 +375,77 @@ NV _packed_dot_product( SV* self, SV* other, UV from, UV length ) {
     return c_vv_dot_product( a, b, (size_t) from, (size_t) length ); 
 }
 
+void _assign_DensePackedVector_from_CODE( SV* self, SV* code ) {
+    HV *stash;
+    GV *gv;
+
+    CV* cv = sv_2cv( code, &stash, &gv, 0);
+
+    if (cv == Nullcv) {
+        C_ERROR_VOID("Not a subroutine reference", C_EINVAL );
+    }
+
+    SV_2STRUCT( self, Vector, v);
+
+    const size_t s = v->stride;
+    size_t       i = v->zero;
+    double * elems = v->elements;
+	
+    size_t k;
+    for ( k = 0; k < v->size; k++ ) {
+        dSP;
+
+        PUSHMARK(SP);
+	XPUSHs( sv_2mortal( newSVnv(elems[ i ])) );
+        PUTBACK;
+
+        call_sv((SV*)cv, G_SCALAR);
+        elems[i] = SvNV( *PL_stack_sp );
+	i += s;
+
+        FREETMPS;
+    }
+}
+
+void _assign_DensePackedVector_from_OBJECT_and_CODE( SV* self, SV* other, SV* code ) {
+    HV *stash;
+    GV *gv;
+
+    CV* cv = sv_2cv( code, &stash, &gv, 0);
+
+    if (cv == Nullcv) {
+        C_ERROR_VOID("Not a subroutine reference", C_EINVAL );
+    }
+
+    SV_2STRUCT(  self, Vector, v);
+    SV_2STRUCT( other, Vector, u);
+
+    const size_t A_s = v->stride;
+    const size_t B_s = u->stride;
+    size_t       i = v->zero;
+    size_t       j = u->zero;
+    double * A_elems = v->elements;
+    double * B_elems = u->elements;
+	
+    size_t k;
+    for ( k = 0; k < v->size; k++ ) {
+        dSP;
+
+        PUSHMARK(SP);
+	XPUSHs( sv_2mortal( newSVnv(A_elems[ i ]) ) );
+        XPUSHs( sv_2mortal( newSVnv(B_elems[ j ]) ) );
+	PUTBACK;
+
+        call_sv((SV*)cv, G_SCALAR);
+
+        A_elems[i] = SvNV( *PL_stack_sp );
+
+        FREETMPS;
+
+	i += A_s;
+        j += B_s;
+    }
+}
 void _packed_swap( SV* self, SV* other) {
 
     /* optimized element swapping between two packed vectors */
@@ -387,6 +458,62 @@ void _packed_swap( SV* self, SV* other) {
 NV sum( SV* self ) {
     SV_2STRUCT( self, Vector, v );
     return c_v_sum( v );
+}
+
+SV* _sub_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Vector, u );
+
+    if (!SvROK(other)) {
+        c_v_add_constant( u, -( SvNV( other )));
+    } else {
+        SV_2STRUCT( other, Vector, v );
+        c_vv_sub( u, v );
+    }
+    
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _add_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Vector, u );
+
+    if (!SvROK(other)) {
+        c_v_add_constant( u, SvNV( other ));
+    } else {
+        SV_2STRUCT( other, Vector, v );
+        c_vv_add( u, v );
+    }
+
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _div_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Vector, u );
+
+    if (!SvROK(other)) {
+        c_v_scale( u, 1 / SvNV( other ) );
+    } else {
+        SV_2STRUCT( other, Vector, v );
+        c_vv_div( u, v );
+    }
+
+    SvREFCNT_inc( self );
+    return self;
+}
+
+SV* _mul_assign( SV* self, SV* other, SV* swap ) {
+    SV_2STRUCT( self, Vector, u );
+
+    if (!SvROK(other)) {
+        c_v_scale( u, SvNV( other ) );
+    } else {
+        SV_2STRUCT( other, Vector, v );
+        c_vv_mul( u, v );
+    }
+
+    SvREFCNT_inc( self );
+    return self;
 }
 
 void _dump( SV* self ) {

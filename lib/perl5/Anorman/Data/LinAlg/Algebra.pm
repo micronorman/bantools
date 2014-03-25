@@ -25,11 +25,10 @@ use Anorman::Math::Algorithm;
 use Anorman::Data;
 use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Data::LinAlg::LUDecomposition;
+use Anorman::Data::LinAlg::QRDecomposition;
 use Anorman::Data::LinAlg::SingularValueDecomposition;
 
 use List::Util qw(min);
-
-use Data::Dumper;
 
 sub inverse {
 	my $A = shift;

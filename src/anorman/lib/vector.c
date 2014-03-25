@@ -367,7 +367,11 @@ c_v_free( Vector* v ) {
     if (v->elements && !v->view_flag) {
         free( v->elements );
     }
-   
+  
+    if (v->offsets) {
+        free(v->offsets->offsets);
+        free(v->offsets);
+    } 
     free( v );
 }
 

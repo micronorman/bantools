@@ -8,6 +8,10 @@ use parent qw(Anorman::Data::Matrix::Abstract Anorman::Data::Matrix);
 use Anorman::Common qw(trace_error sniff_scalar);
 use Anorman::Data::Vector::Dense;
 use Anorman::Data::Matrix::SelectedDense;
+use Anorman::Data::LinAlg::Property qw( is_matrix );
+use Anorman::Math::Functions;
+
+my $F = Anorman::Math::Functions->new;
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'        => \&_assign_DenseMatrix_from_NUMBER,
@@ -16,6 +20,7 @@ my %ASSIGN_DISPATCH = (
 	'OBJECT+CODE'	=> \&_assign_DenseMatrix_from_OBJECT_and_CODE,
 	'CODE'          => \&_assign_DenseMatrix_from_CODE
 );
+
 
 sub new {
 	my $that  = shift;
@@ -148,6 +153,11 @@ sub sum {
 	return $sum;
 }
 
+sub _add_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $F->plus ) : $_[0]->assign( $F->bind_arg2( $F->plus , $_[1] ) ) } 
+sub _sub_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $F->minus) : $_[0]->assign( $F->bind_arg2( $F->minus, $_[1] ) ) } 
+sub _mul_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $F->mult ) : $_[0]->assign( $F->bind_arg2( $F->mult , $_[1] ) ) }
+sub _div_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $F->div  ) : $_[0]->assign( $F->bind_arg2( $F->div  , $_[1] ) ) }
+
 sub _index {
 	my ($s, $r, $c) = @_;
 	return ($s->{'r0'} + $r * $s->{'rstride'} + $s->{'c0'} + $c * $s->{'cstride'});
@@ -254,7 +264,7 @@ sub _assign_DenseMatrix_from_OBJECT_and_CODE {
 		return $self->SUPER::_assign_Matrix_from_OBJECT_and_CODE( $other, $CODE);
 	}
 
-	$self->_check_shape( $other );
+	$self->check_shape( $other );
 
 	my $A_elems   =  $self->{'_ELEMS'};
 	my $B_elems   = $other->{'_ELEMS'};
@@ -349,7 +359,7 @@ sub _have_shared_cells_raw {
 sub _view_selection_like {
 	my $self = shift;
 	my ($roffsets, $coffsets) = @_;
-	return Anorman::Data::Matrix::SelectedDense->new( $self->{'_ELEMS'}, $roffsets, $coffsets );
+	return Anorman::Data::Matrix::SelectedDense->new( $self->{'_ELEMS'}, $roffsets, $coffsets, 0 );
 }
 
 

@@ -17,9 +17,9 @@ $VERSION     = 0.4;
 		);
 
 use constant { TAU     => 1e-6,
-	       PHI     => (1 + sqrt(5)) / 2,
-               EPSILON => 2**-52,
-               RESPHI  => 2 - ((1 + sqrt(5)) / 2)
+	       PHI     => 1.6180339887498949,
+               EPSILON => 2.22044604925031308e-16,
+               RESPHI  => 0.381966011250105097
 };
 
 my %CACHE = ();

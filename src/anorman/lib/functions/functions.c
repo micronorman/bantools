@@ -1,4 +1,5 @@
 #include "functions/functions.h"
+#include <math.h>
 
 /* binary functions */
 double c_plus( double a, double b ) {
@@ -19,12 +20,21 @@ double c_divide( double a, double b ) {
 }
 
 double c_abs_diff( double a, double b ) {
-    return abs( a - b );
+    return fabs( a - b );
 }
 
 double c_square_diff( double a, double b ) {
-    double diff = a - b;
+    long double diff = a - b;
     return (diff * diff);
+}
+
+double c_p_diff( double a, double b, double p ) {
+    long double diff = fabs( a - b );
+    return pow( diff, p );
+}
+
+double c_canberra_diff( double a, double b ) {
+    return ( fabs(a - b) / (fabs(a) + fabs(b)) );
 }
 
 double c_max( double a, double b ) {
@@ -41,7 +51,7 @@ double c_identity( double a ) {
 }
 
 double c_abs( double a ) {
-    return abs( a );
+    return fabs( a );
 }
 
 double c_square( double a ) {

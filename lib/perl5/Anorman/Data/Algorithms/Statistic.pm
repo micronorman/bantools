@@ -1,5 +1,8 @@
 package Anorman::Data::Algorithms::Statistic;
 
+use strict;
+use warnings;
+
 use Exporter;
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -14,12 +17,14 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 %EXPORT_TAGS = ( all => [ @EXPORT_OK ] );
 
 use Anorman::Common;
-use Anorman::Data::Matrix::Dense;
-use Anorman::Data::Matrix::DensePacked;
+use Anorman::Data;
+use Anorman::Data::Functions::Vector;
 use Anorman::Data::LinAlg::Property qw( :matrix );
-use Anorman::Data::Functions::VectorVector qw(vv_covariance);
-use Anorman::Data::Functions::Vector qw (v_variance);
+#use Anorman::Data::Functions::VectorVector qw(vv_covariance);
 
+my $VF = Anorman::Data::Functions::Vector->new;
+
+=head OLD_STUFF
 sub correlation {
 	my ($A) = @_;
 	check_matrix($A);
@@ -102,32 +107,45 @@ sub covariance {
 	
 	return $covariance;
 }
+=cut
+
+sub covariance {
+	return &distance( $_[0], $VF->covariance );
+}
+
+sub correlation {
+	return &distance( $_[0], $VF->correlation );
+}
 
 sub distance {
-	check_matrix($_[0]);
-	trace_error("Second argument must a blessed object containing the method \'apply\'") unless (defined $_[1] && $_[1]->can('apply'));
-
-	my ($matrix, $distance_function) = @_;
-
-	my $m = $matrix->columns;
-	my $distance = is_packed($matrix) ? Anorman::Data::Matrix::DensePacked->new($m,$m) : Anorman::Data::Matrix::Dense->new($m,$m);
-
-	my @cols = map { $matrix->view_column($_) } (0 .. $m - 1);
-
-	warn "Calculating Distances...\n" if $VERBOSE;
+	trace_error("Second argument must be a subroutine reference") unless (defined $_[1] && ref $_[1] eq 'CODE');
 	
-	my $i = $m;
-	while ( --$i >= 0) {
+	my ($A, $distance_function) = @_;
 
-		my $j=$i;
+	check_matrix($A);
+
+	my $N = $A->columns;
+
+	# Cache columns
+	my @cols = map { $A->view_column( $_ ) } ( 0 .. $N - 1);
+
+	# Set up resulting distance matrix
+	my $D   = Anorman::Data->matrix($N,$N);
+
+	my ($i,$j);
+
+	$i = $N;
+	while ( --$i >= 0 ) {
+		$j = $i + 1;
 		while ( --$j >= 0 ) {
-			my $d = $distance_function->apply($cols[$i], $cols[$j]);
-			$distance->set_quick($i,$j,$d);
-			$distance->set_quick($j,$i,$d);
-		}
-	} 
-	
-	return $distance;
+			my $cov = $distance_function->($cols[$i], $cols[$j]);
+
+			$D->set($i, $j, $cov);
+			$D->set($j, $i, $cov) unless ($i == $j); # cuz' it's symmetric
+		}	
+	}
+
+	return $D;
 }
 
 1;

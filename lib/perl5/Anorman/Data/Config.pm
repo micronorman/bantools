@@ -20,7 +20,7 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 
 %EXPORT_TAGS = ( 'string_rules' => [qw($FORMAT $VECTOR_ENDS $VECTOR_SEPARATOR $MATRIX_ROW_ENDS $MATRIX_ROW_SEPARATOR $MATRIX_COL_SEPARATOR) ]);
 
-our $PACK_DATA   = 0;
+our $PACK_DATA   = 1;
 our $FORMAT      = '%7.3G';
 
 our $VECTOR_ENDS          = [ '{ ', ' }' ];

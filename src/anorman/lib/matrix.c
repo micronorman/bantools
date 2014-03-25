@@ -273,24 +273,212 @@ double c_m_sum( Matrix* m ) {
     return sum;
 }
 
-/* DEBUGGING */
-void c_m_show_struct( Matrix* m ) {
-    
-    fprintf( stderr, "\nContents of Matrix struct: (%p)\n", m );
-    fprintf( stderr, "\trows\t(%p): %lu\n", &m->rows, m->rows );
-    fprintf( stderr, "\tcols\t(%p): %lu\n", &m->columns, m->columns );
-    fprintf( stderr, "\tr0\t(%p): %lu\n",  &m->row_zero, m->row_zero );
-    fprintf( stderr, "\tc0\t(%p): %lu\n", &m->column_zero, m->column_zero );
-    fprintf( stderr, "\trstride\t(%p): %lu\n", &m->row_stride, m->row_stride );
-    fprintf( stderr, "\tcstride\t(%p): %lu\n", &m->column_stride, m->column_stride );
 
-    if (!m->elements) {
-        fprintf( stderr, "\telems\t(%p): null\n\n",  &m->elements );
-    } else {
-        fprintf( stderr, "\telems\t(%p): [ %p ]\n",  &m->elements, m->elements );
+int c_mm_add( Matrix* A, Matrix* B) {
+
+    const size_t M = A->rows;
+    const size_t N = A->columns;
+
+    if (B->rows != M || B->columns != N) {
+        C_ERROR("Matrices must have same dimensions", C_EBADLEN);
     }
-    
-    fprintf( stderr, "\tview\t(%p): %d\n\n", &m->view_flag, m->view_flag );
+          double* A_elems = A->elements;
+    const double* B_elems = B->elements;
+
+    const size_t    A_cs = A->column_stride;
+    const size_t    B_cs = B->column_stride;
+    const size_t    A_rs = A->row_stride;
+    const size_t    B_rs = B->row_stride;
+
+    size_t B_index = (int) c_m_index( B, 0,0 );
+    size_t A_index = (int) c_m_index( A, 0,0 );
+
+    int row = (int) A->rows;
+    while ( --row >= 0) {
+        size_t i = A_index;
+        size_t j = B_index;
+
+        int column = (int) A->columns;
+        while (--column >= 0) {
+            A_elems[ i ] += B_elems[ j ];
+            i += A_cs;
+            j += B_cs;
+        }
+
+        A_index += A_rs;
+        B_index += B_rs;
+    }
+
+    return C_SUCCESS;
 }
 
+int c_mm_sub( Matrix* A, Matrix* B) {
+
+    const size_t M = A->rows;
+    const size_t N = A->columns;
+
+    if (B->rows != M || B->columns != N) {
+        C_ERROR("Matrices must have same dimensions", C_EBADLEN);
+    }
+          double* A_elems = A->elements;
+    const double* B_elems = B->elements;
+
+    const size_t    A_cs = A->column_stride;
+    const size_t    B_cs = B->column_stride;
+    const size_t    A_rs = A->row_stride;
+    const size_t    B_rs = B->row_stride;
+
+    size_t B_index = (int) c_m_index( B, 0,0 );
+    size_t A_index = (int) c_m_index( A, 0,0 );
+
+    int row = (int) A->rows;
+    while ( --row >= 0) {
+        size_t i = A_index;
+        size_t j = B_index;
+
+        int column = (int) A->columns;
+        while (--column >= 0) {
+            A_elems[ i ] -= B_elems[ j ];
+            i += A_cs;
+            j += B_cs;
+        }
+
+        A_index += A_rs;
+        B_index += B_rs;
+    }
+
+    return C_SUCCESS;
+}
+
+int c_mm_mul( Matrix* A, Matrix* B) {
+
+    const size_t M = A->rows;
+    const size_t N = A->columns;
+
+    if (B->rows != M || B->columns != N) {
+        C_ERROR("Matrices must have same dimensions", C_EBADLEN);
+    }
+          double* A_elems = A->elements;
+    const double* B_elems = B->elements;
+
+    const size_t    A_cs = A->column_stride;
+    const size_t    B_cs = B->column_stride;
+    const size_t    A_rs = A->row_stride;
+    const size_t    B_rs = B->row_stride;
+
+    size_t B_index = (int) c_m_index( B, 0,0 );
+    size_t A_index = (int) c_m_index( A, 0,0 );
+
+    int row = (int) A->rows;
+    while ( --row >= 0) {
+        size_t i = A_index;
+        size_t j = B_index;
+
+        int column = (int) A->columns;
+        while (--column >= 0) {
+            A_elems[ i ] *= B_elems[ j ];
+            i += A_cs;
+            j += B_cs;
+        }
+
+        A_index += A_rs;
+        B_index += B_rs;
+    }
+
+    return C_SUCCESS;
+}
+
+int c_mm_div( Matrix* A, Matrix* B) {
+
+    const size_t M = A->rows;
+    const size_t N = A->columns;
+
+    if (B->rows != M || B->columns != N) {
+        C_ERROR("Matrices must have same dimensions", C_EBADLEN);
+    }
+          double* A_elems = A->elements;
+    const double* B_elems = B->elements;
+
+    const size_t    A_cs = A->column_stride;
+    const size_t    B_cs = B->column_stride;
+    const size_t    A_rs = A->row_stride;
+    const size_t    B_rs = B->row_stride;
+
+    size_t B_index = (int) c_m_index( B, 0,0 );
+    size_t A_index = (int) c_m_index( A, 0,0 );
+
+    int row = (int) A->rows;
+    while ( --row >= 0) {
+        size_t i = A_index;
+        size_t j = B_index;
+
+        int column = (int) A->columns;
+        while (--column >= 0) {
+            A_elems[ i ] /= B_elems[ j ];
+            i += A_cs;
+            j += B_cs;
+        }
+
+        A_index += A_rs;
+        B_index += B_rs;
+    }
+
+    return C_SUCCESS;
+}
+
+int c_m_scale( Matrix* A, double x ) {
+
+    const size_t M = A->rows;
+    const size_t N = A->columns;
+
+    double* elems = A->elements;
+
+    const size_t cs = A->column_stride;
+    const size_t rs = A->row_stride;
+
+    size_t index = c_m_index( A, 0,0 );
+
+    int row = (int) A->rows;
+    while ( --row >= 0) {
+        size_t i = index;
+
+        int column = (int) A->columns;
+        while (--column >= 0) {
+            elems[ i ] *= x;
+            i += cs;
+        }
+
+        index += rs;
+    }
+
+    return C_SUCCESS;
+}
+
+int c_m_add_constant( Matrix* A, double x ) {
+
+    const size_t M = A->rows;
+    const size_t N = A->columns;
+
+    double* elems = A->elements;
+
+    const size_t cs = A->column_stride;
+    const size_t rs = A->row_stride;
+
+    size_t index = c_m_index( A, 0,0 );
+
+    int row = (int) A->rows;
+    while ( --row >= 0) {
+        size_t i = index;
+
+        int column = (int) A->columns;
+        while (--column >= 0) {
+            elems[ i ] += x;
+            i += cs;
+        }
+
+        index += rs;
+    }
+
+    return C_SUCCESS;
+}
 

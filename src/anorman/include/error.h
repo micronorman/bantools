@@ -13,7 +13,8 @@ enum {
     C_ERANGE   = 2,
     C_EFAULT   = 3,
     C_EINVAL   = 4,
-    C_ENOMEM   = 8
+    C_ENOMEM   = 8,
+    C_EBADLEN  = 19
 };
 
 void c_error( const char * , const char * , int , int  );

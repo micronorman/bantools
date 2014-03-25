@@ -53,7 +53,20 @@ sub _clone_self {
 	return bless ( $clone, $class );
 }
 
-sub _set_view   { $_[0]->{'_VIEW'} = 1 }
+
+sub _set_view  { $_[0]->{'_VIEW'} = 1 }
+
+# Overloaded operations
+sub _sub { my $r = $_[0]->copy; $r->_sub_assign($_[1],$_[2]);$r }
+sub _add { my $r = $_[0]->copy; $r->_add_assign($_[1],$_[2]);$r }
+sub _mul { my $r = $_[0]->copy; $r->_mul_assign($_[1],$_[2]);$r }
+sub _div { my $r = $_[0]->copy; $r->_div_assign($_[1],$_[2]);$r }
+
+# Dummies. Must be overwritten
+sub _add_assign {...}
+sub _sub_assign {...}
+sub _mul_assign {...}
+sub _div_assign {...}
 
 1;
 

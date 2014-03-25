@@ -6,6 +6,7 @@ use warnings;
 use Anorman::Common qw($VERBOSE);
 
 use Anorman::ESOM;
+use Anorman::ESOM::Config;
 use Anorman::ESOM::File;
 use Anorman::ESOM::SOM;
 use Anorman::ESOM::Grid;
@@ -15,6 +16,8 @@ use Anorman::ESOM::BMSearch;
 use Getopt::Long qw( :config no_auto_abbrev no_ignore_case );
 use Pod::Usage;
 use POSIX qw(ceil);
+
+$Anorman::Data::Config::PACK_DATA = $Anorman::ESOM::Config::PACK_MATRIX_DATA;
 
 # Default options
 my $EPOCHS       = 20;

@@ -5,17 +5,11 @@ use warnings;
 
 use Anorman::Common;
 use Anorman::Data::Config qw( :string_rules ); 
+use Anorman::Data::BLAS;
 use Anorman::Data::LinAlg::Property qw( :all );
-use Anorman::Math::Common qw( min max identity );
+use Anorman::Math::Functions;
 
 use Scalar::Util qw(refaddr blessed looks_like_number);
-
-my %oper = (
-	'+' => sub { $_[0] + $_[1] },
-	'-' => sub { $_[0] - $_[1] },
-	'*' => sub { $_[0] * $_[1] },
-	'/' => sub { $_[0] / $_[1] }
-);
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'        => \&_assign_Matrix_from_NUMBER,
@@ -25,20 +19,8 @@ my %ASSIGN_DISPATCH = (
 	'CODE'          => \&_assign_Matrix_from_CODE
 );
 
-sub check_shape {
-	my $self = shift;
-	my $columns = $self->columns;
-	my $rows    = $self->rows;
-
-	foreach my $other(@_) {
-		check_matrix( $other );
-		if ($columns != $other->columns || $rows != $other->rows) {
-			trace_error("Incompatible dimensions " . $self->_to_short_string . " and " . $other->_to_short_string);
-		}
-	}
-}
-
 # universal matrix commands
+
 sub get {
 	my $self = shift;
 	
@@ -98,14 +80,11 @@ sub view_selection {
 	
 	my ($row_indexes, $column_indexes) = @_;
 	
-	$row_indexes    = [ (0 .. $self->rows    - 1) ] if (!defined $row_indexes);
-	$column_indexes = [ (0 .. $self->columns - 1) ] if (!defined $column_indexes);
+	$row_indexes    = [ (0 .. $self->rows    - 1) ] if (!$row_indexes   );
+	$column_indexes = [ (0 .. $self->columns - 1) ] if (!$column_indexes);
 
-	warn "Calculating row offsets for selection...\n" if $DEBUG;
-	my $row_offsets    = [ map { $self->row_zero + $_ * $self->row_stride } @{ $row_indexes    } ];
-
-	warn "Calculating column offsets...\n" if $DEBUG;
-	my $column_offsets = [ map { $self->column_zero + $_ * $self->column_stride } @{ $column_indexes } ];
+	my $row_offsets    = [ map { $self->_row_zero    + $_ * $self->_row_stride    } @{ $row_indexes    } ];
+	my $column_offsets = [ map { $self->_column_zero + $_ * $self->_column_stride } @{ $column_indexes } ];
 	
 	return $self->_view_selection_like( $row_offsets, $column_offsets );
 }
@@ -177,7 +156,7 @@ sub aggregate {
 	my ($aggr, $f) = @_;
 
 	# Set f to identity if it was not provided
-	$f = \&identity if !defined $f;
+	$f = Anorman::Math::Functions::identity if !defined $f;
 
 	my $loop_func;
 
@@ -207,17 +186,17 @@ sub aggregate {
 }
 
 sub normalize {
-	# Normalize matrix in place to [0..1<F8>]
+	# Normalize matrix in place to [0..1]
 	my $self = shift;
+	my $F = Anorman::Math::Functions->new;
 
-	my $min = $self->aggregate( \&min );
-	my $max = $self->aggregate( \&max );
+	my $min = $self->aggregate( $F->min );
+	my $max = $self->aggregate( $F->max );
 
 	return if ($min == 0 && $max == 1);
 
-	my $diff = $max - $min;
-	$self->assign( sub { $_[0] - $min } );
-	$self->assign( sub { $_[0] / $diff } );
+	$self->assign( $F->minus($min)      );
+	$self->assign( $F->div($max - $min) );
 }
 
 sub equals {
@@ -241,19 +220,8 @@ sub equals {
 	}
 }
 
-sub _sub { my $r = $_[0]->copy; $r->_sub_assign($_[1]); $r }
-sub _add { my $r = $_[0]->copy; $r->_add_assign($_[1]); $r }
-sub _mul { my $r = $_[0]->copy; $r->_mul_assign($_[1]); $r }
-sub _div { my $r = $_[0]->copy; $r->_div_assign($_[1]); $r }
-
-sub _sub_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'-'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] - $v } ) } }
-sub _add_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'+'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] + $v } ) } } 
-sub _mul_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'*'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] * $v } ) } }
-sub _div_assign { is_matrix($_[1]) ? $_[0]->assign($_[1], $oper{'/'}) : do {my $v = $_[1]; $_[0]->assign( sub { $_[0] / $v } ) } }
-
-
 sub mult {
-	my ($self, $other, $result, $alpha, $beta) = @_;
+	my ($self, $other, $result, $alpha, $beta, $transA, $transB) = @_;
 	
 	trace_error("Can only multiply with vector or matrix") unless (is_vector($other) || is_matrix($other));
 
@@ -264,82 +232,89 @@ sub mult {
 	
 	# matrix-vector multiplication
 	if (is_vector($other)) {
-		$result = $other->like( $m ) if !defined $result;
-		$self->_error("Incompatible dimensions (A, y, z): " .
-			$self->_to_short_string  . ", " . 
-			$other->_to_short_string . ", " .
-                        $result->_to_short_string ) 
-		if ($n != $other->size || $m != $result->size);
+		if (!defined $result) {
+			$result = $other->like( $m ) if !defined $result;
+		}
 
-		$self->_mult_matrix_vector($other, $result, $alpha,$beta);
+		if ($n != $other->size || $m != $result->size) {
+			trace_error("Incompatible dimensions (A, y, z): " .
+				$self->_to_short_string  . ", " . 
+				$other->_to_short_string . ", " .
+				$result->_to_short_string )
+		} 
+
+		$self->_mult_matrix_vector($other, $result, $alpha, $beta, $transA);
+
 		return $result;
+
 	# matrix-matrix multiplication
 	} else {
-		# chache the result matrix
-		$result = $other->like($m, $other->columns) if !defined $result;
-		check_matrix($result);
-	
-		$self->_error("Matrix2D inner dimensions must agree: " . $self->_to_short_string . ", " .
-			$other->_to_short_string ) if ($other->rows != $n );
-		$self->_error("Incompatible result matrix: " . $self->_to_short_string . ", " . $other->_to_short_string . ", "
-                        . $result->_to_short_string ) if ($result->rows != $m || $result->columns != $other->columns);
+		check_matrix($other);
 
-		$self->_mult_matrix_matrix($other, $result, $alpha, $beta);
+		if (!defined $result) {	
+			$result = $other->like($m, $other->columns);
+		}
+
+		if ($other->rows != $n ) {
+			trace_error("Matrix2D inner dimensions must agree: " 
+					. $self->_to_short_string . ", "
+					. $other->_to_short_string )
+		}
+ 
+		if ($result->rows != $m || $result->columns != $other->columns) {
+			trace_error("Incompatible result matrix: " 
+					. $self->_to_short_string . ", " 
+					. $other->_to_short_string . ", "
+					. $result->_to_short_string )
+		}
+
+		$self->_mult_matrix_matrix($other, $result, $alpha, $beta, $transA, $transB);
+
 		return $result;
 	}
 }
 
 sub _mult_matrix_matrix {
-	my ($self, $other, $result, $alpha, $beta) = @_;
+	my ($A,$B,$C, $alpha, $beta, $transA, $transB ) = @_;
 
-	my ($m, $n, $p) = ($self->rows, $self->columns, $other->columns);
+	Anorman::Data::BLAS::blas_gemm($transA ? BlasTrans : BlasNoTrans,
+				       $transB ? BlasTrans : BlasNoTrans,
+                                       $alpha, $A, $B, $beta, $C);
 
-	my $j = $p;
-	while (--$j >=0) {
-		my $i = $m;
-		while ( --$i >= 0) {
-			my $s = 0;
-			my $k = $n;
-			while ( --$k >= 0 ) {
-				$s += $self->get_quick($i,$k) * $other->get_quick($k, $j);
-			}
-			$result->set_quick($i,$j,$alpha * $s + $beta * $result->get_quick($i,$j));
-		}
-	}
+	# Moved to BLAS
+	#my ($m, $n, $p) = ($self->rows, $self->columns, $other->columns);
+	#my $j = $p;
+	#while (--$j >=0) {
+	#	my $i = $m;
+	#	while ( --$i >= 0) {
+	#		my $s = 0;
+	#		my $k = $n;
+	#		while ( --$k >= 0 ) {
+	#			$s += $self->get_quick($i,$k) * $other->get_quick($k, $j);
+	#		}
+	#		$result->set_quick($i,$j,$alpha * $s + $beta * $result->get_quick($i,$j));
+	#	}
+	#}
 }
 
 sub _mult_matrix_vector {
-	my ($self, $other, $result, $alpha, $beta) = @_;
+	my ($A, $x, $y, $alpha, $beta, $transA) = @_;
 
-	my ($m,$n) = ($self->rows,$self->columns);
+	Anorman::Data::BLAS::blas_gemv( $transA ? BlasTrans : BlasNoTrans, $alpha, $A, $x, $beta, $y);
+	#my ($m,$n) = ($self->rows,$self->columns);
 
-	my $i = $m;
-	while ( --$i >=0 ) {
-		my $s = 0;
-		my $j = $n;
-		while ( --$j >= 0 ) {
-			$s += $self->get_quick($i,$j) * $other->get_quick($j);
-		}
-
-		$result->set_quick( $i, $alpha * $s + $beta * $result->get_quick($i) );
-	}
+	#my $i = $m;
+	#while ( --$i >=0 ) {
+	#	my $s = 0;
+	#	my $j = $n;
+	#	while ( --$j >= 0 ) {
+	#		$s += $self->get_quick($i,$j) * $other->get_quick($j);
+	#	}
+	#
+	#	$result->set_quick( $i, $alpha * $s + $beta * $result->get_quick($i) );
+	#}
 }
 
-sub _to_array {
-	# repackages internal matrix into perl array of arays
-	my $self   = shift;
-	my $values = [[]];
-
-	my $row = $self->rows;	
-	while (--$row >= 0) {
-		my $col = $self->columns;
-		while (--$col >= 0) {
-			$values->[ $row ][ $col ] = $self->get_quick( $row, $col );
-		}
-	}
-
-	return $values;
-}
 
 sub _have_shared_cells {
 	my ($self, $other) = @_;
@@ -353,7 +328,8 @@ sub _have_shared_cells_raw {
 	return undef;
 }
 
-#### ASSIGNMENT ####
+
+# Assign values to the matrix from different  kinds of sources
 
 sub _assign_Matrix_from_NUMBER {
 	my ($self,$value) = @_;
@@ -429,7 +405,8 @@ sub _assign_Matrix_from_CODE {
 
 sub _assign_Matrix_from_OBJECT_and_CODE {
 	my ($self, $other, $function) = @_;
-	$self->_check_shape( $other );
+	$self->check_shape( $other );
+
 	my $row = $self->rows;
 	while ( --$row >= 0 ) {
 		my $column = $self->columns;
@@ -441,6 +418,24 @@ sub _assign_Matrix_from_OBJECT_and_CODE {
 	return $self;
 }
 
+sub _to_array {
+	# repackages internal matrix into perl array of arays
+	my $self   = shift;
+	my $values = [[]];
+
+	my $row = $self->rows;	
+	while (--$row >= 0) {
+		my $col = $self->columns;
+		while (--$col >= 0) {
+			$values->[ $row ][ $col ] = $self->get_quick( $row, $col );
+		}
+	}
+
+	return $values;
+}
+
+# Pretty printing of matrices
+
 sub _to_string {
 	my $self = shift;
 
@@ -451,7 +446,7 @@ sub _to_string {
 	my $row = -1;
 	while (++$row < $rows) {
 		$string .= $MATRIX_ROW_ENDS->[0];
-		$string .= join ($MATRIX_COL_SEPARATOR, map { sprintf( $FORMAT, $_ ) } @{ $self->view_row( $row ) });
+		$string .= join ($MATRIX_COL_SEPARATOR, map { sprintf( $FORMAT, $_ ) } @{ $self->view_row( $row )->_to_array });
 		$string .= $MATRIX_ROW_ENDS->[1];
 		$string .= $MATRIX_ROW_SEPARATOR;
 	}

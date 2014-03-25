@@ -4,7 +4,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Exporter;
 
-@EXPORT_OK = qw(log10 log2 hypot min max plus minus mult div sqrt identity square quiet_sqrt);
+@EXPORT_OK = qw(log10 log2 hypot quiet_sqrt);
 
 @ISA = qw(Exporter);
 
@@ -35,16 +35,9 @@ sub hypot ($$) {
 	return $r;
 }
 
-sub identity   ($) { $_[0] };
-sub square     ($) { $_[0] * $_[0] };
-sub sqrt       ($) { sqrt $_[0] };
-sub quiet_sqrt ($) { ($_[0] >=0) ? sqrt($_[0]) : 'nan' }
-sub min        (@) { $_[0] < $_[1] ? $_[0] : $_[1] };
-sub max        (@) { $_[0] > $_[1] ? $_[0] : $_[1] };
-sub plus       (@) { $_[0] + $_[1] };
-sub minus      (@) { $_[0] - $_[1] };
-sub mult       (@) { $_[0] * $_[1] };
-sub div        (@) { $_[0] / $_[1] };
+sub quiet_sqrt ($) {
+	return $_[0] >= 0 ? sqrt ($_[0]) : 'NAN'
+}
 
 #====== STATISTICS FUNCTIONS ======
 
@@ -306,39 +299,6 @@ sub _calc_lambda2 {
 	my $s = &stats_quick(@_);
 	
 	return $s->{'_min'} > 0 ? 0 : 1 + abs( $s->{'_min'} );
-}
-
-#====== VECTOR FUNCTIONS ======
-
-sub distance_vector ($$) {
-	return map { $_[0]->[ $_ ] - $_[1]->[ $_ ] } 0..$#{ $_[0] };
-}
-
-sub vector_euclidean_norm (@) {
-	my $norm = 0;
-
-	$norm += $_i ** 2 for @_;
-
-	return sqrt $norm;
-}
-
-sub vector_euclidean_distance ($$) {
-	my $dist_sq_sum = 0;
-
-	$dist_sq_sum += ($_[0]->[ $_ ] - $_[1]->[ $_ ]) ** 2 for (0 .. $#{ $_[0] });
-
-	return sqrt $dist_sq_sum;
-}
-
-sub toroid_grid_distance {
-	my ($x1, $y1, $x2, $y2, $h, $w) = @_;
-
-	my $dx = sqrt( ($x1 - $x2)**2 );
-	my $i  = min ( $dx, $h - $dx);
-	my $dy = sqrt( ($y1 - $y2)**2 );
-	my $j  = min ( $dy, $w - $dy);
-
-	return &vector_euclidean_norm( $i, $j ); 
 }
 
 #====== DATA STRUCTURES ======

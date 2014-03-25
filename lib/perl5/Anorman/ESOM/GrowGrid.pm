@@ -258,8 +258,6 @@ use strict;
 use parent -norequire, 'Anorman::ESOM::GrowGrid::Interpolator';
 
 use Anorman::Data::LinAlg::Property qw( :vector );
-use Anorman::Data::Functions::VectorVector qw (vv_add);
-use Anorman::Data::Functions::Vector qw(v_scale);
 use Anorman::Data::Vector;
 
 sub interpolate {
@@ -277,13 +275,16 @@ sub interpolate {
 		my $neigh_vec = $rec_grid->get_weights->view_row($n);
 		my $probe_val = $neigh_vec->get(0);
 	
-		if ($probe_val == $probe_val) { # any there values here?
-			vv_add( $tmp_neuron, $neigh_vec );
+		if ($probe_val == $probe_val) { # any values here?
+
+			# Add neighbor to temporary vector
+			$tmp_neuron += $neigh_vec;
 			$count++;
 		}
 	}
 
-	v_scale( $tmp_neuron, 1 / $count ) unless $count == 0;
+	# Take the mean of the neuron
+	$tmp_neuron /= $count unless ($count == 0);
 
 	return $tmp_neuron;
 }
