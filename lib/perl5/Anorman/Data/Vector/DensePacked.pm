@@ -129,9 +129,10 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Vector::DensePacked',
 		AUTOWRAP  => ENABLE =>
-		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -lvector',
-		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
+		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include',
+		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -landata'
 	   );
+
 use Inline C => <<'END_OF_C_CODE';
 
 #include <stdio.h>
@@ -140,7 +141,9 @@ use Inline C => <<'END_OF_C_CODE';
 #include "perl2c.h"
 #include "vector.h"
 
+/*
 #include "../lib/vector.c"
+*/
 
 void _dump( SV* self );
 

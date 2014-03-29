@@ -5,7 +5,7 @@ use warnings;
 
 use Anorman::Common;
 use Anorman::Data;
-use Anorman::Data::BLAS qw( blas_scal blas_asum );
+use Anorman::Data::LinAlg::BLAS qw( blas_scal blas_asum );
 use Anorman::Data::LinAlg::Property qw( :matrix );
 
 my $FLOAT_RADIX    = 2.0;

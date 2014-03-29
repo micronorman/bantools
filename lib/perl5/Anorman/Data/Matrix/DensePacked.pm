@@ -14,7 +14,7 @@ my %ASSIGN_DISPATCH = (
 	'NUMBER'      => \&_assign_DensePackedMatrix_from_NUMBER,
 	'2D_MATRIX'   => \&_assign_DensePackedMatrix_from_2D_MATRIX,
 	'OBJECT'      => \&_assign_DensePackedMatrix_from_OBJECT,
-	'OBJECT+CODE' => \&Anorman::Data::Matrix::_assign_Matrix_from_OBJECT_and_CODE,	
+	'OBJECT+CODE' => \&_assign_DensePackedMatrix_from_OBJECT_and_CODE,	
 	'CODE'        => \&_assign_DensePackedMatrix_from_CODE
 );
 
@@ -91,7 +91,7 @@ sub assign {
 	if (@_ == 2) {
 		my $arg2_type = sniff_scalar( $_[1] );
 		unless ($type eq 'OBJECT' && $arg2_type eq 'CODE') {
-			$self->_error("Invalid arguments. Argument 2 is not a CODE block ($type,$arg2_type)");
+			trace_error("Invalid arguments. Argument 2 is not a CODE block ($type,$arg2_type)");
 		}
 		$type = 'OBJECT+CODE';
 	}
@@ -133,7 +133,8 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Matrix::DensePacked',
 		ENABLE    => AUTOWRAP =>
-		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
+		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include',
+		LIBS      => '-I' . $Anorman::Common::AN_SRC_DIR . '/lib -landata'
 
            );
 
@@ -144,7 +145,10 @@ use Inline C => <<'END_OF_C_CODE';
 #include "matrix.h"
 #include "perl2c.h"
 #include "error.h"
+
+/*
 #include "../lib/matrix.c"
+*/
 
 /*===========================================================================
  Abstract matrix functions
@@ -244,8 +248,6 @@ UV _column_rank (SV* self, UV rank) {
 UV _column_offset (SV* self, UV index ) {
     return index;
 }
-
-
 
 /* object initializors */
 
@@ -568,12 +570,53 @@ void _assign_DensePackedMatrix_from_CODE( SV* self, SV* code ) {
     }
 }
 
-void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* function ) {
-	SV_2STRUCT( self, Matrix, A );
-	SV_2STRUCT( other, Matrix, B );
+void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* code ) {
+    HV *stash;
+    GV *gv;
+    CV* cv = sv_2cv( code, &stash, &gv, 0);
 
-	
-	
+    if (cv == Nullcv) {
+         C_ERROR_VOID("Not a subroutine reference", C_EINVAL );
+    }
+
+    SV_2STRUCT(  self, Matrix, A );
+    SV_2STRUCT( other, Matrix, B );
+
+    double* A_elems = A->elements;
+    double* B_elems = B->elements;
+
+    size_t A_index = c_m_index(A,0,0);
+    size_t B_index = c_m_index(B,0,0);
+
+    const size_t A_cs = A->column_stride;
+    const size_t B_cs = B->column_stride;
+    const size_t A_rs = A->row_stride;
+    const size_t B_rs = B->row_stride;
+
+    size_t row,column;
+    for (row = 0; row < A->rows; row++ ) {
+        size_t i = A_index;
+        size_t j = B_index;
+        for (column = 0; column < A->columns; column++ ) {
+            dSP;
+
+            PUSHMARK(SP);
+            XPUSHs( sv_2mortal( newSVnv( A_elems[ i ])));
+            XPUSHs( sv_2mortal( newSVnv( B_elems[ j ])));
+            PUTBACK;
+
+            call_sv((SV*)cv, G_SCALAR);
+            A_elems[ i ] =  SvNV( *PL_stack_sp );
+
+            FREETMPS;
+
+            i += A_cs;
+            j += B_cs;
+        }
+
+        A_index += A_rs;
+        B_index += B_rs;
+    }
 }
 
 void _assign_DensePackedMatrix_from_NUMBER ( SV* self, NV value ) {

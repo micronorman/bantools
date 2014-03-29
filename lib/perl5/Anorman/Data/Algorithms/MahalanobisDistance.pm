@@ -14,10 +14,13 @@ use Anorman::Common;
 
 use Anorman::Math::Common qw(quiet_sqrt);
 use Anorman::Data::Algorithms::Statistic;
+use Anorman::Data::Functions::Vector;
 use Anorman::Data::LinAlg::CholeskyDecomposition;
 use Anorman::Data::LinAlg::LUDecomposition;
 use Anorman::Data::LinAlg::QRDecomposition;
 use Anorman::Data::LinAlg::Property qw( :matrix check_vector );
+
+my $VF = Anorman::Data::Functions::Vector->new;
 
 sub new {
 	my $that  = shift;
@@ -31,6 +34,9 @@ sub new {
 		my $m     = $M->rows;
 		my $n     = $M->columns;
 		my @means = ();
+
+		$self->{'_m'} = $m;
+		$self->{'_n'} = $n;
 
 		warn "Calculating column means...\n" if $VERBOSE;
 
@@ -51,11 +57,13 @@ sub new {
 }
 
 sub covariance {
+	return $_[0]->{'covariance'} unless @_ > 1;
+	
 	my $self = shift;
 
-	return $self->{'covariance'} if defined $self->{'covariance'};
-
+	# New covariance matrix
 	my $C = shift;
+
 	check_matrix( $C );
 	check_square( $C );
 
@@ -86,12 +94,19 @@ sub covariance {
 	$self->{'covariance'} = $C;
 }
 	
+sub size {
+	return $_[0]->{'_m'} unless @_ > 1;
+
+	# The size of the original dataset (i.e. no. of rows in the input matrix);
+	$_[0]->{'_m'} = $_[1];
+}
 
 sub means {
+	return $_[0]->{'means'} unless @_ > 1;
+
+	# Vector of column means
 	my $self = shift;
-	return $self->{'means'} if defined $self->{'means'};
-	
-	my $m = shift;
+	my $m    = shift;
 	
 	check_vector($m);
 
@@ -123,6 +138,16 @@ sub GSID {
 	my $diff = $v - $self->{'means'};
 
 	return $self->{'_decomp'}->solve( $diff )->dot_product( $diff );
+}
+
+sub EUCLID {
+	my ($self, $v) = @_;
+
+	check_vector($v);
+
+	trace_error("Input vector has wrong length") if $v->size != $self->{'_n'};
+
+	return $VF->EUCLID->($v, $self->{'means'});
 }
 
 1;

@@ -36,7 +36,8 @@ if ($Anorman::Data::Config::PACK_DATA == 1) {
 		'MAXIMUM'	=> \&XS_maximum_distance,
 		'CANBERRA'	=> \&XS_canberra_distance,
 		'BRAY_CURTIS'	=> \&XS_bray_curtis_distance,
-		'CORRELATION'	=> \&XS_correlation_distance
+		'CORRELATION'	=> \&XS_correlation_distance,
+		'MAHALANOBIS'	=> \&XS_mahalanobis_distance_chol,
 	);
 
 	my %BINARY_XS_FUNCTIONS = (
@@ -101,7 +102,8 @@ if ($Anorman::Data::Config::PACK_DATA == 1) {
 		'CANBERRA'	=> sub { $_[0]->aggregate( $_[1], $F->plus, sub { abs($_[0] - $_[1]) / abs($_[0] + $_[1]) } )},
 		'BRAY_CURTIS'	=> sub { $_[0]->aggregate( $_[1], $F->plus, $F->chain($F->abs, $F->minus)) /
 					 $_[0]->aggregate( $_[1], $F->plus, $F->plus) },
-		'CORRELATION'	=> sub { 1 - &correlation->($_[0],$_[1]) }
+		'CORRELATION'	=> sub { 1 - &correlation->($_[0],$_[1]) },
+		'MAHALANOBIS'	=> sub { my $diff = $_[0] - $_[1]; $_[2]->solve( $diff )->dot_product( $diff ) }
 	);
 
 
@@ -138,19 +140,23 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Functions::Vector',
 		ENABLE    => AUTOWRAP =>
-		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -lvector',
-		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
+		LIBS      => '-L/usr/local/opt/openblas/lib -L' . $Anorman::Common::AN_SRC_DIR . '/lib -landata -lopenblas',
+		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include -I/usr/local/opt/openblas/include'
 	   );
 use Inline C => <<'END_OF_C_CODE';
 
 #include "data.h"
+#include "cblas.h"
 #include "vector.h"
 #include "perl2c.h"
 #include "functions/functions.h"
 #include "functions/vector.h"
 #include "functions/vectorvector.h"
 
+/*
 #include "../lib/vector.c"
+*/
+
 #include "../lib/functions/vector.c"
 #include "../lib/functions/vectorvector.c"
 #include "../lib/functions/functions.c"
@@ -272,6 +278,61 @@ NV XS_canberra_distance( SV* self, SV* other ) {
 
     return (NV) c_vv_aggregate_quick( u->size, u, v, &c_plus, &c_canberra_diff );
 }
+
+SV* XS_mahalanobis_distance_chol( SV* self, SV* other, SV* sv_LLT ) {
+    SV_2STRUCT( self, Vector, u );
+    SV_2STRUCT( other, Vector, v );
+    SV_2STRUCT( sv_LLT, Matrix, LLT );
+
+    SV* mahal_dist = newSVnv(0);
+
+    const size_t size = u->size;
+
+    Vector* diff;
+
+    /* Allocate temporary space for difference vector */
+    Newxz( diff, 1, Vector );
+
+    diff->size      = size;
+    diff->stride    = 1;
+
+    diff->elements  = c_v_alloc( diff, size );
+
+    /* copy elements */
+    c_vv_copy( diff, u );
+
+   /* subtract second vector */
+    c_vv_sub( diff, v );
+
+
+    double* LLT_data =  LLT->elements + (LLT->row_zero + LLT->column_zero);
+    double* diff_data = diff->elements + diff->zero;
+
+    double result;
+    double* tmp;
+
+    /* store temporary vector for dot product calculation */
+    Newx( tmp, size, double );
+    Copy( diff->elements, tmp, size, double );
+
+    /* Solve (equivalent to multiplying with the inverse covariance matrix) */
+    cblas_dtrsv(CblasRowMajor, CblasLower, CblasNoTrans, CblasNonUnit, (int) size, LLT_data, LLT->row_stride,
+                diff_data, (int) diff->stride);
+
+    cblas_dtrsv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, (int) size, LLT_data, LLT->row_stride,
+                diff_data, (int) diff->stride);
+
+    result = cblas_ddot( (int) size, diff_data, 1, tmp, 1 );
+   
+    sv_setnv( mahal_dist, sqrt( result ) );
+
+    Safefree( diff->elements );
+    Safefree( diff );
+    Safefree( tmp );
+
+    return mahal_dist;    
+}
+
 END_OF_C_CODE
 
 1;

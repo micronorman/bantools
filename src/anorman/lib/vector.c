@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+
 #include "data.h"
 #include "error.h"
 #include "vector.h"
@@ -291,7 +292,7 @@ c_v_alloc( Vector* v, const size_t n ) {
     }
 
     if (v->elements != 0 ) {
-        C_WARNING("Vector already contained allocated elements"); 
+        C_WARNING("Vector already contained allocated elements");
         return v->elements;
     }
 
@@ -358,20 +359,24 @@ c_v_set_all( Vector* v, double x ) {
 
 void
 c_v_free( Vector* v ) {
-    
+
     if (!v) {
         return;
     }
+
     /* do not free elements if
        struct is a view         */
     if (v->elements && !v->view_flag) {
         free( v->elements );
+	v->elements = NULL;
     }
   
     if (v->offsets) {
         free(v->offsets->offsets);
         free(v->offsets);
+        v->offsets = NULL;
     } 
+
     free( v );
 }
 
@@ -389,21 +394,4 @@ c_v_part( Vector* v, size_t from, size_t width ) {
     v->zero      += from * v->stride;
     v->size       = width;
     v->view_flag  = 1;
-}
-
-/* Good for debugging */
-void
-c_v_show_struct( Vector* v ) {
-    fprintf(stderr, "\nContents of Vector struct: (%p)\n", v);
-    fprintf(stderr, "\tsize\t(%p): %lu\n", &v->size, v->size );
-    fprintf(stderr, "\toffset\t(%p): %lu\n",  &v->zero, v->zero );
-    fprintf(stderr, "\tstride\t(%p): %lu\n", &v->stride, v->stride );
-
-    if (!v->elements) {
-        fprintf(stderr, "\telems\t(%p): null\n",  &v->elements );
-    } else {
-        fprintf(stderr, "\telems\t(%p): [ %p ]\n",  &v->elements, v->elements );
-    }
-
-    fprintf(stderr, "\tview\t(%p): %i\n\n", &v->view_flag, v->view_flag );
 }

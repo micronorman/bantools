@@ -4,11 +4,13 @@ use strict;
 use warnings;
 
 use Anorman::Common;
-use Anorman::Data::BLAS qw( :L2 );
+use Anorman::Data;
+use Anorman::Data::LinAlg::BLAS qw( :L2 );
 use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Data::LinAlg::Householder qw( :all );
-use Anorman::Math::Common qw(hypot min);
-use Anorman::Data;
+use Anorman::Math::Common qw(hypot);
+
+use List::Util qw(min);
 
 use overload
 	'""' => \&_stringify;
@@ -78,7 +80,6 @@ sub new {
 sub decompose {
 	my $self = shift;
 	my $A    = shift;
-
 	check_matrix($A);
 
 	my $M = $A->rows;

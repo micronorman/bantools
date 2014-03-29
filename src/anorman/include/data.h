@@ -12,6 +12,7 @@
 #define __ANORMAN_DATA_H__
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define MAX_NUM_ELEMENTS 2147483647
 

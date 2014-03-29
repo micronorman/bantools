@@ -1,0 +1,261 @@
+Loading Multivariate Data from file tetra_data.lrn
+Datapoints: 2784
+Vector size: 136
+Method: kbatch (map update at every 418 positions)
+Neighborhood: gauss
+Calculating descriptives...
+Grid dimension ratio: 1.67
+Grid: toroid
+Epochs: 20
+Radius: 51 -> 1 (linear cooling)
+Learning rate: 1 -> 0.1 (linear cooling)
+Search Method: standard
+Search Constant: 8
+Initializing [ 101 x 169 ] grid...
+[ 1.99s ] Training begin
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 2.02s ] Epoch: 0, Radius: 51, Num. of Neigh. neurons: 8212, Lrn. Rate 1.0000
+	Permuting data patterns
+	K-batch: updating 27 bestmaches
+	K-batch: updating 99 bestmaches
+	K-batch: updating 130 bestmaches
+	K-batch: updating 172 bestmaches
+	K-batch: updating 192 bestmaches
+	K-batch: updating 162 bestmaches
+	End of epoch: updating 166 bestmaches
+	948 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 12.39s ] Epoch: 1, Radius: 49, Num. of Neigh. neurons: 7524, Lrn. Rate 0.9550
+	Permuting data patterns
+	K-batch: updating 266 bestmaches
+	K-batch: updating 216 bestmaches
+	K-batch: updating 226 bestmaches
+	K-batch: updating 217 bestmaches
+	K-batch: updating 281 bestmaches
+	K-batch: updating 252 bestmaches
+	End of epoch: updating 181 bestmaches
+	1639 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 22.65s ] Epoch: 2, Radius: 46, Num. of Neigh. neurons: 6624, Lrn. Rate 0.9100
+	Permuting data patterns
+	K-batch: updating 241 bestmaches
+	K-batch: updating 248 bestmaches
+	K-batch: updating 184 bestmaches
+	K-batch: updating 230 bestmaches
+	K-batch: updating 166 bestmaches
+	K-batch: updating 196 bestmaches
+	End of epoch: updating 164 bestmaches
+	1429 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 32.67s ] Epoch: 3, Radius: 44, Num. of Neigh. neurons: 6076, Lrn. Rate 0.8650
+	Permuting data patterns
+	K-batch: updating 294 bestmaches
+	K-batch: updating 281 bestmaches
+	K-batch: updating 222 bestmaches
+	K-batch: updating 235 bestmaches
+	K-batch: updating 209 bestmaches
+	K-batch: updating 276 bestmaches
+	End of epoch: updating 197 bestmaches
+	1714 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 42.02s ] Epoch: 4, Radius: 41, Num. of Neigh. neurons: 5260, Lrn. Rate 0.8200
+	Permuting data patterns
+	K-batch: updating 273 bestmaches
+	K-batch: updating 259 bestmaches
+	K-batch: updating 197 bestmaches
+	K-batch: updating 251 bestmaches
+	K-batch: updating 228 bestmaches
+	K-batch: updating 266 bestmaches
+	End of epoch: updating 168 bestmaches
+	1642 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 50.93s ] Epoch: 5, Radius: 39, Num. of Neigh. neurons: 4776, Lrn. Rate 0.7750
+	Permuting data patterns
+	K-batch: updating 264 bestmaches
+	K-batch: updating 256 bestmaches
+	K-batch: updating 263 bestmaches
+	K-batch: updating 291 bestmaches
+	K-batch: updating 266 bestmaches
+	K-batch: updating 243 bestmaches
+	End of epoch: updating 188 bestmaches
+	1771 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 59.74s ] Epoch: 6, Radius: 36, Num. of Neigh. neurons: 4052, Lrn. Rate 0.7300
+	Permuting data patterns
+	K-batch: updating 251 bestmaches
+	K-batch: updating 246 bestmaches
+	K-batch: updating 248 bestmaches
+	K-batch: updating 265 bestmaches
+	K-batch: updating 246 bestmaches
+	K-batch: updating 246 bestmaches
+	End of epoch: updating 195 bestmaches
+	1697 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 68.77s ] Epoch: 7, Radius: 34, Num. of Neigh. neurons: 3624, Lrn. Rate 0.6850
+	Permuting data patterns
+	K-batch: updating 278 bestmaches
+	K-batch: updating 274 bestmaches
+	K-batch: updating 279 bestmaches
+	K-batch: updating 253 bestmaches
+	K-batch: updating 265 bestmaches
+	K-batch: updating 300 bestmaches
+	End of epoch: updating 188 bestmaches
+	1837 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 77.17s ] Epoch: 8, Radius: 31, Num. of Neigh. neurons: 3000, Lrn. Rate 0.6400
+	Permuting data patterns
+	K-batch: updating 284 bestmaches
+	K-batch: updating 292 bestmaches
+	K-batch: updating 305 bestmaches
+	K-batch: updating 255 bestmaches
+	K-batch: updating 296 bestmaches
+	K-batch: updating 272 bestmaches
+	End of epoch: updating 199 bestmaches
+	1903 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 85.14s ] Epoch: 9, Radius: 29, Num. of Neigh. neurons: 2628, Lrn. Rate 0.5950
+	Permuting data patterns
+	K-batch: updating 299 bestmaches
+	K-batch: updating 300 bestmaches
+	K-batch: updating 314 bestmaches
+	K-batch: updating 311 bestmaches
+	K-batch: updating 305 bestmaches
+	K-batch: updating 317 bestmaches
+	End of epoch: updating 199 bestmaches
+	2045 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 92.70s ] Epoch: 10, Radius: 26, Num. of Neigh. neurons: 2120, Lrn. Rate 0.5500
+	Permuting data patterns
+	K-batch: updating 323 bestmaches
+	K-batch: updating 331 bestmaches
+	K-batch: updating 337 bestmaches
+	K-batch: updating 344 bestmaches
+	K-batch: updating 307 bestmaches
+	K-batch: updating 325 bestmaches
+	End of epoch: updating 231 bestmaches
+	2198 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 99.72s ] Epoch: 11, Radius: 24, Num. of Neigh. neurons: 1792, Lrn. Rate 0.5050
+	Permuting data patterns
+	K-batch: updating 346 bestmaches
+	K-batch: updating 327 bestmaches
+	K-batch: updating 325 bestmaches
+	K-batch: updating 350 bestmaches
+	K-batch: updating 342 bestmaches
+	K-batch: updating 341 bestmaches
+	End of epoch: updating 239 bestmaches
+	2270 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 106.37s ] Epoch: 12, Radius: 21, Num. of Neigh. neurons: 1372, Lrn. Rate 0.4600
+	Permuting data patterns
+	K-batch: updating 348 bestmaches
+	K-batch: updating 363 bestmaches
+	K-batch: updating 369 bestmaches
+	K-batch: updating 367 bestmaches
+	K-batch: updating 333 bestmaches
+	K-batch: updating 350 bestmaches
+	End of epoch: updating 256 bestmaches
+	2386 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 112.85s ] Epoch: 13, Radius: 19, Num. of Neigh. neurons: 1128, Lrn. Rate 0.4150
+	Permuting data patterns
+	K-batch: updating 368 bestmaches
+	K-batch: updating 368 bestmaches
+	K-batch: updating 361 bestmaches
+	K-batch: updating 357 bestmaches
+	K-batch: updating 353 bestmaches
+	K-batch: updating 355 bestmaches
+	End of epoch: updating 239 bestmaches
+	2401 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 119.08s ] Epoch: 14, Radius: 16, Num. of Neigh. neurons: 796, Lrn. Rate 0.3700
+	Permuting data patterns
+	K-batch: updating 365 bestmaches
+	K-batch: updating 380 bestmaches
+	K-batch: updating 385 bestmaches
+	K-batch: updating 375 bestmaches
+	K-batch: updating 373 bestmaches
+	K-batch: updating 372 bestmaches
+	End of epoch: updating 255 bestmaches
+	2505 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 125.08s ] Epoch: 15, Radius: 14, Num. of Neigh. neurons: 612, Lrn. Rate 0.3250
+	Permuting data patterns
+	K-batch: updating 380 bestmaches
+	K-batch: updating 383 bestmaches
+	K-batch: updating 382 bestmaches
+	K-batch: updating 399 bestmaches
+	K-batch: updating 381 bestmaches
+	K-batch: updating 391 bestmaches
+	End of epoch: updating 260 bestmaches
+	2576 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 130.85s ] Epoch: 16, Radius: 11, Num. of Neigh. neurons: 376, Lrn. Rate 0.2800
+	Permuting data patterns
+	K-batch: updating 394 bestmaches
+	K-batch: updating 400 bestmaches
+	K-batch: updating 403 bestmaches
+	K-batch: updating 391 bestmaches
+	K-batch: updating 401 bestmaches
+	K-batch: updating 390 bestmaches
+	End of epoch: updating 268 bestmaches
+	2647 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 136.48s ] Epoch: 17, Radius: 9, Num. of Neigh. neurons: 252, Lrn. Rate 0.2350
+	Permuting data patterns
+	K-batch: updating 399 bestmaches
+	K-batch: updating 409 bestmaches
+	K-batch: updating 404 bestmaches
+	K-batch: updating 404 bestmaches
+	K-batch: updating 401 bestmaches
+	K-batch: updating 404 bestmaches
+	End of epoch: updating 268 bestmaches
+	2689 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 141.90s ] Epoch: 18, Radius: 6, Num. of Neigh. neurons: 112, Lrn. Rate 0.1900
+	Permuting data patterns
+	K-batch: updating 405 bestmaches
+	K-batch: updating 399 bestmaches
+	K-batch: updating 405 bestmaches
+	K-batch: updating 409 bestmaches
+	K-batch: updating 404 bestmaches
+	K-batch: updating 397 bestmaches
+	End of epoch: updating 271 bestmaches
+	2690 updates performed
+	Cooling parameters
+	Pre-calculating relative grid distances
+[ 147.20s ] Epoch: 19, Radius: 1, Num. of Neigh. neurons: 4, Lrn. Rate 0.1000
+	Permuting data patterns
+	K-batch: updating 410 bestmaches
+	K-batch: updating 408 bestmaches
+	K-batch: updating 398 bestmaches
+	K-batch: updating 413 bestmaches
+	K-batch: updating 407 bestmaches
+	K-batch: updating 416 bestmaches
+	End of epoch: updating 271 bestmaches
+	2723 updates performed
+[ 152.25 ] Finished. Total training time: 150.26
+No U-Matrix present
+Calculating U-Matrix heights...
+Writing ESOM U-matrix to file tetra_data.epoch20.umx
+Writing ESOM weights to file tetra_data.epoch20.wts
+Writing Bestmatches to file tetra_data.epoch20.bm

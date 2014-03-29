@@ -1,0 +1,1289 @@
+% 1288
+1	AB.20m_GS0_scaffold_0_1 1-10000
+2	AB.20m_GS0_scaffold_0_2 10001-20000
+3	AB.20m_GS0_scaffold_0_3 20001-30000
+4	AB.20m_GS0_scaffold_0_4 30001-40000
+5	AB.20m_GS0_scaffold_0_5 40001-50000
+6	AB.20m_GS0_scaffold_0_6 50001-60000
+7	AB.20m_GS0_scaffold_0_7 60001-70000
+8	AB.20m_GS0_scaffold_0_8 70001-80000
+9	AB.20m_GS0_scaffold_0_9 80001-90000
+10	AB.20m_GS0_scaffold_0_10 90001-100000
+11	AB.20m_GS0_scaffold_0_11 100001-110000
+12	AB.20m_GS0_scaffold_0_12 110001-120000
+13	AB.20m_GS0_scaffold_0_13 120001-130000
+14	AB.20m_GS0_scaffold_0_14 130001-135651
+15	AB.20m_GS0_scaffold_1_1 1-10000
+16	AB.20m_GS0_scaffold_1_2 10001-20000
+17	AB.20m_GS0_scaffold_1_3 20001-30000
+18	AB.20m_GS0_scaffold_1_4 30001-40000
+19	AB.20m_GS0_scaffold_1_5 40001-50000
+20	AB.20m_GS0_scaffold_1_6 50001-60000
+21	AB.20m_GS0_scaffold_1_7 60001-70000
+22	AB.20m_GS0_scaffold_1_8 70001-80000
+23	AB.20m_GS0_scaffold_1_9 80001-86025
+24	AB.20m_GS0_scaffold_2_1 1-10000
+25	AB.20m_GS0_scaffold_2_2 10001-20000
+26	AB.20m_GS0_scaffold_2_3 20001-30000
+27	AB.20m_GS0_scaffold_2_4 30001-40000
+28	AB.20m_GS0_scaffold_2_5 40001-50000
+29	AB.20m_GS0_scaffold_2_6 50001-60000
+30	AB.20m_GS0_scaffold_2_7 60001-70000
+31	AB.20m_GS0_scaffold_2_8 70001-80000
+32	AB.20m_GS0_scaffold_2_9 80001-84521
+33	AB.20m_GS0_scaffold_3_1 1-10000
+34	AB.20m_GS0_scaffold_3_2 10001-20000
+35	AB.20m_GS0_scaffold_3_3 20001-30000
+36	AB.20m_GS0_scaffold_3_4 30001-40000
+37	AB.20m_GS0_scaffold_3_5 40001-50000
+38	AB.20m_GS0_scaffold_3_6 50001-60000
+39	AB.20m_GS0_scaffold_3_7 60001-70000
+40	AB.20m_GS0_scaffold_3_8 70001-77494
+41	AB.20m_GS0_scaffold_4_1 1-10000
+42	AB.20m_GS0_scaffold_4_2 10001-20000
+43	AB.20m_GS0_scaffold_4_3 20001-30000
+44	AB.20m_GS0_scaffold_4_4 30001-40000
+45	AB.20m_GS0_scaffold_4_5 40001-50000
+46	AB.20m_GS0_scaffold_4_6 50001-60000
+47	AB.20m_GS0_scaffold_4_7 60001-70000
+48	AB.20m_GS0_scaffold_4_8 70001-80000
+49	AB.20m_GS0_scaffold_4_9 80001-90000
+50	AB.20m_GS0_scaffold_4_10 90001-100000
+51	AB.20m_GS0_scaffold_4_11 100001-110000
+52	AB.20m_GS0_scaffold_4_12 110001-120000
+53	AB.20m_GS0_scaffold_4_13 120001-130000
+54	AB.20m_GS0_scaffold_4_14 130001-140000
+55	AB.20m_GS0_scaffold_4_15 140001-150000
+56	AB.20m_GS0_scaffold_4_16 150001-160000
+57	AB.20m_GS0_scaffold_4_17 160001-162652
+58	AB.20m_GS0_scaffold_5_1 1-10000
+59	AB.20m_GS0_scaffold_5_2 10001-20000
+60	AB.20m_GS0_scaffold_5_3 20001-30000
+61	AB.20m_GS0_scaffold_5_4 30001-40000
+62	AB.20m_GS0_scaffold_5_5 40001-50000
+63	AB.20m_GS0_scaffold_5_6 50001-60000
+64	AB.20m_GS0_scaffold_5_7 60001-70000
+65	AB.20m_GS0_scaffold_5_8 70001-74149
+66	AB.20m_GS0_scaffold_6_1 1-10000
+67	AB.20m_GS0_scaffold_6_2 10001-20000
+68	AB.20m_GS0_scaffold_6_3 20001-30000
+69	AB.20m_GS0_scaffold_6_4 30001-40000
+70	AB.20m_GS0_scaffold_6_5 40001-50000
+71	AB.20m_GS0_scaffold_6_6 50001-60000
+72	AB.20m_GS0_scaffold_6_7 60001-70000
+73	AB.20m_GS0_scaffold_6_8 70001-80000
+74	AB.20m_GS0_scaffold_6_9 80001-90000
+75	AB.20m_GS0_scaffold_6_10 90001-100000
+76	AB.20m_GS0_scaffold_7_1 1-10000
+77	AB.20m_GS0_scaffold_7_2 10001-20000
+78	AB.20m_GS0_scaffold_7_3 20001-30000
+79	AB.20m_GS0_scaffold_7_4 30001-40000
+80	AB.20m_GS0_scaffold_7_5 40001-50000
+81	AB.20m_GS0_scaffold_7_6 50001-60000
+82	AB.20m_GS0_scaffold_7_7 60001-70000
+83	AB.20m_GS0_scaffold_7_8 70001-80000
+84	AB.20m_GS0_scaffold_7_9 80001-90000
+85	AB.20m_GS0_scaffold_7_10 90001-96929
+86	AB.20m_GS0_scaffold_8_1 1-10000
+87	AB.20m_GS0_scaffold_8_2 10001-20000
+88	AB.20m_GS0_scaffold_8_3 20001-30000
+89	AB.20m_GS0_scaffold_8_4 30001-40000
+90	AB.20m_GS0_scaffold_8_5 40001-50000
+91	AB.20m_GS0_scaffold_8_6 50001-54429
+92	AB.20m_GS0_scaffold_9_1 1-10000
+93	AB.20m_GS0_scaffold_9_2 10001-20000
+94	AB.20m_GS0_scaffold_9_3 20001-30000
+95	AB.20m_GS0_scaffold_9_4 30001-40000
+96	AB.20m_GS0_scaffold_9_5 40001-50000
+97	AB.20m_GS0_scaffold_9_6 50001-60000
+98	AB.20m_GS0_scaffold_9_7 60001-70000
+99	AB.20m_GS0_scaffold_9_8 70001-80000
+100	AB.20m_GS0_scaffold_9_9 80001-90000
+101	AB.20m_GS0_scaffold_10_1 1-10000
+102	AB.20m_GS0_scaffold_10_2 10001-20000
+103	AB.20m_GS0_scaffold_10_3 20001-30000
+104	AB.20m_GS0_scaffold_10_4 30001-40000
+105	AB.20m_GS0_scaffold_10_5 40001-50000
+106	AB.20m_GS0_scaffold_10_6 50001-53163
+107	AB.20m_GS0_scaffold_11_1 1-10000
+108	AB.20m_GS0_scaffold_11_2 10001-20000
+109	AB.20m_GS0_scaffold_11_3 20001-30000
+110	AB.20m_GS0_scaffold_11_4 30001-40000
+111	AB.20m_GS0_scaffold_11_5 40001-50000
+112	AB.20m_GS0_scaffold_11_6 50001-51894
+113	AB.20m_GS0_scaffold_12_1 1-10000
+114	AB.20m_GS0_scaffold_12_2 10001-20000
+115	AB.20m_GS0_scaffold_12_3 20001-30000
+116	AB.20m_GS0_scaffold_12_4 30001-40000
+117	AB.20m_GS0_scaffold_12_5 40001-50000
+118	AB.20m_GS0_scaffold_12_6 50001-60000
+119	AB.20m_GS0_scaffold_12_7 60001-70000
+120	AB.20m_GS0_scaffold_12_8 70001-72461
+121	AB.20m_GS0_scaffold_13_1 1-10000
+122	AB.20m_GS0_scaffold_13_2 10001-20000
+123	AB.20m_GS0_scaffold_13_3 20001-30000
+124	AB.20m_GS0_scaffold_13_4 30001-40000
+125	AB.20m_GS0_scaffold_13_5 40001-50000
+126	AB.20m_GS0_scaffold_13_6 50001-60000
+127	AB.20m_GS0_scaffold_13_7 60001-70000
+128	AB.20m_GS0_scaffold_13_8 70001-80000
+129	AB.20m_GS0_scaffold_14_1 1-10000
+130	AB.20m_GS0_scaffold_14_2 10001-20000
+131	AB.20m_GS0_scaffold_14_3 20001-30000
+132	AB.20m_GS0_scaffold_14_4 30001-40000
+133	AB.20m_GS0_scaffold_14_5 40001-50000
+134	AB.20m_GS0_scaffold_14_6 50001-60000
+135	AB.20m_GS0_scaffold_14_7 60001-70000
+136	AB.20m_GS0_scaffold_14_8 70001-80000
+137	AB.20m_GS0_scaffold_14_9 80001-90000
+138	AB.20m_GS0_scaffold_14_10 90001-100000
+139	AB.20m_GS0_scaffold_14_11 100001-110000
+140	AB.20m_GS0_scaffold_14_12 110001-118639
+141	AB.20m_GS0_scaffold_15_1 1-10000
+142	AB.20m_GS0_scaffold_15_2 10001-20000
+143	AB.20m_GS0_scaffold_15_3 20001-30000
+144	AB.20m_GS0_scaffold_15_4 30001-40000
+145	AB.20m_GS0_scaffold_15_5 40001-50000
+146	AB.20m_GS0_scaffold_15_6 50001-60000
+147	AB.20m_GS0_scaffold_15_7 60001-63954
+148	AB.20m_GS0_scaffold_16_1 1-10000
+149	AB.20m_GS0_scaffold_16_2 10001-20000
+150	AB.20m_GS0_scaffold_16_3 20001-30000
+151	AB.20m_GS0_scaffold_16_4 30001-40000
+152	AB.20m_GS0_scaffold_16_5 40001-45649
+153	AB.20m_GS0_scaffold_17_1 1-10000
+154	AB.20m_GS0_scaffold_17_2 10001-20000
+155	AB.20m_GS0_scaffold_17_3 20001-30000
+156	AB.20m_GS0_scaffold_17_4 30001-40000
+157	AB.20m_GS0_scaffold_17_5 40001-50000
+158	AB.20m_GS0_scaffold_17_6 50001-60000
+159	AB.20m_GS0_scaffold_17_7 60001-70000
+160	AB.20m_GS0_scaffold_17_8 70001-80000
+161	AB.20m_GS0_scaffold_17_9 80001-90000
+162	AB.20m_GS0_scaffold_17_10 90001-96144
+163	AB.20m_GS0_scaffold_18_1 1-10000
+164	AB.20m_GS0_scaffold_18_2 10001-20000
+165	AB.20m_GS0_scaffold_18_3 20001-30000
+166	AB.20m_GS0_scaffold_18_4 30001-39234
+167	AB.20m_GS0_scaffold_19_1 1-10000
+168	AB.20m_GS0_scaffold_19_2 10001-20000
+169	AB.20m_GS0_scaffold_19_3 20001-30000
+170	AB.20m_GS0_scaffold_19_4 30001-38941
+171	AB.20m_GS0_scaffold_20_1 1-10000
+172	AB.20m_GS0_scaffold_20_2 10001-20000
+173	AB.20m_GS0_scaffold_20_3 20001-30000
+174	AB.20m_GS0_scaffold_20_4 30001-35543
+175	AB.20m_GS0_scaffold_21_1 1-10000
+176	AB.20m_GS0_scaffold_21_2 10001-20000
+177	AB.20m_GS0_scaffold_21_3 20001-30000
+178	AB.20m_GS0_scaffold_21_4 30001-39561
+179	AB.20m_GS0_scaffold_22_1 1-10000
+180	AB.20m_GS0_scaffold_22_2 10001-20000
+181	AB.20m_GS0_scaffold_22_3 20001-30000
+182	AB.20m_GS0_scaffold_22_4 30001-33976
+183	AB.20m_GS0_scaffold_23_1 1-10000
+184	AB.20m_GS0_scaffold_23_2 10001-20000
+185	AB.20m_GS0_scaffold_23_3 20001-30000
+186	AB.20m_GS0_scaffold_23_4 30001-33336
+187	AB.20m_GS0_scaffold_24_1 1-10000
+188	AB.20m_GS0_scaffold_24_2 10001-20000
+189	AB.20m_GS0_scaffold_24_3 20001-30000
+190	AB.20m_GS0_scaffold_24_4 30001-40000
+191	AB.20m_GS0_scaffold_24_5 40001-50000
+192	AB.20m_GS0_scaffold_24_6 50001-60000
+193	AB.20m_GS0_scaffold_24_7 60001-70000
+194	AB.20m_GS0_scaffold_24_8 70001-80000
+195	AB.20m_GS0_scaffold_25_1 1-10000
+196	AB.20m_GS0_scaffold_25_2 10001-20000
+197	AB.20m_GS0_scaffold_25_3 20001-30000
+198	AB.20m_GS0_scaffold_26_1 1-10000
+199	AB.20m_GS0_scaffold_26_2 10001-20000
+200	AB.20m_GS0_scaffold_26_3 20001-30000
+201	AB.20m_GS0_scaffold_27_1 1-10000
+202	AB.20m_GS0_scaffold_27_2 10001-20000
+203	AB.20m_GS0_scaffold_27_3 20001-30000
+204	AB.20m_GS0_scaffold_27_4 30001-40000
+205	AB.20m_GS0_scaffold_27_5 40001-47281
+206	AB.20m_GS0_scaffold_28_1 1-10000
+207	AB.20m_GS0_scaffold_28_2 10001-20000
+208	AB.20m_GS0_scaffold_28_3 20001-30000
+209	AB.20m_GS0_scaffold_29_1 1-10000
+210	AB.20m_GS0_scaffold_29_2 10001-20000
+211	AB.20m_GS0_scaffold_29_3 20001-29765
+212	AB.20m_GS0_scaffold_30_1 1-10000
+213	AB.20m_GS0_scaffold_30_2 10001-20000
+214	AB.20m_GS0_scaffold_30_3 20001-30000
+215	AB.20m_GS0_scaffold_30_4 30001-33595
+216	AB.20m_GS0_scaffold_31_1 1-10000
+217	AB.20m_GS0_scaffold_31_2 10001-20000
+218	AB.20m_GS0_scaffold_31_3 20001-29028
+219	AB.20m_GS0_scaffold_32_1 1-10000
+220	AB.20m_GS0_scaffold_32_2 10001-20000
+221	AB.20m_GS0_scaffold_32_3 20001-28989
+222	AB.20m_GS0_scaffold_33_1 1-10000
+223	AB.20m_GS0_scaffold_33_2 10001-20000
+224	AB.20m_GS0_scaffold_33_3 20001-30000
+225	AB.20m_GS0_scaffold_33_4 30001-40000
+226	AB.20m_GS0_scaffold_33_5 40001-50000
+227	AB.20m_GS0_scaffold_33_6 50001-60000
+228	AB.20m_GS0_scaffold_33_7 60001-70000
+229	AB.20m_GS0_scaffold_33_8 70001-79753
+230	AB.20m_GS0_scaffold_34_1 1-10000
+231	AB.20m_GS0_scaffold_34_2 10001-20000
+232	AB.20m_GS0_scaffold_34_3 20001-27929
+233	AB.20m_GS0_scaffold_35_1 1-10000
+234	AB.20m_GS0_scaffold_35_2 10001-20000
+235	AB.20m_GS0_scaffold_35_3 20001-30000
+236	AB.20m_GS0_scaffold_35_4 30001-40000
+237	AB.20m_GS0_scaffold_35_5 40001-50000
+238	AB.20m_GS0_scaffold_35_6 50001-60000
+239	AB.20m_GS0_scaffold_35_7 60001-70000
+240	AB.20m_GS0_scaffold_35_8 70001-80000
+241	AB.20m_GS0_scaffold_35_9 80001-89723
+242	AB.20m_GS0_scaffold_36_1 1-10000
+243	AB.20m_GS0_scaffold_36_2 10001-20000
+244	AB.20m_GS0_scaffold_36_3 20001-26800
+245	AB.20m_GS0_scaffold_37_1 1-10000
+246	AB.20m_GS0_scaffold_37_2 10001-20000
+247	AB.20m_GS0_scaffold_37_3 20001-26183
+248	AB.20m_GS0_scaffold_38_1 1-10000
+249	AB.20m_GS0_scaffold_38_2 10001-20000
+250	AB.20m_GS0_scaffold_38_3 20001-30000
+251	AB.20m_GS0_scaffold_38_4 30001-40000
+252	AB.20m_GS0_scaffold_38_5 40001-41539
+253	AB.20m_GS0_scaffold_39_1 1-10000
+254	AB.20m_GS0_scaffold_39_2 10001-20000
+255	AB.20m_GS0_scaffold_39_3 20001-30000
+256	AB.20m_GS0_scaffold_39_4 30001-40000
+257	AB.20m_GS0_scaffold_39_5 40001-50000
+258	AB.20m_GS0_scaffold_39_6 50001-52251
+259	AB.20m_GS0_scaffold_40_1 1-10000
+260	AB.20m_GS0_scaffold_40_2 10001-20000
+261	AB.20m_GS0_scaffold_40_3 20001-30000
+262	AB.20m_GS0_scaffold_40_4 30001-40000
+263	AB.20m_GS0_scaffold_40_5 40001-45330
+264	AB.20m_GS0_scaffold_41_1 1-10000
+265	AB.20m_GS0_scaffold_41_2 10001-20000
+266	AB.20m_GS0_scaffold_41_3 20001-24364
+267	AB.20m_GS0_scaffold_42_1 1-10000
+268	AB.20m_GS0_scaffold_42_2 10001-20000
+269	AB.20m_GS0_scaffold_42_3 20001-28329
+270	AB.20m_GS0_scaffold_43_1 1-10000
+271	AB.20m_GS0_scaffold_43_2 10001-20000
+272	AB.20m_GS0_scaffold_43_3 20001-30000
+273	AB.20m_GS0_scaffold_43_4 30001-40000
+274	AB.20m_GS0_scaffold_43_5 40001-50000
+275	AB.20m_GS0_scaffold_43_6 50001-60000
+276	AB.20m_GS0_scaffold_43_7 60001-70000
+277	AB.20m_GS0_scaffold_43_8 70001-80000
+278	AB.20m_GS0_scaffold_43_9 80001-90000
+279	AB.20m_GS0_scaffold_43_10 90001-100000
+280	AB.20m_GS0_scaffold_44_1 1-10000
+281	AB.20m_GS0_scaffold_44_2 10001-20000
+282	AB.20m_GS0_scaffold_44_3 20001-30000
+283	AB.20m_GS0_scaffold_44_4 30001-40000
+284	AB.20m_GS0_scaffold_44_5 40001-46314
+285	AB.20m_GS0_scaffold_45_1 1-10000
+286	AB.20m_GS0_scaffold_45_2 10001-20000
+287	AB.20m_GS0_scaffold_45_3 20001-30000
+288	AB.20m_GS0_scaffold_45_4 30001-40000
+289	AB.20m_GS0_scaffold_45_5 40001-50000
+290	AB.20m_GS0_scaffold_45_6 50001-60000
+291	AB.20m_GS0_scaffold_45_7 60001-67195
+292	AB.20m_GS0_scaffold_46_1 1-10000
+293	AB.20m_GS0_scaffold_46_2 10001-20000
+294	AB.20m_GS0_scaffold_46_3 20001-30000
+295	AB.20m_GS0_scaffold_46_4 30001-33316
+296	AB.20m_GS0_scaffold_47_1 1-10000
+297	AB.20m_GS0_scaffold_47_2 10001-20000
+298	AB.20m_GS0_scaffold_47_3 20001-24495
+299	AB.20m_GS0_scaffold_48_1 1-10000
+300	AB.20m_GS0_scaffold_48_2 10001-20000
+301	AB.20m_GS0_scaffold_49_1 1-10000
+302	AB.20m_GS0_scaffold_49_2 10001-20000
+303	AB.20m_GS0_scaffold_49_3 20001-24168
+304	AB.20m_GS0_scaffold_50_1 1-10000
+305	AB.20m_GS0_scaffold_50_2 10001-19950
+306	AB.20m_GS0_scaffold_51_1 1-10000
+307	AB.20m_GS0_scaffold_51_2 10001-20000
+308	AB.20m_GS0_scaffold_51_3 20001-30000
+309	AB.20m_GS0_scaffold_52_1 1-10000
+310	AB.20m_GS0_scaffold_52_2 10001-19663
+311	AB.20m_GS0_scaffold_53_1 1-10000
+312	AB.20m_GS0_scaffold_53_2 10001-19638
+313	AB.20m_GS0_scaffold_54_1 1-10000
+314	AB.20m_GS0_scaffold_54_2 10001-20000
+315	AB.20m_GS0_scaffold_54_3 20001-30000
+316	AB.20m_GS0_scaffold_54_4 30001-40000
+317	AB.20m_GS0_scaffold_54_5 40001-43853
+318	AB.20m_GS0_scaffold_55_1 1-10000
+319	AB.20m_GS0_scaffold_55_2 10001-19000
+320	AB.20m_GS0_scaffold_56_1 1-10000
+321	AB.20m_GS0_scaffold_56_2 10001-20000
+322	AB.20m_GS0_scaffold_56_3 20001-30000
+323	AB.20m_GS0_scaffold_56_4 30001-40000
+324	AB.20m_GS0_scaffold_57_1 1-10000
+325	AB.20m_GS0_scaffold_57_2 10001-18526
+326	AB.20m_GS0_scaffold_58_1 1-10000
+327	AB.20m_GS0_scaffold_58_2 10001-20000
+328	AB.20m_GS0_scaffold_58_3 20001-30000
+329	AB.20m_GS0_scaffold_58_4 30001-40000
+330	AB.20m_GS0_scaffold_58_5 40001-44247
+331	AB.20m_GS0_scaffold_59_1 1-10000
+332	AB.20m_GS0_scaffold_59_2 10001-20000
+333	AB.20m_GS0_scaffold_59_3 20001-30000
+334	AB.20m_GS0_scaffold_59_4 30001-40000
+335	AB.20m_GS0_scaffold_59_5 40001-50000
+336	AB.20m_GS0_scaffold_59_6 50001-60000
+337	AB.20m_GS0_scaffold_60_1 1-10000
+338	AB.20m_GS0_scaffold_60_2 10001-20000
+339	AB.20m_GS0_scaffold_60_3 20001-30000
+340	AB.20m_GS0_scaffold_60_4 30001-37091
+341	AB.20m_GS0_scaffold_61_1 1-10000
+342	AB.20m_GS0_scaffold_61_2 10001-19066
+343	AB.20m_GS0_scaffold_62_1 1-10000
+344	AB.20m_GS0_scaffold_62_2 10001-17896
+345	AB.20m_GS0_scaffold_63_1 1-10000
+346	AB.20m_GS0_scaffold_63_2 10001-20000
+347	AB.20m_GS0_scaffold_63_3 20001-24029
+348	AB.20m_GS0_scaffold_64_1 1-10000
+349	AB.20m_GS0_scaffold_64_2 10001-17703
+350	AB.20m_GS0_scaffold_65_1 1-10000
+351	AB.20m_GS0_scaffold_65_2 10001-20000
+352	AB.20m_GS0_scaffold_65_3 20001-25286
+353	AB.20m_GS0_scaffold_66_1 1-10000
+354	AB.20m_GS0_scaffold_66_2 10001-17276
+355	AB.20m_GS0_scaffold_67_1 1-10000
+356	AB.20m_GS0_scaffold_67_2 10001-16485
+357	AB.20m_GS0_scaffold_68_1 1-10000
+358	AB.20m_GS0_scaffold_68_2 10001-20000
+359	AB.20m_GS0_scaffold_68_3 20001-24378
+360	AB.20m_GS0_scaffold_69_1 1-10000
+361	AB.20m_GS0_scaffold_69_2 10001-20000
+362	AB.20m_GS0_scaffold_69_3 20001-21573
+363	AB.20m_GS0_scaffold_70_1 1-10000
+364	AB.20m_GS0_scaffold_70_2 10001-20000
+365	AB.20m_GS0_scaffold_70_3 20001-27998
+366	AB.20m_GS0_scaffold_71_1 1-10000
+367	AB.20m_GS0_scaffold_71_2 10001-18950
+368	AB.20m_GS0_scaffold_72_1 1-10000
+369	AB.20m_GS0_scaffold_72_2 10001-20000
+370	AB.20m_GS0_scaffold_72_3 20001-30000
+371	AB.20m_GS0_scaffold_72_4 30001-40000
+372	AB.20m_GS0_scaffold_72_5 40001-50000
+373	AB.20m_GS0_scaffold_72_6 50001-55603
+374	AB.20m_GS0_scaffold_73_1 1-10000
+375	AB.20m_GS0_scaffold_73_2 10001-15570
+376	AB.20m_GS0_scaffold_74_1 1-10000
+377	AB.20m_GS0_scaffold_74_2 10001-20000
+378	AB.20m_GS0_scaffold_74_3 20001-26286
+379	AB.20m_GS0_scaffold_75_1 1-10000
+380	AB.20m_GS0_scaffold_75_2 10001-20000
+381	AB.20m_GS0_scaffold_75_3 20001-30000
+382	AB.20m_GS0_scaffold_75_4 30001-40000
+383	AB.20m_GS0_scaffold_75_5 40001-41700
+384	AB.20m_GS0_scaffold_76_1 1-10000
+385	AB.20m_GS0_scaffold_76_2 10001-15233
+386	AB.20m_GS0_scaffold_77_1 1-10000
+387	AB.20m_GS0_scaffold_77_2 10001-15076
+388	AB.20m_GS0_scaffold_78_1 1-10000
+389	AB.20m_GS0_scaffold_78_2 10001-20000
+390	AB.20m_GS0_scaffold_78_3 20001-30000
+391	AB.20m_GS0_scaffold_78_4 30001-40000
+392	AB.20m_GS0_scaffold_78_5 40001-47837
+393	AB.20m_GS0_scaffold_79_1 1-10000
+394	AB.20m_GS0_scaffold_79_2 10001-15009
+395	AB.20m_GS0_scaffold_80_1 1-10000
+396	AB.20m_GS0_scaffold_80_2 10001-20000
+397	AB.20m_GS0_scaffold_80_3 20001-25648
+398	AB.20m_GS0_scaffold_81_1 1-10000
+399	AB.20m_GS0_scaffold_81_2 10001-15011
+400	AB.20m_GS0_scaffold_82_1 1-10000
+401	AB.20m_GS0_scaffold_82_2 10001-20000
+402	AB.20m_GS0_scaffold_82_3 20001-30000
+403	AB.20m_GS0_scaffold_82_4 30001-40000
+404	AB.20m_GS0_scaffold_82_5 40001-50000
+405	AB.20m_GS0_scaffold_82_6 50001-60000
+406	AB.20m_GS0_scaffold_83_1 1-10000
+407	AB.20m_GS0_scaffold_83_2 10001-20000
+408	AB.20m_GS0_scaffold_83_3 20001-30000
+409	AB.20m_GS0_scaffold_83_4 30001-40000
+410	AB.20m_GS0_scaffold_83_5 40001-45300
+411	AB.20m_GS0_scaffold_84_1 1-10000
+412	AB.20m_GS0_scaffold_84_2 10001-12605
+413	AB.20m_GS0_scaffold_85_1 1-10000
+414	AB.20m_GS0_scaffold_85_2 10001-20000
+415	AB.20m_GS0_scaffold_85_3 20001-22965
+416	AB.20m_GS0_scaffold_86_1 1-10000
+417	AB.20m_GS0_scaffold_86_2 10001-12336
+418	AB.20m_GS0_scaffold_87_1 1-10000
+419	AB.20m_GS0_scaffold_87_2 10001-15288
+420	AB.20m_GS0_scaffold_88_1 1-10000
+421	AB.20m_GS0_scaffold_88_2 10001-16774
+422	AB.20m_GS0_scaffold_89_1 1-10000
+423	AB.20m_GS0_scaffold_89_2 10001-20000
+424	AB.20m_GS0_scaffold_89_3 20001-28573
+425	AB.20m_GS0_scaffold_90_1 1-10000
+426	AB.20m_GS0_scaffold_90_2 10001-11859
+427	AB.20m_GS0_scaffold_91_1 1-10000
+428	AB.20m_GS0_scaffold_91_2 10001-17141
+429	AB.20m_GS0_scaffold_92_1 1-10000
+430	AB.20m_GS0_scaffold_92_2 10001-17985
+431	AB.20m_GS0_scaffold_93_1 1-10000
+432	AB.20m_GS0_scaffold_93_2 10001-11771
+433	AB.20m_GS0_scaffold_94_1 1-10000
+434	AB.20m_GS0_scaffold_94_2 10001-11801
+435	AB.20m_GS0_scaffold_95 length_10946 read_count_5773
+436	AB.20m_GS0_scaffold_96 length_10844 read_count_2963
+437	AB.20m_GS0_scaffold_97 length_10576 read_count_247455
+438	AB.20m_GS0_scaffold_98_1 1-10000
+439	AB.20m_GS0_scaffold_98_2 10001-13733
+440	AB.20m_GS0_scaffold_99_1 1-10000
+441	AB.20m_GS0_scaffold_99_2 10001-19538
+442	AB.20m_GS0_scaffold_100_1 1-10000
+443	AB.20m_GS0_scaffold_100_2 10001-20000
+444	AB.20m_GS0_scaffold_100_3 20001-30000
+445	AB.20m_GS0_scaffold_101_1 1-10000
+446	AB.20m_GS0_scaffold_101_2 10001-20000
+447	AB.20m_GS0_scaffold_101_3 20001-30000
+448	AB.20m_GS0_scaffold_101_4 30001-34904
+449	AB.20m_GS0_scaffold_102 length_10383 read_count_15889
+450	AB.20m_GS0_scaffold_103_1 1-10000
+451	AB.20m_GS0_scaffold_103_2 10001-18078
+452	AB.20m_GS0_scaffold_104 length_10464 read_count_390443
+453	AB.20m_GS0_scaffold_105 length_9905 read_count_4573
+454	AB.20m_GS0_scaffold_106_1 1-10000
+455	AB.20m_GS0_scaffold_106_2 10001-19243
+456	AB.20m_GS0_scaffold_107 length_9593 read_count_1051
+457	AB.20m_GS0_scaffold_108_1 1-10000
+458	AB.20m_GS0_scaffold_108_2 10001-20000
+459	AB.20m_GS0_scaffold_108_3 20001-26685
+460	AB.20m_GS0_scaffold_109 length_9523 read_count_77622
+461	AB.20m_GS0_scaffold_110 length_9457 read_count_154057
+462	AB.20m_GS0_scaffold_111_1 1-10000
+463	AB.20m_GS0_scaffold_111_2 10001-12813
+464	AB.20m_GS0_scaffold_112 length_10123 read_count_8902
+465	AB.20m_GS0_scaffold_113 length_9373 read_count_2496
+466	AB.20m_GS0_scaffold_114 length_9320 read_count_93034
+467	AB.20m_GS0_scaffold_115_1 1-10000
+468	AB.20m_GS0_scaffold_115_2 10001-12270
+469	AB.20m_GS0_scaffold_116_1 1-10000
+470	AB.20m_GS0_scaffold_116_2 10001-20000
+471	AB.20m_GS0_scaffold_117 length_9025 read_count_159468
+472	AB.20m_GS0_scaffold_118 length_9002 read_count_914
+473	AB.20m_GS0_scaffold_119 length_9586 read_count_1013
+474	AB.20m_GS0_scaffold_120 length_8847 read_count_4509
+475	AB.20m_GS0_scaffold_121 length_11230 read_count_223479
+476	AB.20m_GS0_scaffold_122 length_10263 read_count_753
+477	AB.20m_GS0_scaffold_123 length_8690 read_count_262209
+478	AB.20m_GS0_scaffold_124 length_10439 read_count_1915
+479	AB.20m_GS0_scaffold_125 length_8463 read_count_4385
+480	AB.20m_GS0_scaffold_126_1 1-10000
+481	AB.20m_GS0_scaffold_126_2 10001-20000
+482	AB.20m_GS0_scaffold_126_3 20001-22792
+483	AB.20m_GS0_scaffold_127_1 1-10000
+484	AB.20m_GS0_scaffold_127_2 10001-11961
+485	AB.20m_GS0_scaffold_128_1 1-10000
+486	AB.20m_GS0_scaffold_128_2 10001-20000
+487	AB.20m_GS0_scaffold_128_3 20001-22186
+488	AB.20m_GS0_scaffold_129 length_8276 read_count_24282
+489	AB.20m_GS0_scaffold_130 length_10192 read_count_1154
+490	AB.20m_GS0_scaffold_131_1 1-10000
+491	AB.20m_GS0_scaffold_131_2 10001-20000
+492	AB.20m_GS0_scaffold_131_3 20001-21626
+493	AB.20m_GS0_scaffold_132 length_7931 read_count_47926
+494	AB.20m_GS0_scaffold_133 length_7839 read_count_3468
+495	AB.20m_GS0_scaffold_134_1 1-10000
+496	AB.20m_GS0_scaffold_134_2 10001-13871
+497	AB.20m_GS0_scaffold_135 length_7676 read_count_229197
+498	AB.20m_GS0_scaffold_136 length_10600 read_count_1093
+499	AB.20m_GS0_scaffold_137 length_7538 read_count_1131
+500	AB.20m_GS0_scaffold_138 length_7516 read_count_266962
+501	AB.20m_GS0_scaffold_139 length_7237 read_count_6379
+502	AB.20m_GS0_scaffold_140 length_7208 read_count_808
+503	AB.20m_GS0_scaffold_141 length_10073 read_count_110437
+504	AB.20m_GS0_scaffold_142 length_7121 read_count_772
+505	AB.20m_GS0_scaffold_143 length_9706 read_count_922
+506	AB.20m_GS0_scaffold_144_1 1-10000
+507	AB.20m_GS0_scaffold_144_2 10001-12494
+508	AB.20m_GS0_scaffold_145 length_6816 read_count_669
+509	AB.20m_GS0_scaffold_146 length_6809 read_count_1214
+510	AB.20m_GS0_scaffold_147 length_10671 read_count_89425
+511	AB.20m_GS0_scaffold_148_1 1-10000
+512	AB.20m_GS0_scaffold_148_2 10001-13965
+513	AB.20m_GS0_scaffold_149 length_6712 read_count_97866
+514	AB.20m_GS0_scaffold_150_1 1-10000
+515	AB.20m_GS0_scaffold_150_2 10001-13079
+516	AB.20m_GS0_scaffold_151 length_6480 read_count_109730
+517	AB.20m_GS0_scaffold_152 length_11263 read_count_1904
+518	AB.20m_GS0_scaffold_153 length_6392 read_count_478
+519	AB.20m_GS0_scaffold_154 length_9592 read_count_1429
+520	AB.20m_GS0_scaffold_155 length_10386 read_count_1164
+521	AB.20m_GS0_scaffold_156_1 1-10000
+522	AB.20m_GS0_scaffold_156_2 10001-12174
+523	AB.20m_GS0_scaffold_157_1 1-10000
+524	AB.20m_GS0_scaffold_157_2 10001-13597
+525	AB.20m_GS0_scaffold_158_1 1-10000
+526	AB.20m_GS0_scaffold_158_2 10001-20000
+527	AB.20m_GS0_scaffold_158_3 20001-21944
+528	AB.20m_GS0_scaffold_159_1 1-10000
+529	AB.20m_GS0_scaffold_159_2 10001-20000
+530	AB.20m_GS0_scaffold_160 length_6203 read_count_9837
+531	AB.20m_GS0_scaffold_161 length_6093 read_count_612
+532	AB.20m_GS0_scaffold_162 length_7499 read_count_1107
+533	AB.20m_GS0_scaffold_163 length_6995 read_count_736
+534	AB.20m_GS0_scaffold_164_1 1-10000
+535	AB.20m_GS0_scaffold_164_2 10001-11583
+536	AB.20m_GS0_scaffold_165_1 1-10000
+537	AB.20m_GS0_scaffold_165_2 10001-13658
+538	AB.20m_GS0_scaffold_166 length_6939 read_count_1507
+539	AB.20m_GS0_scaffold_167 length_5946 read_count_875
+540	AB.20m_GS0_scaffold_168_1 1-10000
+541	AB.20m_GS0_scaffold_168_2 10001-11981
+542	AB.20m_GS0_scaffold_169 length_6847 read_count_620
+543	AB.20m_GS0_scaffold_170 length_7331 read_count_678
+544	AB.20m_GS0_scaffold_171 length_5720 read_count_97508
+545	AB.20m_GS0_scaffold_172 length_9681 read_count_7403
+546	AB.20m_GS0_scaffold_173 length_6939 read_count_873
+547	AB.20m_GS0_scaffold_174 length_5664 read_count_35576
+548	AB.20m_GS0_scaffold_175 length_5603 read_count_219986
+549	AB.20m_GS0_scaffold_176 length_9959 read_count_155358
+550	AB.20m_GS0_scaffold_177 length_10928 read_count_43752
+551	AB.20m_GS0_scaffold_178 length_9233 read_count_945
+552	AB.20m_GS0_scaffold_179 length_10166 read_count_586
+553	AB.20m_GS0_scaffold_180 length_5455 read_count_72902
+554	AB.20m_GS0_scaffold_181 length_6642 read_count_748
+555	AB.20m_GS0_scaffold_182 length_8900 read_count_1117
+556	AB.20m_GS0_scaffold_183 length_7000 read_count_4237
+557	AB.20m_GS0_scaffold_184 length_6923 read_count_9298
+558	AB.20m_GS0_scaffold_185 length_5592 read_count_516
+559	AB.20m_GS0_scaffold_186_1 1-10000
+560	AB.20m_GS0_scaffold_186_2 10001-12828
+561	AB.20m_GS0_scaffold_187 length_5277 read_count_188410
+562	AB.20m_GS0_scaffold_188 length_5208 read_count_249339
+563	AB.20m_GS0_scaffold_189 length_8384 read_count_773
+564	AB.20m_GS0_scaffold_190 length_5799 read_count_354
+565	AB.20m_GS0_scaffold_191 length_5671 read_count_6013
+566	AB.20m_GS0_scaffold_192 length_5601 read_count_671
+567	AB.20m_GS0_scaffold_193 length_5114 read_count_22715
+568	AB.20m_GS0_scaffold_194 length_8664 read_count_28198
+569	AB.20m_GS0_scaffold_195_1 1-10000
+570	AB.20m_GS0_scaffold_195_2 10001-13097
+571	AB.20m_GS0_scaffold_196 length_4996 read_count_1113
+572	AB.20m_GS0_scaffold_197 length_8694 read_count_836
+573	AB.20m_GS0_scaffold_198 length_10127 read_count_41701
+574	AB.20m_GS0_scaffold_199 length_4912 read_count_32798
+575	AB.20m_GS0_scaffold_200_1 1-10000
+576	AB.20m_GS0_scaffold_200_2 10001-13059
+577	AB.20m_GS0_scaffold_201 length_4902 read_count_1080
+578	AB.20m_GS0_scaffold_202 length_6280 read_count_723
+579	AB.20m_GS0_scaffold_203 length_7113 read_count_14241
+580	AB.20m_GS0_scaffold_204 length_5770 read_count_656
+581	AB.20m_GS0_scaffold_205 length_4805 read_count_618
+582	AB.20m_GS0_scaffold_206 length_4797 read_count_50807
+583	AB.20m_GS0_scaffold_207 length_5831 read_count_664
+584	AB.20m_GS0_scaffold_208 length_7133 read_count_943
+585	AB.20m_GS0_scaffold_209 length_7319 read_count_192650
+586	AB.20m_GS0_scaffold_210 length_5501 read_count_32983
+587	AB.20m_GS0_scaffold_211 length_11057 read_count_1023
+588	AB.20m_GS0_scaffold_212 length_4568 read_count_90566
+589	AB.20m_GS0_scaffold_213 length_4792 read_count_334
+590	AB.20m_GS0_scaffold_214 length_8394 read_count_1183
+591	AB.20m_GS0_scaffold_215 length_5304 read_count_652
+592	AB.20m_GS0_scaffold_216 length_6461 read_count_671
+593	AB.20m_GS0_scaffold_217 length_4970 read_count_690
+594	AB.20m_GS0_scaffold_218 length_7634 read_count_82019
+595	AB.20m_GS0_scaffold_219 length_7584 read_count_8921
+596	AB.20m_GS0_scaffold_220 length_7012 read_count_876
+597	AB.20m_GS0_scaffold_221 length_4393 read_count_2324
+598	AB.20m_GS0_scaffold_222 length_7080 read_count_464
+599	AB.20m_GS0_scaffold_223 length_4387 read_count_439
+600	AB.20m_GS0_scaffold_224 length_4345 read_count_440
+601	AB.20m_GS0_scaffold_225 length_4343 read_count_647
+602	AB.20m_GS0_scaffold_226 length_4335 read_count_555
+603	AB.20m_GS0_scaffold_227 length_5764 read_count_604
+604	AB.20m_GS0_scaffold_228 length_4312 read_count_77579
+605	AB.20m_GS0_scaffold_229 length_6280 read_count_593
+606	AB.20m_GS0_scaffold_230 length_4264 read_count_14684
+607	AB.20m_GS0_scaffold_231 length_4176 read_count_382
+608	AB.20m_GS0_scaffold_232 length_4856 read_count_329
+609	AB.20m_GS0_scaffold_233 length_6530 read_count_525
+610	AB.20m_GS0_scaffold_234 length_9678 read_count_76620
+611	AB.20m_GS0_scaffold_235 length_4110 read_count_1566
+612	AB.20m_GS0_scaffold_236 length_4095 read_count_2577
+613	AB.20m_GS0_scaffold_237 length_4074 read_count_45472
+614	AB.20m_GS0_scaffold_238 length_4622 read_count_28159
+615	AB.20m_GS0_scaffold_239 length_4031 read_count_349
+616	AB.20m_GS0_scaffold_240 length_4632 read_count_463
+617	AB.20m_GS0_scaffold_241 length_3961 read_count_82858
+618	AB.20m_GS0_scaffold_242 length_3921 read_count_1686
+619	AB.20m_GS0_scaffold_243 length_7857 read_count_119778
+620	AB.20m_GS0_scaffold_244 length_4260 read_count_809
+621	AB.20m_GS0_scaffold_245 length_3884 read_count_154365
+622	AB.20m_GS0_scaffold_246 length_3879 read_count_458
+623	AB.20m_GS0_scaffold_247 length_3877 read_count_400
+624	AB.20m_GS0_scaffold_248 length_7377 read_count_1269
+625	AB.20m_GS0_scaffold_249 length_5551 read_count_511
+626	AB.20m_GS0_scaffold_250 length_7319 read_count_78197
+627	AB.20m_GS0_scaffold_251 length_3780 read_count_459
+628	AB.20m_GS0_scaffold_252 length_3765 read_count_102968
+629	AB.20m_GS0_scaffold_253 length_4210 read_count_356
+630	AB.20m_GS0_scaffold_254 length_3740 read_count_446
+631	AB.20m_GS0_scaffold_255 length_3728 read_count_4774
+632	AB.20m_GS0_scaffold_256 length_4007 read_count_238
+633	AB.20m_GS0_scaffold_257 length_3714 read_count_2554
+634	AB.20m_GS0_scaffold_258 length_3713 read_count_9340
+635	AB.20m_GS0_scaffold_259 length_3708 read_count_11495
+636	AB.20m_GS0_scaffold_260 length_4825 read_count_340
+637	AB.20m_GS0_scaffold_261 length_3701 read_count_295
+638	AB.20m_GS0_scaffold_262 length_5846 read_count_598
+639	AB.20m_GS0_scaffold_263 length_3974 read_count_463
+640	AB.20m_GS0_scaffold_264 length_8489 read_count_15700
+641	AB.20m_GS0_scaffold_265 length_3639 read_count_327
+642	AB.20m_GS0_scaffold_266 length_5826 read_count_623
+643	AB.20m_GS0_scaffold_267 length_5848 read_count_575
+644	AB.20m_GS0_scaffold_268 length_5658 read_count_563
+645	AB.20m_GS0_scaffold_269 length_3607 read_count_6945
+646	AB.20m_GS0_scaffold_270 length_3584 read_count_9711
+647	AB.20m_GS0_scaffold_271 length_3576 read_count_203
+648	AB.20m_GS0_scaffold_272 length_6630 read_count_26989
+649	AB.20m_GS0_scaffold_273 length_3555 read_count_298
+650	AB.20m_GS0_scaffold_274 length_5244 read_count_361
+651	AB.20m_GS0_scaffold_275 length_3541 read_count_399
+652	AB.20m_GS0_scaffold_276 length_5830 read_count_639
+653	AB.20m_GS0_scaffold_277 length_3519 read_count_31538
+654	AB.20m_GS0_scaffold_278 length_4032 read_count_244
+655	AB.20m_GS0_scaffold_279 length_3513 read_count_20618
+656	AB.20m_GS0_scaffold_280 length_3505 read_count_235
+657	AB.20m_GS0_scaffold_281 length_5219 read_count_87861
+658	AB.20m_GS0_scaffold_282 length_3497 read_count_411
+659	AB.20m_GS0_scaffold_283 length_3486 read_count_366
+660	AB.20m_GS0_scaffold_284 length_6900 read_count_485
+661	AB.20m_GS0_scaffold_285 length_4639 read_count_453
+662	AB.20m_GS0_scaffold_286 length_3412 read_count_3122
+663	AB.20m_GS0_scaffold_287 length_3636 read_count_257
+664	AB.20m_GS0_scaffold_288 length_4462 read_count_448
+665	AB.20m_GS0_scaffold_289 length_4423 read_count_430
+666	AB.20m_GS0_scaffold_290 length_3333 read_count_564
+667	AB.20m_GS0_scaffold_291 length_3331 read_count_6054
+668	AB.20m_GS0_scaffold_292 length_4925 read_count_497
+669	AB.20m_GS0_scaffold_293 length_3903 read_count_450
+670	AB.20m_GS0_scaffold_294 length_3309 read_count_230
+671	AB.20m_GS0_scaffold_295 length_3303 read_count_307
+672	AB.20m_GS0_scaffold_296 length_4368 read_count_266
+673	AB.20m_GS0_scaffold_297 length_3278 read_count_663
+674	AB.20m_GS0_scaffold_298 length_6548 read_count_702
+675	AB.20m_GS0_scaffold_299 length_3267 read_count_652
+676	AB.20m_GS0_scaffold_300 length_3264 read_count_351
+677	AB.20m_GS0_scaffold_301 length_4459 read_count_558
+678	AB.20m_GS0_scaffold_302 length_3251 read_count_602
+679	AB.20m_GS0_scaffold_303 length_3240 read_count_262
+680	AB.20m_GS0_scaffold_304 length_3240 read_count_269
+681	AB.20m_GS0_scaffold_305 length_3238 read_count_452
+682	AB.20m_GS0_scaffold_306 length_10863 read_count_904
+683	AB.20m_GS0_scaffold_307 length_3289 read_count_587
+684	AB.20m_GS0_scaffold_308 length_4320 read_count_341
+685	AB.20m_GS0_scaffold_309 length_3206 read_count_306
+686	AB.20m_GS0_scaffold_310 length_3193 read_count_393
+687	AB.20m_GS0_scaffold_311 length_3180 read_count_100713
+688	AB.20m_GS0_scaffold_312 length_4095 read_count_338
+689	AB.20m_GS0_scaffold_313 length_3168 read_count_311
+690	AB.20m_GS0_scaffold_314 length_3563 read_count_267
+691	AB.20m_GS0_scaffold_315 length_3132 read_count_645
+692	AB.20m_GS0_scaffold_316 length_3880 read_count_497
+693	AB.20m_GS0_scaffold_317 length_4587 read_count_401
+694	AB.20m_GS0_scaffold_318 length_3108 read_count_258
+695	AB.20m_GS0_scaffold_319_1 1-10000
+696	AB.20m_GS0_scaffold_319_2 10001-14438
+697	AB.20m_GS0_scaffold_320 length_3099 read_count_253
+698	AB.20m_GS0_scaffold_321 length_3559 read_count_3258
+699	AB.20m_GS0_scaffold_322 length_3079 read_count_236
+700	AB.20m_GS0_scaffold_323 length_3817 read_count_385
+701	AB.20m_GS0_scaffold_324 length_4953 read_count_349
+702	AB.20m_GS0_scaffold_325 length_3062 read_count_200
+703	AB.20m_GS0_scaffold_326 length_3060 read_count_11337
+704	AB.20m_GS0_scaffold_327 length_3630 read_count_10991
+705	AB.20m_GS0_scaffold_328 length_3048 read_count_22203
+706	AB.20m_GS0_scaffold_329 length_3033 read_count_351
+707	AB.20m_GS0_scaffold_330 length_3032 read_count_227
+708	AB.20m_GS0_scaffold_331 length_3022 read_count_432
+709	AB.20m_GS0_scaffold_332 length_2974 read_count_166
+710	AB.20m_GS0_scaffold_333 length_2970 read_count_5230
+711	AB.20m_GS0_scaffold_334 length_4129 read_count_342
+712	AB.20m_GS0_scaffold_335 length_2959 read_count_362
+713	AB.20m_GS0_scaffold_336 length_2939 read_count_23229
+714	AB.20m_GS0_scaffold_337 length_4748 read_count_3955
+715	AB.20m_GS0_scaffold_338 length_2900 read_count_1784
+716	AB.20m_GS0_scaffold_339 length_10812 read_count_1098
+717	AB.20m_GS0_scaffold_340 length_4272 read_count_95710
+718	AB.20m_GS0_scaffold_341 length_3953 read_count_4310
+719	AB.20m_GS0_scaffold_342 length_2885 read_count_314
+720	AB.20m_GS0_scaffold_343 length_2883 read_count_226
+721	AB.20m_GS0_scaffold_344 length_2877 read_count_26311
+722	AB.20m_GS0_scaffold_345 length_2875 read_count_194
+723	AB.20m_GS0_scaffold_346 length_5482 read_count_566
+724	AB.20m_GS0_scaffold_347 length_4998 read_count_379
+725	AB.20m_GS0_scaffold_348 length_3227 read_count_3060
+726	AB.20m_GS0_scaffold_349 length_2823 read_count_137255
+727	AB.20m_GS0_scaffold_350 length_8196 read_count_16820
+728	AB.20m_GS0_scaffold_351 length_3265 read_count_27305
+729	AB.20m_GS0_scaffold_352 length_5354 read_count_372
+730	AB.20m_GS0_scaffold_353 length_2806 read_count_220
+731	AB.20m_GS0_scaffold_354 length_3382 read_count_205
+732	AB.20m_GS0_scaffold_355 length_2785 read_count_270
+733	AB.20m_GS0_scaffold_356 length_2783 read_count_564
+734	AB.20m_GS0_scaffold_357 length_7155 read_count_587
+735	AB.20m_GS0_scaffold_358 length_2777 read_count_191
+736	AB.20m_GS0_scaffold_359 length_2774 read_count_635
+737	AB.20m_GS0_scaffold_360 length_2772 read_count_310
+738	AB.20m_GS0_scaffold_361 length_2761 read_count_4122
+739	AB.20m_GS0_scaffold_362 length_3592 read_count_257
+740	AB.20m_GS0_scaffold_363 length_2750 read_count_773
+741	AB.20m_GS0_scaffold_364 length_3377 read_count_466
+742	AB.20m_GS0_scaffold_365 length_4035 read_count_354
+743	AB.20m_GS0_scaffold_366 length_2744 read_count_195
+744	AB.20m_GS0_scaffold_367 length_2742 read_count_218
+745	AB.20m_GS0_scaffold_368 length_2731 read_count_184
+746	AB.20m_GS0_scaffold_369 length_2719 read_count_20788
+747	AB.20m_GS0_scaffold_370 length_2712 read_count_165
+748	AB.20m_GS0_scaffold_371 length_2706 read_count_2368
+749	AB.20m_GS0_scaffold_372 length_2696 read_count_687
+750	AB.20m_GS0_scaffold_373 length_5187 read_count_329
+751	AB.20m_GS0_scaffold_374 length_4280 read_count_344
+752	AB.20m_GS0_scaffold_375 length_4337 read_count_307
+753	AB.20m_GS0_scaffold_376 length_2646 read_count_30750
+754	AB.20m_GS0_scaffold_377 length_3992 read_count_259
+755	AB.20m_GS0_scaffold_378 length_2639 read_count_10545
+756	AB.20m_GS0_scaffold_379 length_4387 read_count_2895
+757	AB.20m_GS0_scaffold_380 length_2589 read_count_273
+758	AB.20m_GS0_scaffold_381 length_5752 read_count_375
+759	AB.20m_GS0_scaffold_382 length_2585 read_count_210
+760	AB.20m_GS0_scaffold_383 length_2583 read_count_9232
+761	AB.20m_GS0_scaffold_384 length_4866 read_count_307
+762	AB.20m_GS0_scaffold_385 length_2572 read_count_181
+763	AB.20m_GS0_scaffold_386 length_2565 read_count_43630
+764	AB.20m_GS0_scaffold_387 length_3104 read_count_9572
+765	AB.20m_GS0_scaffold_388 length_6978 read_count_401
+766	AB.20m_GS0_scaffold_389 length_2553 read_count_162
+767	AB.20m_GS0_scaffold_390 length_2548 read_count_24196
+768	AB.20m_GS0_scaffold_391 length_3071 read_count_552
+769	AB.20m_GS0_scaffold_392 length_4529 read_count_307
+770	AB.20m_GS0_scaffold_393 length_5343 read_count_1129
+771	AB.20m_GS0_scaffold_394 length_2852 read_count_3472
+772	AB.20m_GS0_scaffold_395 length_2498 read_count_267
+773	AB.20m_GS0_scaffold_396 length_2493 read_count_155
+774	AB.20m_GS0_scaffold_397 length_7140 read_count_583
+775	AB.20m_GS0_scaffold_398 length_2481 read_count_237
+776	AB.20m_GS0_scaffold_399 length_4106 read_count_12989
+777	AB.20m_GS0_scaffold_400 length_2478 read_count_7089
+778	AB.20m_GS0_scaffold_401 length_2470 read_count_237
+779	AB.20m_GS0_scaffold_402 length_6702 read_count_515
+780	AB.20m_GS0_scaffold_403 length_2782 read_count_314
+781	AB.20m_GS0_scaffold_404 length_2996 read_count_303
+782	AB.20m_GS0_scaffold_405 length_5119 read_count_389
+783	AB.20m_GS0_scaffold_406 length_2460 read_count_557
+784	AB.20m_GS0_scaffold_407 length_2459 read_count_2241
+785	AB.20m_GS0_scaffold_408 length_2449 read_count_254
+786	AB.20m_GS0_scaffold_409 length_7374 read_count_8517
+787	AB.20m_GS0_scaffold_410 length_2434 read_count_873
+788	AB.20m_GS0_scaffold_411 length_5113 read_count_342
+789	AB.20m_GS0_scaffold_412 length_2429 read_count_294
+790	AB.20m_GS0_scaffold_413 length_4516 read_count_557
+791	AB.20m_GS0_scaffold_414 length_2416 read_count_11769
+792	AB.20m_GS0_scaffold_415 length_2405 read_count_185
+793	AB.20m_GS0_scaffold_416 length_5157 read_count_355
+794	AB.20m_GS0_scaffold_417 length_3281 read_count_432
+795	AB.20m_GS0_scaffold_418 length_2398 read_count_178
+796	AB.20m_GS0_scaffold_419 length_2395 read_count_196
+797	AB.20m_GS0_scaffold_420 length_6481 read_count_41571
+798	AB.20m_GS0_scaffold_421 length_6734 read_count_6681
+799	AB.20m_GS0_scaffold_422 length_2353 read_count_155
+800	AB.20m_GS0_scaffold_423 length_2352 read_count_362
+801	AB.20m_GS0_scaffold_424 length_3239 read_count_469
+802	AB.20m_GS0_scaffold_425 length_2344 read_count_133
+803	AB.20m_GS0_scaffold_426 length_2339 read_count_46854
+804	AB.20m_GS0_scaffold_427 length_4241 read_count_401
+805	AB.20m_GS0_scaffold_428 length_2331 read_count_168
+806	AB.20m_GS0_scaffold_429 length_2764 read_count_43345
+807	AB.20m_GS0_scaffold_430 length_4884 read_count_366
+808	AB.20m_GS0_scaffold_431 length_2314 read_count_162
+809	AB.20m_GS0_scaffold_432 length_2310 read_count_128
+810	AB.20m_GS0_scaffold_433 length_2308 read_count_154
+811	AB.20m_GS0_scaffold_434 length_2307 read_count_221
+812	AB.20m_GS0_scaffold_435 length_2305 read_count_350
+813	AB.20m_GS0_scaffold_436 length_2304 read_count_4049
+814	AB.20m_GS0_scaffold_437 length_2304 read_count_125
+815	AB.20m_GS0_scaffold_438 length_2300 read_count_132
+816	AB.20m_GS0_scaffold_439 length_3607 read_count_8624
+817	AB.20m_GS0_scaffold_440 length_6386 read_count_619
+818	AB.20m_GS0_scaffold_441 length_3600 read_count_35265
+819	AB.20m_GS0_scaffold_442 length_2491 read_count_12897
+820	AB.20m_GS0_scaffold_443 length_2267 read_count_173
+821	AB.20m_GS0_scaffold_444 length_7127 read_count_597
+822	AB.20m_GS0_scaffold_445 length_3429 read_count_289
+823	AB.20m_GS0_scaffold_446 length_2993 read_count_1281
+824	AB.20m_GS0_scaffold_447 length_5345 read_count_559
+825	AB.20m_GS0_scaffold_448 length_2251 read_count_344
+826	AB.20m_GS0_scaffold_449 length_2235 read_count_169
+827	AB.20m_GS0_scaffold_450 length_3140 read_count_244
+828	AB.20m_GS0_scaffold_451 length_2214 read_count_208
+829	AB.20m_GS0_scaffold_452 length_2624 read_count_177
+830	AB.20m_GS0_scaffold_453 length_3369 read_count_10786
+831	AB.20m_GS0_scaffold_454 length_3288 read_count_375
+832	AB.20m_GS0_scaffold_455 length_2648 read_count_6542
+833	AB.20m_GS0_scaffold_456 length_2181 read_count_3280
+834	AB.20m_GS0_scaffold_457 length_2968 read_count_299
+835	AB.20m_GS0_scaffold_458 length_2170 read_count_178
+836	AB.20m_GS0_scaffold_459 length_3203 read_count_4023
+837	AB.20m_GS0_scaffold_460 length_2168 read_count_18458
+838	AB.20m_GS0_scaffold_461 length_3983 read_count_367
+839	AB.20m_GS0_scaffold_462 length_2481 read_count_196
+840	AB.20m_GS0_scaffold_463 length_2159 read_count_378
+841	AB.20m_GS0_scaffold_464 length_2352 read_count_3655
+842	AB.20m_GS0_scaffold_465 length_2152 read_count_148
+843	AB.20m_GS0_scaffold_466 length_2351 read_count_27423
+844	AB.20m_GS0_scaffold_467 length_4141 read_count_399
+845	AB.20m_GS0_scaffold_468 length_3219 read_count_205
+846	AB.20m_GS0_scaffold_469 length_2144 read_count_169
+847	AB.20m_GS0_scaffold_470 length_2128 read_count_246
+848	AB.20m_GS0_scaffold_471 length_3934 read_count_301
+849	AB.20m_GS0_scaffold_472 length_2429 read_count_154
+850	AB.20m_GS0_scaffold_473 length_2123 read_count_187
+851	AB.20m_GS0_scaffold_474 length_3813 read_count_280
+852	AB.20m_GS0_scaffold_475 length_5317 read_count_79966
+853	AB.20m_GS0_scaffold_476 length_2462 read_count_1553
+854	AB.20m_GS0_scaffold_477 length_2831 read_count_327
+855	AB.20m_GS0_scaffold_478 length_2106 read_count_150
+856	AB.20m_GS0_scaffold_479 length_2103 read_count_191
+857	AB.20m_GS0_scaffold_480 length_2097 read_count_132
+858	AB.20m_GS0_scaffold_481 length_2094 read_count_227
+859	AB.20m_GS0_scaffold_482 length_6382 read_count_468
+860	AB.20m_GS0_scaffold_483 length_5341 read_count_360
+861	AB.20m_GS0_scaffold_484 length_2084 read_count_313
+862	AB.20m_GS0_scaffold_485 length_2073 read_count_167
+863	AB.20m_GS0_scaffold_486 length_2760 read_count_215
+864	AB.20m_GS0_scaffold_487 length_4672 read_count_592
+865	AB.20m_GS0_scaffold_488 length_3565 read_count_33067
+866	AB.20m_GS0_scaffold_489 length_2060 read_count_118
+867	AB.20m_GS0_scaffold_490 length_2060 read_count_181802
+868	AB.20m_GS0_scaffold_491 length_2916 read_count_4004
+869	AB.20m_GS0_scaffold_492 length_2250 read_count_2544
+870	AB.20m_GS0_scaffold_493 length_2049 read_count_143
+871	AB.20m_GS0_scaffold_494 length_2047 read_count_452
+872	AB.20m_GS0_scaffold_495 length_6164 read_count_435
+873	AB.20m_GS0_scaffold_496 length_3421 read_count_264
+874	AB.20m_GS0_scaffold_497 length_2039 read_count_4022
+875	AB.20m_GS0_scaffold_498 length_2035 read_count_33254
+876	AB.20m_GS0_scaffold_499 length_2034 read_count_181
+877	AB.20m_GS0_scaffold_500 length_2024 read_count_164
+878	AB.20m_GS0_scaffold_501 length_2023 read_count_238
+879	AB.20m_GS0_scaffold_502 length_5750 read_count_437
+880	AB.20m_GS0_scaffold_503 length_2889 read_count_348
+881	AB.20m_GS0_scaffold_504 length_3193 read_count_237
+882	AB.20m_GS0_scaffold_505 length_2004 read_count_247
+883	AB.20m_GS0_scaffold_506 length_3933 read_count_19606
+884	AB.20m_GS0_scaffold_507 length_3801 read_count_242
+885	AB.20m_GS0_scaffold_508 length_1996 read_count_281
+886	AB.20m_GS0_scaffold_509 length_1991 read_count_367
+887	AB.20m_GS0_scaffold_510 length_1977 read_count_162
+888	AB.20m_GS0_scaffold_511 length_1975 read_count_33470
+889	AB.20m_GS0_scaffold_512 length_1963 read_count_177
+890	AB.20m_GS0_scaffold_513 length_4633 read_count_8805
+891	AB.20m_GS0_scaffold_514 length_1952 read_count_90
+892	AB.20m_GS0_scaffold_515 length_2247 read_count_7110
+893	AB.20m_GS0_scaffold_516 length_2850 read_count_195
+894	AB.20m_GS0_scaffold_517 length_2812 read_count_604
+895	AB.20m_GS0_scaffold_518 length_1943 read_count_75
+896	AB.20m_GS0_scaffold_519 length_2074 read_count_2722
+897	AB.20m_GS0_scaffold_520 length_1929 read_count_168
+898	AB.20m_GS0_scaffold_521 length_1928 read_count_155
+899	AB.20m_GS0_scaffold_522 length_5341 read_count_314
+900	AB.20m_GS0_scaffold_523 length_2263 read_count_131
+901	AB.20m_GS0_scaffold_524 length_3160 read_count_27978
+902	AB.20m_GS0_scaffold_525 length_1915 read_count_1673
+903	AB.20m_GS0_scaffold_526 length_1915 read_count_125
+904	AB.20m_GS0_scaffold_527 length_3080 read_count_18573
+905	AB.20m_GS0_scaffold_528 length_1913 read_count_4175
+906	AB.20m_GS0_scaffold_529 length_1912 read_count_138
+907	AB.20m_GS0_scaffold_530 length_4839 read_count_390
+908	AB.20m_GS0_scaffold_531 length_2647 read_count_221
+909	AB.20m_GS0_scaffold_532 length_1907 read_count_161
+910	AB.20m_GS0_scaffold_533 length_1906 read_count_60905
+911	AB.20m_GS0_scaffold_534 length_3278 read_count_340
+912	AB.20m_GS0_scaffold_535 length_2965 read_count_214
+913	AB.20m_GS0_scaffold_536 length_2525 read_count_137
+914	AB.20m_GS0_scaffold_537 length_3167 read_count_357
+915	AB.20m_GS0_scaffold_538 length_1892 read_count_122
+916	AB.20m_GS0_scaffold_539 length_1889 read_count_110
+917	AB.20m_GS0_scaffold_540 length_3069 read_count_1955
+918	AB.20m_GS0_scaffold_541 length_3831 read_count_229
+919	AB.20m_GS0_scaffold_542 length_1877 read_count_4991
+920	AB.20m_GS0_scaffold_543 length_1877 read_count_3025
+921	AB.20m_GS0_scaffold_544 length_1875 read_count_18350
+922	AB.20m_GS0_scaffold_545 length_2168 read_count_254
+923	AB.20m_GS0_scaffold_546 length_4637 read_count_655
+924	AB.20m_GS0_scaffold_547 length_2662 read_count_214
+925	AB.20m_GS0_scaffold_548 length_3360 read_count_185
+926	AB.20m_GS0_scaffold_549 length_4519 read_count_563
+927	AB.20m_GS0_scaffold_550 length_1860 read_count_150
+928	AB.20m_GS0_scaffold_551 length_1855 read_count_782
+929	AB.20m_GS0_scaffold_552 length_3486 read_count_35729
+930	AB.20m_GS0_scaffold_553 length_1851 read_count_193
+931	AB.20m_GS0_scaffold_554 length_1848 read_count_93
+932	AB.20m_GS0_scaffold_555 length_3818 read_count_288
+933	AB.20m_GS0_scaffold_556 length_1845 read_count_244
+934	AB.20m_GS0_scaffold_557 length_1840 read_count_142
+935	AB.20m_GS0_scaffold_558 length_2667 read_count_159
+936	AB.20m_GS0_scaffold_559 length_1983 read_count_3199
+937	AB.20m_GS0_scaffold_560 length_3834 read_count_406
+938	AB.20m_GS0_scaffold_561 length_3554 read_count_32959
+939	AB.20m_GS0_scaffold_562 length_5156 read_count_473
+940	AB.20m_GS0_scaffold_563 length_1820 read_count_111
+941	AB.20m_GS0_scaffold_564 length_2306 read_count_150
+942	AB.20m_GS0_scaffold_565 length_1811 read_count_12782
+943	AB.20m_GS0_scaffold_566 length_1807 read_count_16210
+944	AB.20m_GS0_scaffold_567 length_1801 read_count_3997
+945	AB.20m_GS0_scaffold_568 length_2853 read_count_18947
+946	AB.20m_GS0_scaffold_569 length_1789 read_count_86
+947	AB.20m_GS0_scaffold_570 length_3266 read_count_200
+948	AB.20m_GS0_scaffold_571 length_1785 read_count_279
+949	AB.20m_GS0_scaffold_572 length_2657 read_count_147
+950	AB.20m_GS0_scaffold_573 length_1782 read_count_136
+951	AB.20m_GS0_scaffold_574 length_2296 read_count_194
+952	AB.20m_GS0_scaffold_575 length_1780 read_count_243
+953	AB.20m_GS0_scaffold_576 length_1780 read_count_450013
+954	AB.20m_GS0_scaffold_577 length_4263 read_count_181
+955	AB.20m_GS0_scaffold_578 length_2024 read_count_213
+956	AB.20m_GS0_scaffold_579 length_1766 read_count_9555
+957	AB.20m_GS0_scaffold_580 length_1765 read_count_121
+958	AB.20m_GS0_scaffold_581 length_4524 read_count_280
+959	AB.20m_GS0_scaffold_582 length_1758 read_count_3527
+960	AB.20m_GS0_scaffold_583 length_1758 read_count_4742
+961	AB.20m_GS0_scaffold_584 length_2527 read_count_235
+962	AB.20m_GS0_scaffold_585 length_1752 read_count_214
+963	AB.20m_GS0_scaffold_586 length_2982 read_count_1146
+964	AB.20m_GS0_scaffold_587 length_1746 read_count_110
+965	AB.20m_GS0_scaffold_588 length_1744 read_count_145
+966	AB.20m_GS0_scaffold_589 length_1740 read_count_126
+967	AB.20m_GS0_scaffold_590 length_1734 read_count_161
+968	AB.20m_GS0_scaffold_591 length_1732 read_count_79
+969	AB.20m_GS0_scaffold_592 length_1728 read_count_832
+970	AB.20m_GS0_scaffold_593 length_1728 read_count_691
+971	AB.20m_GS0_scaffold_594 length_1726 read_count_95
+972	AB.20m_GS0_scaffold_595 length_2122 read_count_1085
+973	AB.20m_GS0_scaffold_596 length_1726 read_count_181
+974	AB.20m_GS0_scaffold_597 length_1726 read_count_8169
+975	AB.20m_GS0_scaffold_598 length_4404 read_count_16730
+976	AB.20m_GS0_scaffold_599 length_1859 read_count_30060
+977	AB.20m_GS0_scaffold_600 length_2431 read_count_143
+978	AB.20m_GS0_scaffold_601 length_2364 read_count_137
+979	AB.20m_GS0_scaffold_602 length_1713 read_count_6685
+980	AB.20m_GS0_scaffold_603 length_3351 read_count_9391
+981	AB.20m_GS0_scaffold_604 length_1916 read_count_90
+982	AB.20m_GS0_scaffold_605 length_1703 read_count_130
+983	AB.20m_GS0_scaffold_606 length_2836 read_count_162
+984	AB.20m_GS0_scaffold_607 length_3882 read_count_259
+985	AB.20m_GS0_scaffold_608 length_3978 read_count_30056
+986	AB.20m_GS0_scaffold_609 length_7113 read_count_6729
+987	AB.20m_GS0_scaffold_610 length_3284 read_count_175
+988	AB.20m_GS0_scaffold_611 length_1690 read_count_120
+989	AB.20m_GS0_scaffold_612 length_1687 read_count_124
+990	AB.20m_GS0_scaffold_613 length_3375 read_count_291
+991	AB.20m_GS0_scaffold_614 length_2222 read_count_141
+992	AB.20m_GS0_scaffold_615 length_3137 read_count_32691
+993	AB.20m_GS0_scaffold_616 length_1673 read_count_115
+994	AB.20m_GS0_scaffold_617 length_1671 read_count_203
+995	AB.20m_GS0_scaffold_618 length_1812 read_count_20709
+996	AB.20m_GS0_scaffold_619 length_1670 read_count_98
+997	AB.20m_GS0_scaffold_620 length_1666 read_count_111
+998	AB.20m_GS0_scaffold_621 length_2279 read_count_149
+999	AB.20m_GS0_scaffold_622 length_2142 read_count_3750
+1000	AB.20m_GS0_scaffold_623 length_4515 read_count_312
+1001	AB.20m_GS0_scaffold_624 length_1657 read_count_93
+1002	AB.20m_GS0_scaffold_625 length_1654 read_count_117
+1003	AB.20m_GS0_scaffold_626 length_2643 read_count_9443
+1004	AB.20m_GS0_scaffold_627 length_1649 read_count_1433
+1005	AB.20m_GS0_scaffold_628 length_2281 read_count_406
+1006	AB.20m_GS0_scaffold_629 length_2099 read_count_197
+1007	AB.20m_GS0_scaffold_630 length_1646 read_count_84
+1008	AB.20m_GS0_scaffold_631 length_1644 read_count_290
+1009	AB.20m_GS0_scaffold_632 length_1643 read_count_5131
+1010	AB.20m_GS0_scaffold_633 length_1641 read_count_206
+1011	AB.20m_GS0_scaffold_634 length_4225 read_count_8083
+1012	AB.20m_GS0_scaffold_635 length_2824 read_count_237
+1013	AB.20m_GS0_scaffold_636 length_1637 read_count_79
+1014	AB.20m_GS0_scaffold_637 length_3004 read_count_3766
+1015	AB.20m_GS0_scaffold_638 length_2663 read_count_353
+1016	AB.20m_GS0_scaffold_639 length_1636 read_count_363124
+1017	AB.20m_GS0_scaffold_640 length_1629 read_count_73
+1018	AB.20m_GS0_scaffold_641 length_1628 read_count_101
+1019	AB.20m_GS0_scaffold_642 length_1628 read_count_82
+1020	AB.20m_GS0_scaffold_643 length_1623 read_count_3402
+1021	AB.20m_GS0_scaffold_644 length_2813 read_count_206
+1022	AB.20m_GS0_scaffold_645 length_1617 read_count_3375
+1023	AB.20m_GS0_scaffold_646 length_2773 read_count_290
+1024	AB.20m_GS0_scaffold_647 length_1790 read_count_312
+1025	AB.20m_GS0_scaffold_648 length_1614 read_count_92
+1026	AB.20m_GS0_scaffold_649 length_3228 read_count_441
+1027	AB.20m_GS0_scaffold_650 length_1609 read_count_129
+1028	AB.20m_GS0_scaffold_651 length_1605 read_count_266
+1029	AB.20m_GS0_scaffold_652 length_1599 read_count_93
+1030	AB.20m_GS0_scaffold_653 length_1939 read_count_129
+1031	AB.20m_GS0_scaffold_654 length_1593 read_count_85
+1032	AB.20m_GS0_scaffold_655 length_1592 read_count_94
+1033	AB.20m_GS0_scaffold_656 length_1592 read_count_1653
+1034	AB.20m_GS0_scaffold_657 length_1590 read_count_1770
+1035	AB.20m_GS0_scaffold_658 length_1587 read_count_77
+1036	AB.20m_GS0_scaffold_659 length_1587 read_count_184
+1037	AB.20m_GS0_scaffold_660 length_1586 read_count_2235
+1038	AB.20m_GS0_scaffold_661 length_2596 read_count_138
+1039	AB.20m_GS0_scaffold_662 length_1585 read_count_103
+1040	AB.20m_GS0_scaffold_663 length_1582 read_count_2363
+1041	AB.20m_GS0_scaffold_664 length_1580 read_count_234931
+1042	AB.20m_GS0_scaffold_665 length_1779 read_count_1011
+1043	AB.20m_GS0_scaffold_666 length_1950 read_count_69
+1044	AB.20m_GS0_scaffold_667 length_2178 read_count_909
+1045	AB.20m_GS0_scaffold_668 length_1569 read_count_68
+1046	AB.20m_GS0_scaffold_669 length_2291 read_count_305
+1047	AB.20m_GS0_scaffold_670 length_2005 read_count_121
+1048	AB.20m_GS0_scaffold_671 length_2461 read_count_177
+1049	AB.20m_GS0_scaffold_672 length_2277 read_count_166
+1050	AB.20m_GS0_scaffold_673 length_1886 read_count_107
+1051	AB.20m_GS0_scaffold_674 length_1545 read_count_113
+1052	AB.20m_GS0_scaffold_675 length_1544 read_count_10524
+1053	AB.20m_GS0_scaffold_676 length_1538 read_count_106
+1054	AB.20m_GS0_scaffold_677 length_1536 read_count_125
+1055	AB.20m_GS0_scaffold_678 length_1532 read_count_2001
+1056	AB.20m_GS0_scaffold_679 length_1532 read_count_92
+1057	AB.20m_GS0_scaffold_680 length_1989 read_count_149
+1058	AB.20m_GS0_scaffold_681 length_1528 read_count_106
+1059	AB.20m_GS0_scaffold_682 length_2721 read_count_258
+1060	AB.20m_GS0_scaffold_683 length_1526 read_count_107
+1061	AB.20m_GS0_scaffold_684 length_2541 read_count_140
+1062	AB.20m_GS0_scaffold_685 length_2529 read_count_134
+1063	AB.20m_GS0_scaffold_686 length_1524 read_count_82
+1064	AB.20m_GS0_scaffold_687 length_1523 read_count_3552
+1065	AB.20m_GS0_scaffold_688 length_1522 read_count_4081
+1066	AB.20m_GS0_scaffold_689 length_1521 read_count_71
+1067	AB.20m_GS0_scaffold_690 length_1520 read_count_11106
+1068	AB.20m_GS0_scaffold_691 length_1811 read_count_92
+1069	AB.20m_GS0_scaffold_692 length_2830 read_count_183
+1070	AB.20m_GS0_scaffold_693 length_2238 read_count_595
+1071	AB.20m_GS0_scaffold_694 length_1514 read_count_30472
+1072	AB.20m_GS0_scaffold_695 length_1511 read_count_76
+1073	AB.20m_GS0_scaffold_696 length_2011 read_count_382
+1074	AB.20m_GS0_scaffold_697 length_1507 read_count_65
+1075	AB.20m_GS0_scaffold_698 length_2042 read_count_113
+1076	AB.20m_GS0_scaffold_699 length_1506 read_count_289
+1077	AB.20m_GS0_scaffold_700 length_2079 read_count_12077
+1078	AB.20m_GS0_scaffold_701 length_4347 read_count_243
+1079	AB.20m_GS0_scaffold_704 length_1837 read_count_95
+1080	AB.20m_GS0_scaffold_706 length_2214 read_count_176
+1081	AB.20m_GS0_scaffold_709 length_2105 read_count_160
+1082	AB.20m_GS0_scaffold_710 length_3152 read_count_23314
+1083	AB.20m_GS0_scaffold_711 length_1996 read_count_142
+1084	AB.20m_GS0_scaffold_712 length_3102 read_count_56084
+1085	AB.20m_GS0_scaffold_718 length_2860 read_count_217
+1086	AB.20m_GS0_scaffold_720 length_1994 read_count_116
+1087	AB.20m_GS0_scaffold_721 length_3349 read_count_259
+1088	AB.20m_GS0_scaffold_724 length_1773 read_count_133
+1089	AB.20m_GS0_scaffold_725 length_4757 read_count_30816
+1090	AB.20m_GS0_scaffold_727 length_1834 read_count_91
+1091	AB.20m_GS0_scaffold_728 length_1775 read_count_130
+1092	AB.20m_GS0_scaffold_732 length_1772 read_count_168
+1093	AB.20m_GS0_scaffold_735 length_2133 read_count_131
+1094	AB.20m_GS0_scaffold_738 length_2743 read_count_198
+1095	AB.20m_GS0_scaffold_739 length_1524 read_count_26160
+1096	AB.20m_GS0_scaffold_751 length_3317 read_count_170
+1097	AB.20m_GS0_scaffold_753 length_2084 read_count_138
+1098	AB.20m_GS0_scaffold_754 length_1820 read_count_2373
+1099	AB.20m_GS0_scaffold_756 length_1711 read_count_85
+1100	AB.20m_GS0_scaffold_757 length_2621 read_count_196
+1101	AB.20m_GS0_scaffold_762 length_2523 read_count_135
+1102	AB.20m_GS0_scaffold_763 length_2239 read_count_10836
+1103	AB.20m_GS0_scaffold_766 length_2002 read_count_3681
+1104	AB.20m_GS0_scaffold_767 length_2937 read_count_7737
+1105	AB.20m_GS0_scaffold_769 length_2151 read_count_38652
+1106	AB.20m_GS0_scaffold_771 length_1973 read_count_3797
+1107	AB.20m_GS0_scaffold_774 length_1872 read_count_165
+1108	AB.20m_GS0_scaffold_775 length_1612 read_count_85
+1109	AB.20m_GS0_scaffold_777 length_2344 read_count_4368
+1110	AB.20m_GS0_scaffold_786 length_1901 read_count_121
+1111	AB.20m_GS0_scaffold_788 length_1945 read_count_1309
+1112	AB.20m_GS0_scaffold_789 length_2074 read_count_13917
+1113	AB.20m_GS0_scaffold_790 length_2016 read_count_148
+1114	AB.20m_GS0_scaffold_791 length_1635 read_count_92
+1115	AB.20m_GS0_scaffold_792 length_2729 read_count_282
+1116	AB.20m_GS0_scaffold_794 length_1651 read_count_109
+1117	AB.20m_GS0_scaffold_798 length_2253 read_count_615
+1118	AB.20m_GS0_scaffold_801 length_1579 read_count_152
+1119	AB.20m_GS0_scaffold_802 length_2938 read_count_199
+1120	AB.20m_GS0_scaffold_804 length_1715 read_count_144
+1121	AB.20m_GS0_scaffold_807 length_1670 read_count_208
+1122	AB.20m_GS0_scaffold_808 length_2186 read_count_199
+1123	AB.20m_GS0_scaffold_811 length_4765 read_count_5975
+1124	AB.20m_GS0_scaffold_812 length_5237 read_count_331
+1125	AB.20m_GS0_scaffold_813 length_1554 read_count_74028
+1126	AB.20m_GS0_scaffold_815 length_1577 read_count_107
+1127	AB.20m_GS0_scaffold_820 length_2041 read_count_207
+1128	AB.20m_GS0_scaffold_822 length_2152 read_count_2068
+1129	AB.20m_GS0_scaffold_824 length_4291 read_count_300
+1130	AB.20m_GS0_scaffold_828 length_2700 read_count_149
+1131	AB.20m_GS0_scaffold_829 length_2139 read_count_20712
+1132	AB.20m_GS0_scaffold_830 length_1623 read_count_69
+1133	AB.20m_GS0_scaffold_831 length_1615 read_count_89
+1134	AB.20m_GS0_scaffold_832 length_1508 read_count_157
+1135	AB.20m_GS0_scaffold_836 length_1697 read_count_89
+1136	AB.20m_GS0_scaffold_843 length_2361 read_count_84
+1137	AB.20m_GS0_scaffold_850 length_3022 read_count_158
+1138	AB.20m_GS0_scaffold_853 length_1626 read_count_110
+1139	AB.20m_GS0_scaffold_856 length_1852 read_count_162
+1140	AB.20m_GS0_scaffold_858 length_2678 read_count_122
+1141	AB.20m_GS0_scaffold_859 length_2324 read_count_135
+1142	AB.20m_GS0_scaffold_863 length_1630 read_count_16900
+1143	AB.20m_GS0_scaffold_865 length_1631 read_count_2616
+1144	AB.20m_GS0_scaffold_866 length_1616 read_count_2005
+1145	AB.20m_GS0_scaffold_867 length_1559 read_count_2729
+1146	AB.20m_GS0_scaffold_869 length_2526 read_count_131
+1147	AB.20m_GS0_scaffold_874 length_2870 read_count_212
+1148	AB.20m_GS0_scaffold_876 length_2473 read_count_5849
+1149	AB.20m_GS0_scaffold_877 length_3006 read_count_143
+1150	AB.20m_GS0_scaffold_878 length_1568 read_count_508
+1151	AB.20m_GS0_scaffold_879 length_1869 read_count_417
+1152	AB.20m_GS0_scaffold_880 length_1557 read_count_1291
+1153	AB.20m_GS0_scaffold_881 length_2145 read_count_195
+1154	AB.20m_GS0_scaffold_885 length_1541 read_count_4861
+1155	AB.20m_GS0_scaffold_886 length_2380 read_count_131
+1156	AB.20m_GS0_scaffold_889 length_2517 read_count_165
+1157	AB.20m_GS0_scaffold_890 length_1727 read_count_3165
+1158	AB.20m_GS0_scaffold_892 length_1789 read_count_98
+1159	AB.20m_GS0_scaffold_893 length_2662 read_count_176
+1160	AB.20m_GS0_scaffold_894 length_1890 read_count_99
+1161	AB.20m_GS0_scaffold_895 length_1511 read_count_152
+1162	AB.20m_GS0_scaffold_897 length_1657 read_count_91
+1163	AB.20m_GS0_scaffold_899 length_1649 read_count_3661
+1164	AB.20m_GS0_scaffold_900 length_2171 read_count_132
+1165	AB.20m_GS0_scaffold_911 length_2139 read_count_243
+1166	AB.20m_GS0_scaffold_916 length_1791 read_count_108
+1167	AB.20m_GS0_scaffold_917 length_4205 read_count_242
+1168	AB.20m_GS0_scaffold_927 length_2512 read_count_9510
+1169	AB.20m_GS0_scaffold_935 length_1591 read_count_108
+1170	AB.20m_GS0_scaffold_936 length_1528 read_count_64
+1171	AB.20m_GS0_scaffold_941 length_1603 read_count_91
+1172	AB.20m_GS0_scaffold_946 length_2111 read_count_168
+1173	AB.20m_GS0_scaffold_948 length_3119 read_count_149
+1174	AB.20m_GS0_scaffold_957 length_1833 read_count_2737
+1175	AB.20m_GS0_scaffold_960 length_2199 read_count_143
+1176	AB.20m_GS0_scaffold_964 length_1712 read_count_79
+1177	AB.20m_GS0_scaffold_966 length_2109 read_count_102
+1178	AB.20m_GS0_scaffold_967 length_2454 read_count_180
+1179	AB.20m_GS0_scaffold_970 length_3267 read_count_243
+1180	AB.20m_GS0_scaffold_972 length_1995 read_count_1933
+1181	AB.20m_GS0_scaffold_973 length_1649 read_count_41332
+1182	AB.20m_GS0_scaffold_974 length_1821 read_count_103
+1183	AB.20m_GS0_scaffold_975 length_1913 read_count_77
+1184	AB.20m_GS0_scaffold_981 length_2070 read_count_137
+1185	AB.20m_GS0_scaffold_984 length_2329 read_count_36401
+1186	AB.20m_GS0_scaffold_990 length_3096 read_count_174
+1187	AB.20m_GS0_scaffold_992 length_1916 read_count_124
+1188	AB.20m_GS0_scaffold_997 length_1876 read_count_85
+1189	AB.20m_GS0_scaffold_1000 length_2605 read_count_109
+1190	AB.20m_GS0_scaffold_1001 length_2032 read_count_1182
+1191	AB.20m_GS0_scaffold_1006 length_1907 read_count_105
+1192	AB.20m_GS0_scaffold_1008 length_1714 read_count_79
+1193	AB.20m_GS0_scaffold_1023 length_1674 read_count_84
+1194	AB.20m_GS0_scaffold_1026 length_2618 read_count_127
+1195	AB.20m_GS0_scaffold_1035 length_1821 read_count_69
+1196	AB.20m_GS0_scaffold_1043 length_1522 read_count_84
+1197	AB.20m_GS0_scaffold_1048 length_1513 read_count_105
+1198	AB.20m_GS0_scaffold_1051 length_1789 read_count_101
+1199	AB.20m_GS0_scaffold_1054 length_1769 read_count_272
+1200	AB.20m_GS0_scaffold_1055 length_2621 read_count_4109
+1201	AB.20m_GS0_scaffold_1059 length_1707 read_count_64
+1202	AB.20m_GS0_scaffold_1060 length_1796 read_count_505
+1203	AB.20m_GS0_scaffold_1069 length_1600 read_count_129
+1204	AB.20m_GS0_scaffold_1072 length_1792 read_count_125
+1205	AB.20m_GS0_scaffold_1075 length_1998 read_count_112
+1206	AB.20m_GS0_scaffold_1082 length_1702 read_count_91
+1207	AB.20m_GS0_scaffold_1088 length_1938 read_count_119
+1208	AB.20m_GS0_scaffold_1092 length_2339 read_count_132
+1209	AB.20m_GS0_scaffold_1096 length_1537 read_count_69
+1210	AB.20m_GS0_scaffold_1098 length_1530 read_count_10550
+1211	AB.20m_GS0_scaffold_1100 length_2415 read_count_4179
+1212	AB.20m_GS0_scaffold_1101 length_1809 read_count_93
+1213	AB.20m_GS0_scaffold_1104 length_1584 read_count_122
+1214	AB.20m_GS0_scaffold_1107 length_1526 read_count_87
+1215	AB.20m_GS0_scaffold_1110 length_1551 read_count_65
+1216	AB.20m_GS0_scaffold_1118 length_1741 read_count_89
+1217	AB.20m_GS0_scaffold_1119 length_1786 read_count_6350
+1218	AB.20m_GS0_scaffold_1122 length_1828 read_count_140
+1219	AB.20m_GS0_scaffold_1130 length_1932 read_count_72
+1220	AB.20m_GS0_scaffold_1132 length_1658 read_count_76
+1221	AB.20m_GS0_scaffold_1133 length_1661 read_count_1673
+1222	AB.20m_GS0_scaffold_1135 length_2226 read_count_98
+1223	AB.20m_GS0_scaffold_1138 length_1602 read_count_71
+1224	AB.20m_GS0_scaffold_1143 length_1762 read_count_107
+1225	AB.20m_GS0_scaffold_1145 length_1579 read_count_96
+1226	AB.20m_GS0_scaffold_1161 length_2613 read_count_155
+1227	AB.20m_GS0_scaffold_1173 length_1955 read_count_100
+1228	AB.20m_GS0_scaffold_1176 length_1695 read_count_103
+1229	AB.20m_GS0_scaffold_1178 length_1732 read_count_4853
+1230	AB.20m_GS0_scaffold_1188 length_1581 read_count_21493
+1231	AB.20m_GS0_scaffold_1190 length_1875 read_count_114
+1232	AB.20m_GS0_scaffold_1193 length_1594 read_count_63
+1233	AB.20m_GS0_scaffold_1202 length_1568 read_count_103
+1234	AB.20m_GS0_scaffold_1206 length_1925 read_count_127
+1235	AB.20m_GS0_scaffold_1209 length_2274 read_count_85
+1236	AB.20m_GS0_scaffold_1216 length_1743 read_count_99
+1237	AB.20m_GS0_scaffold_1226 length_2042 read_count_84
+1238	AB.20m_GS0_scaffold_1228 length_1501 read_count_64
+1239	AB.20m_GS0_scaffold_1229 length_1864 read_count_105
+1240	AB.20m_GS0_scaffold_1237 length_1574 read_count_503
+1241	AB.20m_GS0_scaffold_1238 length_1657 read_count_17946
+1242	AB.20m_GS0_scaffold_1247 length_1664 read_count_9931
+1243	AB.20m_GS0_scaffold_1250 length_1661 read_count_81
+1244	AB.20m_GS0_scaffold_1253 length_1585 read_count_370
+1245	AB.20m_GS0_scaffold_1254 length_1589 read_count_132
+1246	AB.20m_GS0_scaffold_1262 length_1509 read_count_71
+1247	AB.20m_GS0_scaffold_1264 length_1777 read_count_146
+1248	AB.20m_GS0_scaffold_1278 length_1628 read_count_103
+1249	AB.20m_GS0_scaffold_1291 length_1506 read_count_176
+1250	AB.20m_GS0_scaffold_1296 length_1642 read_count_92
+1251	AB.20m_GS0_scaffold_1303 length_2126 read_count_123
+1252	AB.20m_GS0_scaffold_1307 length_1504 read_count_628
+1253	AB.20m_GS0_scaffold_1311 length_1759 read_count_69
+1254	AB.20m_GS0_scaffold_1312 length_1608 read_count_89
+1255	AB.20m_GS0_scaffold_1336 length_1904 read_count_145
+1256	AB.20m_GS0_scaffold_1338 length_2032 read_count_103
+1257	AB.20m_GS0_scaffold_1361 length_1549 read_count_69
+1258	AB.20m_GS0_scaffold_1377 length_1584 read_count_68
+1259	AB.20m_GS0_scaffold_1379 length_2155 read_count_107
+1260	AB.20m_GS0_scaffold_1413 length_1756 read_count_152
+1261	AB.20m_GS0_scaffold_1430 length_1762 read_count_8394
+1262	AB.20m_GS0_scaffold_1449 length_1504 read_count_103
+1263	AB.20m_GS0_scaffold_1455 length_1592 read_count_93
+1264	AB.20m_GS0_scaffold_1456 length_1739 read_count_471
+1265	AB.20m_GS0_scaffold_1486 length_1519 read_count_70
+1266	AB.20m_GS0_scaffold_1491 length_1681 read_count_71
+1267	AB.20m_GS0_scaffold_1492 length_1583 read_count_13529
+1268	AB.20m_GS0_scaffold_1496 length_1634 read_count_106
+1269	AB.20m_GS0_scaffold_1504 length_1946 read_count_18633
+1270	AB.20m_GS0_scaffold_1509 length_2432 read_count_113
+1271	AB.20m_GS0_scaffold_1537 length_1895 read_count_86
+1272	AB.20m_GS0_scaffold_1581 length_1586 read_count_14471
+1273	AB.20m_GS0_scaffold_1625 length_1563 read_count_69
+1274	AB.20m_GS0_scaffold_1638 length_2005 read_count_85
+1275	AB.20m_GS0_scaffold_1640 length_1520 read_count_13133
+1276	AB.20m_GS0_scaffold_1665 length_1918 read_count_71
+1277	AB.20m_GS0_scaffold_1696 length_1628 read_count_12302
+1278	AB.20m_GS0_scaffold_1698 length_1588 read_count_18002
+1279	AB.20m_GS0_scaffold_1727 length_1749 read_count_24963
+1280	AB.20m_GS0_scaffold_1744 length_2208 read_count_390
+1281	AB.20m_GS0_scaffold_1755 length_1516 read_count_2375
+1282	AB.20m_GS0_scaffold_1830 length_1847 read_count_90
+1283	AB.20m_GS0_scaffold_2023 length_1709 read_count_6268
+1284	AB.20m_GS0_scaffold_2312 length_1536 read_count_94
+1285	AB.20m_GS0_scaffold_2358 length_1709 read_count_6536
+1286	AB.20m_GS0_scaffold_2362 length_1961 read_count_76
+1287	AB.20m_GS0_scaffold_2634 length_1606 read_count_1580
+1288	AB.20m_GS0_scaffold_3260 length_2277 read_count_6713

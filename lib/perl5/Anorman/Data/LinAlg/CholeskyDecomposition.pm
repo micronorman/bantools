@@ -6,7 +6,8 @@ use warnings;
 use Anorman::Common;
 use Anorman::Data;
 use Anorman::Data::LinAlg::Property qw( :all );
-use Anorman::Data::BLAS qw( :all );
+use Anorman::Data::LinAlg::BLAS qw( :L1 :L2 );
+use Anorman::Data::LinAlg::CBLAS;
 use Anorman::Math::Common qw(quiet_sqrt);
 
 use List::Util qw(max);
@@ -34,19 +35,19 @@ sub decompose {
 
 	my ($i,$j,$k);
 	my $M = $A->rows;
-	my $L = $A->copy;
+	my $LLT = $A->copy;
 
 
-	my $A_00 = $L->get_quick(0,0);
+	my $A_00 = $LLT->get_quick(0,0);
 	my $L_00 = quiet_sqrt($A_00);
 
 	my $symposdef = ($A_00 > 0);
 
-	$L->set(0,0,$L_00);
+	$LLT->set(0,0,$L_00);
 
 	if ($M > 1) {
-		my $A_10 = $L->get_quick(1,0);
-		my $A_11 = $L->get_quick(1,1);
+		my $A_10 = $LLT->get_quick(1,0);
+		my $A_11 = $LLT->get_quick(1,1);
 	
 		my $L_10 = $A_10 / $L_00;
 		my $diag = $A_11 - $L_10 * $L_10;
@@ -55,23 +56,28 @@ sub decompose {
 
 		$symposdef = ($symposdef && $diag > 0);
 
-		$L->set_quick(1,0,$L_10);
-		$L->set_quick(1,1,$L_11);
+		$LLT->set_quick(1,0,$L_10);
+		$LLT->set_quick(1,1,$L_11);
 	}
 
 	$k = 1;
 	while ( ++$k < $M ) {
-		my $A_kk = $L->get_quick($k,$k);
+		my $A_kk = $LLT->get_quick($k,$k);
 		
 		$i = -1;
 		while ( ++$i < $k ) {
 			my $sum = 0;
 
-			my $A_ki = $L->get_quick($k,$i);
-			my $A_ii = $L->get_quick($i,$i);
+			my $A_ki = $LLT->get_quick($k,$i);
+			my $A_ii = $LLT->get_quick($i,$i);
 
-			my $ci = $L->view_row($i);
-			my $ck = $L->view_row($k);
+			if ($A_ii == 0) {
+				warn "ZERO value found at ($i,$i)\n";
+				exit;
+			}
+
+			my $ci = $LLT->view_row($i);
+			my $ck = $LLT->view_row($k);
 
 			if ($i > 0) {
 				my $di = $ci->view_part(0,$i);
@@ -81,21 +87,21 @@ sub decompose {
 			}
 
 			$A_ki = ($A_ki - $sum) / $A_ii;
-			$L->set_quick($k, $i, $A_ki);
+			$LLT->set_quick($k, $i, $A_ki);
 		}
 
 		{
-			my $ck = $L->view_row( $k );
+			my $ck = $LLT->view_row( $k );
 			my $dk = $ck->view_part(0,$k);
 
-			my $sum  = blas_nrm2( $dk );
+			my $sum  = XS_call_cblas_nrm2( $dk );
 			my $diag = $A_kk - $sum * $sum;
 
 			my $L_kk = quiet_sqrt($diag);
 
 			$symposdef = ($symposdef && $diag > 0);
 
-			$L->set_quick($k,$k, $L_kk);
+			$LLT->set_quick($k,$k, $L_kk);
 		}
 	}
 
@@ -105,15 +111,15 @@ sub decompose {
 	while ( ++$i < $M ) {
 		$j = -1;
 		while ( ++$j < $i ) {
-			$L->set_quick($j,$i,0);
-			#my $A_ij = $LLT->get_quick($i,$j);
-			#$LLT->set_quick($j,$i,$A_ij);
+			#$L->set_quick($j,$i,0);
+			my $A_ij = $LLT->get_quick($i,$j);
+			$LLT->set_quick($j,$i,$A_ij);
 		}
 	}
 
-	$self->{'_L'} = $L;
+	$self->{'_LLT'} = $LLT;
 
-	return $L if $symposdef;
+	return $LLT if $symposdef;
 }
 
 
@@ -166,21 +172,10 @@ sub solve {
 	my $self = shift;
 	my $b    = shift;
 
-	my $L = $self->{'_L'};
-
-	check_vector($b);
-
-	trace_error("Matrix row dimension must match b size") if ($L->rows != $b->size);
-	trace_error("Matrix is not symmetric positive definite.") unless $self->is_symmetric_positive_definite;
-	
 	# Copy x <- b
 	my $x = $b->copy;
 
-	# Solve for c using forward-substitution, L c = b
-	blas_trsv(BlasLower, BlasNoTrans, BlasNonUnit, $L, $x);
-
-	# Perform back-substitution, U x = c
-	blas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $L->view_dice, $x);
+	$self->svx($x);
 
 	return $x;
 }
@@ -190,24 +185,26 @@ sub svx {
 	my $self = shift;
 	my $x    = shift;
 
-	my $L = $self->{'_L'};
+	my $LLT = $self->{'_LLT'};
 
 	check_vector($x);
 
-	trace_error("Matrix row dimension must match b size") if ($L->rows != $b->size);
+	trace_error("Matrix row dimension must match b size") if ($LLT->rows != $x->size);
 	trace_error("Matrix is not symmetric positive definite.") unless $self->is_symmetric_positive_definite;
 	
 	# Solve for c using forward-substitution, L c = b
-	blas_trsv(BlasLower, BlasNoTrans, BlasNonUnit, $L, $x);
+	#blas_trsv(BlasLower, BlasNoTrans, BlasNonUnit, $LLT, $x);
+	XS_call_cblas_trsv(BlasLower, BlasNoTrans, BlasNonUnit, $LLT, $x);
 
 	# Perform back-substitution, U x = c
-	blas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $L->view_dice, $x);
+	#blas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $LLT, $x);
+	XS_call_cblas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $LLT, $x);
 }
 
 sub invert {
 	my $self = shift;
 
-	my $I = $self->{'_L'}->copy;
+	my $I = $self->{'_LLT'}->copy;
 	my $N = $I->rows;
 
 	my $sum;
@@ -227,7 +224,7 @@ sub invert {
 			my $v1 = $I->view_column( $j )->view_part( $j + 1, $N - $j - 1);
 
 			blas_trmv(BlasLower, BlasNoTrans, BlasNonUnit, $m, $v1 );
-			blas_scal($ajj, $v1);
+			$v1 *= $ajj;
 		}
 
 	}
@@ -264,7 +261,42 @@ sub invert {
 
 sub L {
 	my $self = shift;
-	return $self->{'_L'};
+	my $LLT  = $self->{'_LLT'};
+	my $L    = $LLT->like;
+	my $N    = $LLT->rows;
+
+	my ($i,$j);
+
+	$i = -1;
+	while ( ++$i < $N ) {
+		$j = -1;
+		while ( ++$j <= $i ) {
+			#$L->set_quick($j,$i,0);
+			my $A_ij = $LLT->get_quick($i,$j);
+			$L->set_quick($i,$j,$A_ij);
+		}
+	}
+
+	return $L;
+}
+
+sub LT {
+	my $self = shift;
+	my $LLT  = $self->{'_LLT'};
+	my $LT    = $LLT->like;
+	my $N    = $LLT->rows;
+	
+	my $j = -1;
+	while ( ++$j < $N) {
+		my $i = -1;
+		while ( ++$i <= $j ) {
+			my $L_ij = $LLT->get_quick($i,$j);
+			$LT->set_quick($i,$j, $L_ij);
+		}
+	}
+
+	return $LT;
+
 }
 
 sub is_symmetric_positive_definite {
@@ -281,7 +313,7 @@ sub _stringify {
 	$string .= "-----------------------------------\n";
 
 	$string .= "A is symmetric positive definite: " . ($self->is_symmetric_positive_definite ? "YES" : "NO");
-	$string .= "\n\nL:\n$self->{'_L'}";
+	$string .= "\n\nL:\n" . $self->L;
 	$string .= "\n\ninverse(A):\n" . $self->invert if $self->is_symmetric_positive_definite;
 
 	return $string;

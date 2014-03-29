@@ -7,9 +7,15 @@
 void c_mm_copy( Matrix*, Matrix* );
 double c_m_sum( Matrix* );
 
+
+/* Get-set calls */
+
 size_t c_m_index( Matrix*, const size_t, const size_t );
 double c_m_get_quick( Matrix*, const size_t, const size_t );
-void c_m_set_quick( Matrix*, const size_t, const size_t, const double);
+void   c_m_set_quick( Matrix*, const size_t, const size_t, const double);
+
+
+/* Mathematical operations */
 
 int c_mm_add( Matrix* A, Matrix* B);
 int c_mm_sub( Matrix* A, Matrix* B);
@@ -20,19 +26,57 @@ int c_m_add_constant( Matrix* A, double x);
 
 void c_m_show_struct( Matrix* );
 
+
 /* Declarations */
 
+double * c_m_ptr( Matrix* m, const size_t i, const size_t j ) {
+    return (double*) m->elements + (m->row_zero + i * m->row_stride + j * m->column_stride);
+}
+
 size_t c_m_index( Matrix* m, const size_t i, const size_t j ) {
-    return (m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride);
+    if (m->offsets) {
+        const size_t offset = m->offsets->offset;
+
+        size_t* roffs = m->offsets->row_offsets;
+        size_t* coffs = m->offsets->column_offsets;
+
+        return (offset + roffs[ m->row_zero + i * m->row_stride ]
+                + coffs[ m->column_zero + j * m->column_stride ] ); 
+    } else {
+        return (m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride);
+    }
 }
 
 double c_m_get_quick( Matrix* m, const size_t i, const size_t j ) {
-    return m->elements[ m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride ];
+    if (m->offsets) {
+        const size_t offset = m->offsets->offset;
+
+        size_t* roffs = m->offsets->row_offsets;
+        size_t* coffs = m->offsets->column_offsets;
+        double* elems = m->elements;
+
+        return elems[ offset + roffs[ m->row_zero + i * m->row_stride ]
+                     + coffs[ m->column_zero + j * m->column_stride ] ];
+    } else {
+        return m->elements[ m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride ];
+    }
 }
 
 void c_m_set_quick( Matrix* m, const size_t i, const size_t j,  const double x ) {
-    m->elements[ m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride ] = x;
+    if (m->offsets) {
+        const size_t offset = m->offsets->offset;
+
+        size_t* roffs = m->offsets->row_offsets;
+        size_t* coffs = m->offsets->column_offsets;
+        double* elems = m->elements;
+
+        elems[ offset + roffs[ m->row_zero + i * m->row_stride ]
+              + coffs[ m->column_zero + j * m->column_stride ] ] = x;
+    } else {
+        m->elements[ m->row_zero + i * m->row_stride + m->column_zero + j * m->column_stride ] = x;
+    }
 }
+
 
 /* DEBUGGING */
 void c_m_show_struct( Matrix* m ) {
@@ -66,7 +110,7 @@ void c_m_show_struct( Matrix* m ) {
     fprintf( stderr, "\tview\t(%p): %d\n\n", &m->view_flag, m->view_flag );
 
     if (m->offsets) {
-        fprintf( stderr, "\n\nOffsets: (%p)\n", &m->offsets );
+        fprintf( stderr, "Offsets: (%p)\n", &m->offsets );
         fprintf( stderr, "\toffset\t(%p): %lu\n\n", &m->offsets->offset, m->offsets->offset );
         fprintf( stderr, "\troffsets\t(%p): [ %p ]\n", &m->offsets->row_offsets, m->offsets->row_offsets );
         fprintf( stderr, "\tcoffsets\t(%p): [ %p ]\n", &m->offsets->column_offsets, m->offsets->column_offsets );

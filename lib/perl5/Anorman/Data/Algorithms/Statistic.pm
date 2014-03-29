@@ -138,6 +138,8 @@ sub distance {
 	while ( --$i >= 0 ) {
 		$j = $i + 1;
 		while ( --$j >= 0 ) {
+
+			# Calculate vector distance
 			my $cov = $distance_function->($cols[$i], $cols[$j]);
 
 			$D->set($i, $j, $cov);

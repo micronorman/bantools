@@ -9,7 +9,7 @@ $Anorman::Data::Config::PACK_DATA = 1;
 use Anorman::Common;
 
 use Anorman::Data;
-use Anorman::Data::BLAS qw( :L3 );
+use Anorman::Data::LinAlg::BLAS qw( :L3 );
 use Anorman::Data::LinAlg::QRDecomposition; 
 use Anorman::Data::LinAlg::CholeskyDecomposition;
 use Anorman::Data::LinAlg::LUDecomposition;
@@ -196,7 +196,7 @@ sub test_QR_decomp_dim {
 	my $N = $m->columns;
 
 	my $a = $m->like;
-
+	
 	my $qr = Anorman::Data::LinAlg::QRDecomposition->new( $m );
 
 	blas_gemm(BlasNoTrans, BlasNoTrans, 1.0, $qr->Q, $qr->R, 0.0, $a);
@@ -319,7 +319,7 @@ sub test_cholesky_decomp_dim {
 	my $chol = Anorman::Data::LinAlg::CholeskyDecomposition->new( $m );
 
 	my $l  = $chol->L;
-	my $lt = $l->view_dice;
+	my $lt = $chol->LT;
 
 	blas_gemm(BlasNoTrans, BlasNoTrans, 1.0, $l, $lt, 0.0, $a);
 

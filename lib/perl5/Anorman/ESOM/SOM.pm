@@ -398,15 +398,16 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::ESOM::SOM',
 		ENABLE    => AUTOWRAP =>
-		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib',
+		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -landata',
 		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
 	   );
 
 use Inline C => <<'END_OF_C_CODE';
 
+#include <stddef.h>
 #include "data.h"
 #include "perl2c.h"
-#include "../lib/vector.c"
+#include "vector.h"
 
 void update_neuron( size_t size, double weight, Vector* vector, Vector* neuron ) {
 	double* v_elems = vector->elements;
@@ -429,13 +430,13 @@ void update_neuron( size_t size, double weight, Vector* vector, Vector* neuron )
 	}
 }
 
-void _fast_update_neighborhood ( SV* vector, char* neighbors, SV* weights, SV* neurons ) {
+void _fast_update_neighborhood ( SV* vector, SV* neighbors, SV* weights, SV* neurons ) {
 	
     SV_2STRUCT( vector, Vector, v );
     SV_2STRUCT( weights, Vector, w );
     SV_2STRUCT( neurons, Matrix, grid );
 
-    unsigned int *n = (unsigned int *) neighbors;
+    size_t* n = INT2PTR( size_t*, SvUV( neighbors ) );
 
     Vector* neuron;
     Newxz( neuron, 1, Vector);
@@ -457,6 +458,7 @@ void _fast_update_neighborhood ( SV* vector, char* neighbors, SV* weights, SV* n
     }
 
     c_v_free( neuron );
+    Safefree( n );
 }
 
 END_OF_C_CODE

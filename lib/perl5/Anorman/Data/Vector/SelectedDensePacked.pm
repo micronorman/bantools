@@ -77,7 +77,7 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Vector::SelectedDensePacked',
 		ENABLE    => AUTOWRAP =>
-		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -lmatrix',
+		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -landata',
 		INC       => '-I' . $Anorman::Common::AN_SRC_DIR  . '/include'
 
            );
@@ -89,7 +89,9 @@ use Inline C => <<'END_OF_C_CODE';
 #include "perl2c.h"
 #include "vector.h"
 
+/*
 #include "../lib/vector.c"
+*/
 
 /*===========================================================================
  Abstract Vector functions

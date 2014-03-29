@@ -14,7 +14,8 @@ enum {
     C_EFAULT   = 3,
     C_EINVAL   = 4,
     C_ENOMEM   = 8,
-    C_EBADLEN  = 19
+    C_EBADLEN  = 19,
+    C_ENOTSQR  = 20
 };
 
 void c_error( const char * , const char * , int , int  );
@@ -46,23 +47,4 @@ void c_stream_printf( const char *, const char *, int, const char * );
     c_warn( reason, __FILE__, __LINE__) ; \
     } while (0)
 
-void c_error( const char * reason, const char * file, int line, int c_errno ) {
-    c_stream_printf("ERROR", file, line, reason);
-
-    fflush (stdout);
-    fprintf (stderr, "C Error Handler invoked.\n");
-    fflush (stderr);
-
-    abort();
-}
-
-void c_warn( const char * reason, const char * file, int line ) {
-    c_stream_printf("WARNING", file, line, reason);
-}
-
-void
-c_stream_printf (const char *label, const char *file, int line,
-                   const char *reason) {
-    fprintf( stderr, "Message from C: %s:%d: %s: %s\n", file, line, label, reason );
-}
 #endif

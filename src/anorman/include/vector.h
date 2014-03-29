@@ -27,26 +27,67 @@ double* c_v_alloc( Vector*, const size_t );
 void c_v_set_all( Vector*, double );
 void c_v_free( Vector* );
 
+void c_v_show_struct( Vector* );
+
 double* 
 c_v_ptr(Vector *v, const size_t rank) {
-    return (double *) (v->elements + v->zero + rank * v->stride);
+    c_v_show_struct( v );
+    return (double *) (v->elements + (v->zero + rank * v->stride));
 }
 
 double
 c_v_get_quick(Vector *v, size_t index) {
-    double *elem = v->elements;
-    return elem[ v->zero + v->stride * index ];
+    double *elems = v->elements;
+
+    if (v->offsets) {
+        size_t* offs  = v->offsets->offsets;
+        return elems[ v->offsets->offset + offs[ v->zero + index * v->stride ] ]; 
+    } else {
+        return elems[ v->zero + v->stride * index ];
+    }
 }
 
 void
 c_v_set_quick( Vector *v, size_t index, const double value ) {
-    double *elem = v->elements;
-    elem[ v->zero + v->stride * index ] = value;
+    double *elems = v->elements;
+    if (v->offsets) {
+        size_t* offs  = v->offsets->offsets;
+        elems[ v->offsets->offset + offs[ v->zero + index * v->stride ] ] = value;
+    } else {
+        elems[ v->zero + v->stride * index ] = value;
+    }
 }
 
 size_t
 c_v_index ( Vector *v, size_t rank ) {
-    return v->zero + rank * v->stride;
+    if (v->offsets) {
+        size_t* offsets = v->offsets->offsets;
+        return v->offsets->offset + offsets[ v->zero + rank * v->stride ];
+    } else {
+        return v->zero + rank * v->stride;
+    }
 }
 
+/* Good for debugging */
+void
+c_v_show_struct( Vector* v ) {
+    fprintf(stderr, "\nContents of Vector struct: (%p)\n", v);
+    fprintf(stderr, "\tsize\t(%p): %lu\n", &v->size, v->size );
+    fprintf(stderr, "\tzero\t(%p): %lu\n",  &v->zero, v->zero );
+    fprintf(stderr, "\tstride\t(%p): %lu\n", &v->stride, v->stride );
+
+    if (!v->elements) {
+        fprintf(stderr, "\telems\t(%p): null\n",  &v->elements );
+    } else {
+        fprintf(stderr, "\telems\t(%p): [ %p ]\n",  &v->elements, v->elements );
+    }
+
+    if (!v->offsets) {
+        fprintf( stderr, "\toffsets\t(%p): null\n", &v->offsets );
+    } else {
+        fprintf( stderr, "\toffsets\t(%p): [ %p ]\n", &v->offsets, v->offsets );
+    }
+
+    fprintf(stderr, "\tview\t(%p): %i\n\n", &v->view_flag, v->view_flag );
+}
 #endif

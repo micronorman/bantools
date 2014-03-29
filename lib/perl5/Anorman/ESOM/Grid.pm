@@ -134,6 +134,8 @@ sub init {
 
 	} elsif ($method eq 'zero') {
 		$self->get_weights->assign(0);
+	} else {
+		die "No method\n";
 	}
 }
 
@@ -242,6 +244,7 @@ use parent -norequire, 'Anorman::ESOM::Grid::Matrix';
 use Anorman::Common;
 use Anorman::ESOM::File;
 
+use Data::Dumper;
 sub new {
 	my $class = shift;
 	$class->_error("Wrong number of arguments") if (@_ != 0 && @_ != 3);
@@ -294,7 +297,8 @@ sub index2row {
 }
 
 sub init {
-	my ($self,$desc, $method) = @_;
+	my $self = shift;
+	my ($desc, $method) = @_;
 	
 	if (defined $method && $method eq 'pca') {
 		warn "Initializing grid using the pca method\n";
@@ -385,6 +389,9 @@ use Inline (C => Config =>
 
 use Inline C => <<'END_OF_C_CODE';
 
+#include "perl2c.h"
+#include <stddef.h>
+
 static int min( int, int );
 static int max( int, int );
 
@@ -411,15 +418,15 @@ int max_grid_distance (int x1, int y1, int x2, int y2, int rows, int columns) {
  * the dimensions of the grid are required
  */
 
-int toroid_squared_euclidean_grid_distance (int xi, int yi, int xj, int yj, int rows, int columns ) {
+IV toroid_squared_euclidean_grid_distance (IV xi, IV yi, IV xj, IV yj, IV rows, IV columns ) {
 
-	int x1 = min( xi, xj );
-	int x2 = max( xi, xj );
-	int y1 = min( yi, yj );
-	int y2 = max( yi, yj );
+	IV x1 = min( xi, xj );
+	IV x2 = max( xi, xj );
+	IV y1 = min( yi, yj );
+	IV y2 = max( yi, yj );
 
-	int dx = min( abs( x1 - x2 ), abs( x1 + columns - x2));
-	int dy = min( abs( y1 - y2 ), abs( y1 + rows - y2));
+	IV dx = min( abs( x1 - x2 ), abs( x1 + columns - x2));
+	IV dy = min( abs( y1 - y2 ), abs( y1 + rows - y2));
 
 	return ( dx * dx ) + ( dy * dy );
 }
@@ -470,6 +477,7 @@ int _toroid_coords2index (int x, int y, int rows, int columns) {
 	return index;
 }
 
+/*
 void find_euclidean_toroid_grid_neighbors ( int r, int rr, int c, char* n, int rows, int columns ) {
 
 	int* neighbor = (int*) n;
@@ -493,6 +501,46 @@ void find_euclidean_toroid_grid_neighbors ( int r, int rr, int c, char* n, int r
 		}
 	}
 	
+}
+*/
+
+SV* find_euclidean_toroid_grid_neighbors ( IV r, IV rr, UV c, UV rows, UV columns ) {
+
+        size_t buffer_size = 1 + (4 * r * r);
+	size_t* neighbors;
+        /*size_t* distances;*/
+
+        Newx( neighbors, buffer_size, size_t );
+        /*Newx( distances, buffer_size, size_t ); */
+
+        if (!neighbors) {
+            croak("Failed to allocate grid neighborhood");
+        }
+
+	IV xc = _index2row( c, columns );
+	IV yc = _index2col( c, columns );
+
+	IV x;
+	IV y;
+
+	size_t index = 0;
+	for ( x = xc - r; x <= (xc + r); x++ ) {
+		for ( y = yc - r; y <= (yc + r); y++) {
+			IV dist = toroid_squared_euclidean_grid_distance( x, y, xc, yc, rows, columns );
+			
+			if (dist <= rr ) {
+                                size_t index2 = _toroid_coords2index( x, y, rows, columns );
+				neighbors[ index ] = index2;
+                                /*distances[ index ] = (size_t) dist;*/	
+				index++;
+			}
+		}
+	}
+
+        PTR_2SVADDR( neighbors, sv_neighbors );
+        /*PTR_2SVADDR( distances, sv_distances );*/
+
+	return sv_neighbors;
 }
 
 void find_manhattan_toroid_grid_neighbors ( int r, int rr, int c, char* n, int rows, int columns ) {
@@ -609,15 +657,15 @@ sub neighbors {
 
 	# conversion of radius (euclidean distance trick) and allocation of string of unsigned integers for storing neighbors
 	my $rr   = $self->transform_radius( $r );
-	my $size = scalar @{ $self->{'_distance_cache'} };
-	my $n    = pack("I$size" , (-1) x $size );
+	#my $size = scalar @{ $self->{'_distance_cache'} };
+	#my $n    = pack("I$size" , (-1) x $size );
 
 
 	#NOTE: Had to disable this giant memory leak. Consider a cache with size limit and LRU dumping policy	
 	#$ptr->{ $c } = $n;
 	
-	$self->_find_neighbors( $r, $rr, $c, $n );
-	return $n;
+	return $self->_find_neighbors( $r, $rr, $c );
+	#return $n;
 }
 
 sub distances {

@@ -3,13 +3,14 @@ package Anorman::Data::Matrix;
 use strict;
 use warnings;
 
-use Anorman::Common;
+use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::Config qw( :string_rules ); 
-use Anorman::Data::BLAS;
+use Anorman::Data::LinAlg::BLAS;
 use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Math::Functions;
 
 use Scalar::Util qw(refaddr blessed looks_like_number);
+use List::Util qw(min);
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'        => \&_assign_Matrix_from_NUMBER,
@@ -83,10 +84,10 @@ sub view_selection {
 	$row_indexes    = [ (0 .. $self->rows    - 1) ] if (!$row_indexes   );
 	$column_indexes = [ (0 .. $self->columns - 1) ] if (!$column_indexes);
 
-	my $row_offsets    = [ map { $self->_row_zero    + $_ * $self->_row_stride    } @{ $row_indexes    } ];
-	my $column_offsets = [ map { $self->_column_zero + $_ * $self->_column_stride } @{ $column_indexes } ];
+	my @row_offsets    = map { $self->_row_offset($self->_row_rank($_))       } @{ $row_indexes    };
+	my @column_offsets = map { $self->_column_offset($self->_column_rank($_)) } @{ $column_indexes };
 	
-	return $self->_view_selection_like( $row_offsets, $column_offsets );
+	return $self->_view_selection_like( \@row_offsets, \@column_offsets );
 }
 
 sub view_dice {
@@ -334,14 +335,11 @@ sub _have_shared_cells_raw {
 sub _assign_Matrix_from_NUMBER {
 	my ($self,$value) = @_;
 	
-	my $r = $self->rows;
-	my $c = $self->columns;
-
 	my $row = $self->rows;
-	while ( --$row >= $r ) {
+	while ( --$row >= 0 ) {
 		
 		my $column = $self->columns;
-		while ( --$column >= $c ) {
+		while ( --$column >= 0 ) {
 			$self->set_quick($row,$column,$value);
 		}
 	}
@@ -352,7 +350,7 @@ sub _assign_Matrix_from_NUMBER {
 sub _assign_Matrix_from_OBJECT {
 	my ($self,$other) = @_;
 	return if ($self == $other);
-	$self->_check_shape($other);
+	$self->check_shape($other);
 	$other = $other->copy if $self->_have_shared_cells($other);
 
 	my $row = $self->rows;

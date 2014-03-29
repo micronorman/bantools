@@ -1,7 +1,8 @@
+#include <stdio.h>
+
 #include "data.h"
 #include "error.h"
 #include "matrix.h"
-#include "stdio.h"
 
 Matrix*
 c_m_alloc_from_matrix( Matrix * mm, 
@@ -50,8 +51,16 @@ c_m_free( Matrix* m ) {
        struct is a view         */
     if (m->elements && !m->view_flag) {
         free( m->elements );
+        m->elements = NULL;
     }
-   
+  
+    if (m->offsets) {
+        free( m->offsets->row_offsets );
+        free( m->offsets->column_offsets );
+        free( m->offsets );
+        m->offsets = NULL;
+    }
+ 
     free( m ); 
 }
 
@@ -113,7 +122,7 @@ Matrix* c_mm_mult ( Matrix* A, Matrix* B, Matrix* C, double alpha, double beta) 
 
     const double* A_elems = A->elements;
     const double* B_elems = B->elements;
-    double* C_elems = C->elements;
+          double* C_elems = C->elements;
 
     const size_t cA = A->column_stride;
     const size_t cB = B->column_stride;
@@ -124,7 +133,8 @@ Matrix* c_mm_mult ( Matrix* A, Matrix* B, Matrix* C, double alpha, double beta) 
     const size_t rC = C->row_stride;
 
     static size_t BLOCK_SIZE = 30000;
-    size_t m_optimal = (BLOCK_SIZE - n) / (n+1);
+           size_t m_optimal = (BLOCK_SIZE - n) / (n+1);
+
     if (m_optimal <= 0) m_optimal = 1;
     int blocks = m/m_optimal;
     size_t rr = 0;
@@ -228,13 +238,13 @@ void c_mm_copy( Matrix* A, Matrix* B) {
     const size_t    B_cs = B->column_stride;
     const size_t    A_rs = A->row_stride;
     const size_t    B_rs = B->row_stride;
-    size_t B_index = (int) c_m_index( B, 0,0 );
-    size_t A_index = (int) c_m_index( A, 0,0 );
+    size_t B_index = c_m_index( B, 0,0 );
+    size_t A_index = c_m_index( A, 0,0 );
 
     int row = (int) A->rows;
     while ( --row >= 0) {
-        int i = A_index;
-        int j = B_index;
+        size_t i = A_index;
+        size_t j = B_index;
 
         int column = (int) A->columns;
         while (--column >= 0) {
@@ -256,12 +266,12 @@ double c_m_sum( Matrix* m ) {
     size_t index = c_m_index(m, 0,0);
     size_t    cs = m->column_stride;
     size_t    rs = m->row_stride;
-    int   row = (int) m->rows;
 
+    int   row = (int) m->rows;
     while( --row >= 0) {
         size_t i      = index;
+        
         int column = (int) m->columns;
-
         while( --column >= 0) {       
             sum += elem[i];
               i += cs;
@@ -290,8 +300,8 @@ int c_mm_add( Matrix* A, Matrix* B) {
     const size_t    A_rs = A->row_stride;
     const size_t    B_rs = B->row_stride;
 
-    size_t B_index = (int) c_m_index( B, 0,0 );
-    size_t A_index = (int) c_m_index( A, 0,0 );
+    size_t B_index = c_m_index( B, 0,0 );
+    size_t A_index = c_m_index( A, 0,0 );
 
     int row = (int) A->rows;
     while ( --row >= 0) {
@@ -328,8 +338,8 @@ int c_mm_sub( Matrix* A, Matrix* B) {
     const size_t    A_rs = A->row_stride;
     const size_t    B_rs = B->row_stride;
 
-    size_t B_index = (int) c_m_index( B, 0,0 );
-    size_t A_index = (int) c_m_index( A, 0,0 );
+    size_t B_index = c_m_index( B, 0,0 );
+    size_t A_index = c_m_index( A, 0,0 );
 
     int row = (int) A->rows;
     while ( --row >= 0) {
@@ -366,8 +376,8 @@ int c_mm_mul( Matrix* A, Matrix* B) {
     const size_t    A_rs = A->row_stride;
     const size_t    B_rs = B->row_stride;
 
-    size_t B_index = (int) c_m_index( B, 0,0 );
-    size_t A_index = (int) c_m_index( A, 0,0 );
+    size_t B_index = c_m_index( B, 0,0 );
+    size_t A_index = c_m_index( A, 0,0 );
 
     int row = (int) A->rows;
     while ( --row >= 0) {
@@ -404,8 +414,8 @@ int c_mm_div( Matrix* A, Matrix* B) {
     const size_t    A_rs = A->row_stride;
     const size_t    B_rs = B->row_stride;
 
-    size_t B_index = (int) c_m_index( B, 0,0 );
-    size_t A_index = (int) c_m_index( A, 0,0 );
+    size_t B_index = c_m_index( B, 0,0 );
+    size_t A_index = c_m_index( A, 0,0 );
 
     int row = (int) A->rows;
     while ( --row >= 0) {

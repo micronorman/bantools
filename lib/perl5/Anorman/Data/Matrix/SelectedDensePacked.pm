@@ -10,6 +10,8 @@ use Anorman::Data::Matrix::DensePacked;
 use Anorman::Data::Vector::SelectedDensePacked;
 use Anorman::Data::LinAlg::Property qw(is_packed);
 
+use Data::Dumper;
+
 sub new {
 	my $that  = shift;
 	my $class = ref $that || $that;
@@ -61,6 +63,7 @@ sub new {
 	$self->_setup( $rows, $columns, $row_zero, $column_zero, $row_stride, $column_stride);
 
 	$self->_set_elements( $elems );
+
 	$self->_set_offsets( $offset, $row_offsets, $column_offsets );
 	$self->_set_view(1);
 
@@ -94,7 +97,7 @@ sub view_column {
 	my ($offset, $roffsets, $coffsets) = $self->_get_offsets;
 
 	my $voffsets = $roffsets;
-	my $voffset  = $$offset + $self->_column_offset( $self->_column_rank( $column ) );
+	my $voffset  = $offset + $self->_column_offset( $self->_column_rank( $column ) );
 
 	return Anorman::Data::Vector::SelectedDensePacked->new( $vsize, $self->_elements, $vzero, $vstride, $voffsets, $voffset );
 }
@@ -135,7 +138,7 @@ use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::Data::Matrix::SelectedDensePacked',
 		ENABLE    => AUTOWRAP =>
-		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -lmatrix',
+		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib -landata',
 		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
 
            );
@@ -147,7 +150,10 @@ use Inline C => <<'END_OF_C_CODE';
 #include "matrix.h"
 #include "perl2c.h"
 #include "error.h"
+
+/*
 #include "../lib/matrix.c"
+*/
 
 /*===========================================================================
  Abstract matrix functions
@@ -377,7 +383,7 @@ NV get_quick(SV* self, IV row, IV column) {
 
 void set_quick(SV* self, IV row, IV column, NV value) {
     SV_2STRUCT( self, Matrix, m );
-   
+    printf("SET_QUICK\n"); 
     const size_t offset = m->offsets->offset;
 
     size_t* roffs = m->offsets->row_offsets;

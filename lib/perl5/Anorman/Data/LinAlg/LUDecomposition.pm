@@ -5,7 +5,8 @@ use warnings;
 
 use Anorman::Common;
 use Anorman::Data;
-use Anorman::Data::BLAS qw ( :L2 blas_axpy );
+use Anorman::Data::LinAlg::BLAS qw ( :L2 blas_axpy );
+use Anorman::Data::LinAlg::CBLAS;
 use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Data::LinAlg::Algebra qw( permute_rows );
 use List::Util qw(min max);
@@ -135,14 +136,9 @@ sub invert {
 
 sub solve {
 	my $self = shift;
+
 	my $b    = shift;
-	my $LU   = $self->{'LU'};
-	my $p    = $self->{'piv'};
-
-	trace_error("Matrix size must match solution/rhs size") if $b->size != $LU->rows;
-	trace_error("Matrix is singular") if $self->singular;
-
-	my $x = $b->copy;
+	my $x    = $b->copy;
 	
 	$self->svx( $x );
 
@@ -162,13 +158,13 @@ sub svx {
 	# Apply permutation to RHS
 	Anorman::Data::LinAlg::Algebra::permute( $x, $p );
 	
-	#print "PERMUTE: $x\n";
 	# Solve for c using forward-substitution, L c = P b
-	blas_trsv(BlasLower, BlasNoTrans, BlasUnit, $LU, $x);
-
+	#blas_trsv(BlasLower, BlasNoTrans, BlasUnit, $LU, $x);
+	XS_call_cblas_trsv( BlasLower, BlasNoTrans, BlasUnit, $LU, $x);
 	#print "TRSV_FWD: $x\n";
 	# Perform back-substitution, U x = c
-	blas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $LU, $x);	
+	#blas_trsv(BlasUpper, BlasNoTrans, BlasNonUnit, $LU, $x);	
+	XS_call_cblas_trsv( BlasUpper, BlasNoTrans, BlasNonUnit, $LU, $x );
 	#print "TRSV_REV: $x\n";
 }
 

@@ -39,7 +39,6 @@ sub permutation {}
 use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
 		NAME      => 'Anorman::ESOM::BMSearch',
-		ENABLE    => AUTOWRAP =>
 		LIBS      => '-L' . $Anorman::Common::AN_SRC_DIR . '/lib',
 		INC       => '-I' . $Anorman::Common::AN_SRC_DIR . '/include'
 
@@ -47,31 +46,29 @@ use Inline (C => Config =>
 use Inline C => <<'END_OF_C_CODE';
 
 #include "data.h"
+#include "perl2c.h"
 #include <float.h>
-
-#define SV_2VECTOR( sv, ptr_name )    Vector* ptr_name = (Vector*) SvIV( SvRV( sv ) )
-#define SV_2MATRIX( sv, ptr_name )    Matrix* ptr_name = (Matrix*) SvIV( SvRV( sv ) )
 
 void bm_brute_force_search( SV* vector, SV* weights ) {
     /* search all weights for bestmatch */
-    SV_2VECTOR( vector, v );
-    SV_2MATRIX( weights, w );
+    SV_2STRUCT( vector, Vector, v );
+    SV_2STRUCT( weights, Matrix, w );
 
-    int    bm        = -1;
-    double min       = DBL_MAX;
+    IV bm  = -1;
+    NV min = DBL_MAX;
     double threshold = min;
     double dist2; /* square distance */	
     double diff;
 
     int i  = -1;
 
-    double* v_elems = (double*) v->elements;
-    double* w_elems = (double*) w->elements;
+    double* v_elems = v->elements;
+    double* w_elems = w->elements;
 
     /* highly optimized search. Will only measure euclidean distance */    
     while ( ++i < w->rows ) {
-        int w_index = (int) (v->size + i * w->row_stride) - 1;
-        int v_index = (int) (v->zero + v->size - 1);
+        int w_index = (v->size + i * w->row_stride) - 1;
+        int v_index = (v->zero + v->size - 1);
 
         diff = v_elems[ v_index ] - w_elems[ w_index ];
         dist2 = (diff * diff); 
@@ -104,8 +101,8 @@ void bm_brute_force_search( SV* vector, SV* weights ) {
 
 void bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
     /* search a list of neurons for the best match */
-    SV_2VECTOR( vector, v );
-    SV_2MATRIX( weights, w );
+    SV_2STRUCT( vector, Vector, v );
+    SV_2STRUCT( weights, Matrix, w );
 
     int    bm        = -1;
     double min       = DBL_MAX;
@@ -113,8 +110,8 @@ void bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
     double dist2; /* square distance */	
     double diff;
 
-    double* v_elems = (double*) v->elements;
-    double* w_elems = (double*) w->elements;
+    double* v_elems = v->elements;
+    double* w_elems = w->elements;
 
     int n = (int) av_len(indices) + 1;
     int i;
@@ -156,11 +153,11 @@ void bm_indexed_search( SV* vector, SV* weights, AV* indices ) {
 
 void bm_local_search( SV* vector, SV* weights, IV top, IV left, IV bottom, IV right, IV grid_rows, IV grid_columns ) {
     /* search a square area for the best match */
-    SV_2VECTOR( vector, v );
-    SV_2MATRIX( weights, w );
+    SV_2STRUCT( vector, Vector, v );
+    SV_2STRUCT( weights, Matrix, w );
 
-    double* v_elems = (double*) v->elements;
-    double* w_elems = (double*) w->elements;
+    double* v_elems = v->elements;
+    double* w_elems = w->elements;
     
     int    bm        = -1;
     double min       = DBL_MAX;

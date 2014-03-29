@@ -5,7 +5,8 @@ use warnings;
 
 use Anorman::Common;
 use Anorman::Data::Algorithms::MahalanobisDistance;
-use Anorman::ESOM;
+
+use Data::Dumper;
 
 sub new {
 	my $that  = shift;
@@ -15,14 +16,12 @@ sub new {
 
 	if ($esom->_has_wts) {
 		trace_error("No class mask present") unless $esom->_has_cmx;
+		$esom->_cmx->index_classes;
 
-	} elsif ($esom->_has_lrn) {
-		trace_error("No class data present") unless $esom->_has_cls;
-	}
+	} 
 
+	warn "Analyzing ", $esom->weights->data->rows, " neuron grid...\n";
 	my $classes     = $esom->class_table;
-	my $bestmatches = $esom->bestmatches;
-
 	my %mhdist = ();
 
 	foreach my $class(@{ $esom->class_table }) {
@@ -33,14 +32,22 @@ sub new {
 		my $size = @{ $members };
 			
 		print "[ $name $size ]\n";
-		my $matrix = $esom->weights->data->view_selection( $members );
 
-		my $mh = Anorman::Data::Algorithms::MahalanobisDistance->new( $matrix->copy );
+		warn "Extracting matrix view\n";
+		my $matrix = $esom->weights->data->view_selection( $members, undef );
+		warn "Done\n";
+
+		my $mh = Anorman::Data::Algorithms::MahalanobisDistance->new( $matrix );
+	
 		$mhdist{ $class->index } = $mh;	
 	}
-	my $self = { 'esom' => $esom };
+
+	my $self = { 'esom' => $esom, 'mhdist' => \%mhdist };
 
 	bless ($self, $class);
+
+	print Dumper $self->{'mhdist'};exit;
+	return $self;
 
 }
 
@@ -49,6 +56,10 @@ sub apply {
 }
 
 sub quick_apply {
+
+}
+
+sub test_bestmatches {
 
 }
 

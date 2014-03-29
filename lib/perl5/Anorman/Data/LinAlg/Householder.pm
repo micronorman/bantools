@@ -3,7 +3,7 @@ package Anorman::Data::LinAlg::Householder;
 use strict;
 use warnings;
 
-use Anorman::Data::BLAS qw( :L1 );
+use Anorman::Data::LinAlg::BLAS qw( :L1 );
 use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Math::Common qw(hypot);
 
@@ -45,15 +45,16 @@ sub householder_transform ($) {
 		my $s = ($alpha - $beta);
 
 		if (abs($s) > 2.2250738585072014e-308) {
-			blas_scal(1.0 / $s, $x);
+			#blas_scal(1.0 / $s, $x);
+			$x /= $s;
 			$v->set_quick(0, $beta);
 		} else {
-			blas_scal( 2.2204460492503131e-16 / $s, $x);
-			blas_scal( 1.0 / 2.2204460492503131e-16, $x);
+			$x *= (2.2204460492503131e-16 / $s);
+			$x *= ( 1.0 / 2.2204460492503131e-16);
 			$v->set_quick(0,$beta);
 		}
 	}
-
+	
 	return $tau;
 }
 
