@@ -8,7 +8,7 @@ use warnings;
 #
 # http://www.prism.gatech.edu/~ndantam3/cblas-doc/doc/html/main.html
 
-
+use Anorman::Common;
 use Exporter;
 
 our (@ISA, @EXPORT_OK, @EXPORT);
@@ -82,7 +82,7 @@ int XS_call_cblas_axpy( NV alpha, SV* sv_X, SV* sv_Y ) {
                      (int) Y->stride );
         return C_SUCCESS;
     } else {
-        C_ERROR("invalid length", C_EBADLEN);
+        C_ERROR("Invalid length", C_EBADLEN);
     }
 }
 

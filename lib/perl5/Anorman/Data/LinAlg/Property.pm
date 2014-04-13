@@ -22,6 +22,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 	check_vector
 	is_packed
 	is_identity
+	is_diagonal
 	is_matrix
 	is_square
 	is_singular
@@ -35,7 +36,7 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 );
  
 %EXPORT_TAGS = ( vector => [ qw(is_packed is_vector check_vector vector_equals_vector vector_equals_value) ],
-                 matrix => [ qw(is_packed is_matrix is_symmetric is_square is_singular is_diagonal is_identity
+                 matrix => [ qw(is_packed is_matrix is_symmetric is_diagonal is_square is_singular is_diagonal is_identity
                              check_matrix check_rectangular check_square matrix_equals_matrix matrix_equals_value) ],
 		 all => [ @EXPORT_OK ] );
 
@@ -221,6 +222,27 @@ sub is_identity {
 			return undef if !(abs($v) <= $epsilon);
 		}
 	}
+	return 1;
+}
+
+sub is_diagonal {
+	my $A       = shift;
+	my $epsilon = $TOLERANCE;
+	my $rows    = $A->rows;
+	my $columns = $A->columns;
+
+	my $row = $rows;
+	while ( --$row >= 0) {
+		my $column = $columns;
+		while ( --$column >= 0 ) {
+
+			if ( $row != $column ) {
+				my $v = $A->get_quick($row,$column);
+				return undef if !(abs($v) <= $epsilon);
+			} 
+		}
+	}
+
 	return 1;
 }
 

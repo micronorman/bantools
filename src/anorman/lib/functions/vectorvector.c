@@ -1,3 +1,4 @@
+#include "error.h"
 #include "vector.h"
 #include "functions/functions.h"
 #include "functions/vector.h"
@@ -6,7 +7,7 @@
 /* aggregate functions that return a double */
 
 double c_vv_aggregate_quick( size_t size, Vector* a, Vector* b, dd_func aggr, dd_func f ) {
-    long double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
+    double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
     
     int i = (int) size - 1;
     while ( --i >= 0) {
@@ -16,8 +17,32 @@ double c_vv_aggregate_quick( size_t size, Vector* a, Vector* b, dd_func aggr, dd
     return result;
 }
 
-double c_vv_aggregate_quick_upto( size_t size, Vector* a, Vector* b, dd_func aggr, dd_func f, double threshold ) {
-    long double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
+double c_vv_aggregate_quick_upto( size_t size, Vector* a, Vector* b, dd_func aggr, dd_func f, const double threshold ) {
+    double* const a_elems = a->elements;
+    double* const b_elems = b->elements;
+
+    const size_t a_str = a->stride;
+    const size_t b_str = b->stride;
+
+    size_t a_index = c_v_index(a, 0);
+    size_t b_index = c_v_index(b, 0);
+
+    double result = (*f) ( a_elems[ a_index ], b_elems[ b_index ]);
+    
+    size_t k;
+    for (k = 1; k < size; k++) {
+        if (result > threshold)
+        break;
+        a_index += a_str;
+        b_index += b_str; 
+        result = ( *aggr ) ( result, ( *f ) ( a_elems[ a_index ], b_elems[ b_index ] ) );
+    } 
+
+    return result;
+}
+
+double c_vv_aggregate_upto( size_t size, Vector* a, Vector* b, dd_func aggr, dd_func f, const double threshold ) {
+    double result = (*f) ( c_v_get_quick( a, size - 1 ), c_v_get_quick( b, size - 1 ) );
     
     int i = (int) size - 1;
     while ( --i >= 0) {
@@ -157,3 +182,11 @@ double c_vv_dist_euclidean_upto( size_t size, Vector* a, Vector* b, double thres
     return sqrt( c_vv_aggregate_quick_upto( size, a, b, aggr, f, threshold ) ); 
 }
 
+/* Euclidean distance with threshold */
+double c_vv_dist_squared_euclidean_upto( size_t size, Vector* a, Vector* b, double threshold ) {
+
+    dd_func aggr = (dd_func) &c_plus;
+    dd_func    f = (dd_func) &c_square_diff;
+
+    return c_vv_aggregate_quick_upto( size, a, b, aggr, f, threshold ); 
+}

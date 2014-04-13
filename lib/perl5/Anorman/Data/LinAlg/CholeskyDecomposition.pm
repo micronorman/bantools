@@ -299,6 +299,11 @@ sub LT {
 
 }
 
+sub LLT {
+	my $self = shift;
+	return $self->{'_LLT'};
+}
+
 sub is_symmetric_positive_definite {
 	my $self = shift;
 	return $self->{'_is_symmetric_positive_definite'};

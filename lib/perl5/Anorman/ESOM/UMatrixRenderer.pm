@@ -29,8 +29,11 @@ sub render {
 		my $df = $grid->distance_function;
 
 		my $matrix = Anorman::Data->matrix( $h, $w );
-		warn "Calculating U-Matrix heights ...\n" if $VERBOSE;
 		
+		warn "Caching neuron views...\n" if $VERBOSE;
+		my @neurons = map { $grid->get_neuron( $_ ) } (0 .. $grid->size - 1); #NOTE: potential memory leak;
+
+		warn "Calculating U-Matrix heights ...\n" if $VERBOSE;
 		my $row = $h;
 		while ( --$row >= 0 ) {
 			# Calculate U-Matrix on a row-by-row basis
@@ -43,7 +46,8 @@ sub render {
 				my $n     = 0;
 
 				foreach my $j( $grid->immediate_neighbors( $i ) ) {
-					$sum += $grid->distance_function->apply_quick( $grid->get_neuron( $i ),  $grid->get_neuron( $j ) );
+					#$sum += $grid->distance_function->apply_quick( $grid->get_neuron( $i ),  $grid->get_neuron( $j ) );
+					$sum += $grid->distance_function->( $neurons[ $i ], $neurons[ $j ] );
 					$n++;
 				}
 
@@ -53,6 +57,7 @@ sub render {
 			$matrix->view_row( $row )->assign( $current_row );
 		}
 
+		warn "Normalizing U-matrix heights\n" if $VERBOSE;
 		$matrix->normalize;
 
 

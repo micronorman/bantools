@@ -5,9 +5,10 @@ use warnings;
 
 use parent qw(Anorman::Data::Vector::Abstract Anorman::Data::Vector);
 
-use Anorman::Common qw(sniff_scalar);
+use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::LinAlg::Property qw( :vector );
 
+use Anorman::Data::Vector::SelectedDensePacked;
 # I like dispatch tables...
 my %ASSIGN_DISPATCH = (
 	'NUMBER'      => \&_assign_DensePackedVector_from_NUMBER,
@@ -39,7 +40,7 @@ sub _new_from_array {
 	my $size = @{ $_[0] };
 
 	$self->_new_from_dims( $size );
-	$self->_assign_DenseVector_from_ARRAY( $_[0] );
+	$self->_assign_DensePackedVector_from_ARRAY( $_[0] );
 }
 
 sub _new_from_dims {
@@ -59,6 +60,10 @@ sub _new_from_dims {
 		$self->_set_elements( $elements );
 		$self->_set_view(1);
 	}
+}
+
+sub _view_selection_like {
+	return Anorman::Data::Vector::SelectedDensePacked->new( $_[0]->_elements, $_[1] );
 }
 
 sub assign {
@@ -299,6 +304,11 @@ NV get_quick(SV* self, UV index) {
 void set_quick(SV* self, UV index, NV value) {
     SV_2STRUCT( self, Vector, v );
     c_v_set_quick( v, (size_t) index, (double) value );
+}
+
+UV _index(SV* self, UV index) {
+    SV_2STRUCT( self, Vector, v );
+    return (UV) v->zero + index * v->stride;
 }
 
 SV* _allocate_elements( SV* self, UV num_elems ) {

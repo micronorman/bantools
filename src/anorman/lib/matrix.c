@@ -156,7 +156,7 @@ Matrix* c_mm_mult ( Matrix* A, Matrix* B, Matrix* C, double alpha, double beta) 
                 size_t kA = iA;
                 size_t kB = jB;
 
-                long double s = 0.0;
+                double s = 0.0;
 
                 // loop unrolled 
                 kA -= cA;

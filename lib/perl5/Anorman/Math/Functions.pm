@@ -31,7 +31,8 @@ while (my ($k,$v) = each %UNARY_FUNCTIONS) {
 # Binary functions. If provided an argument this binds
 # it to the second argument of the function
 while (my ($k,$v) = each %BINARY_FUNCTIONS) {
-	*$k = sub { if (defined $_[1]) {
+	*$k = sub { 
+		    if (defined $_[1]) {
                       my $arg2 = $_[1]; 
                       
                       return sub { $v->( $_[0], $arg2 ) }
@@ -92,7 +93,7 @@ sub chain {
 	my @chain = @_;
 
 	if (@chain == 2) {
-		return sub { $chain[0]->( $chain[1]->($_[0]) ) };
+		return sub { $chain[0]->( $chain[1]->(@_) ) };
 	} elsif (@chain == 3) {
 		return sub { $chain[0]->( $chain[1]->($_[0]), $chain[2]->($_[1]) ) }
 	} else {

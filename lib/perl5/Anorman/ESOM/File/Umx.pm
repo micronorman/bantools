@@ -3,7 +3,7 @@ package Anorman::ESOM::File::Umx;
 use strict;
 use warnings;
 
-use parent -norequire,'Anorman::ESOM::File::Matrix';
+use parent 'Anorman::ESOM::File::Matrix';
 
 use Anorman::Common;
 

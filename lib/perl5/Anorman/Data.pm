@@ -21,6 +21,12 @@ sub matrix {
 	}
 }
 
+sub random_matrix {
+	my $self = shift;
+	
+	return $self->matrix($_[0],$_[1])->assign( sub { rand } );
+}
+
 
 sub vector {
 	my $self = shift;
@@ -32,6 +38,12 @@ sub vector {
 		require Anorman::Data::Vector::Dense;
 		return  Anorman::Data::Vector::Dense->new(@_);
 	}
+}
+
+sub random_vector {
+	my $self = shift;
+
+	return $self->vector($_[0])->assign( sub { rand } );
 }
 
 sub general_matrix {

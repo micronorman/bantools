@@ -16,11 +16,7 @@ sub new {
 	return bless ( {}, ref($class) || $class );
 }
 
-sub som {
-	my $self = shift;
-	$self->{'_SOM'} = shift if defined $_[0];
-	return $self->{'_SOM'};
-}
+sub som { $_[0]->{'_SOM'} = $_[1] if @_ > 1; $_[0]->{'_SOM'} }
 
 sub old_bestmatches {}
 
@@ -55,20 +51,20 @@ void bm_brute_force_search( SV* vector, SV* weights ) {
     SV_2STRUCT( weights, Matrix, w );
 
     IV bm  = -1;
-    NV min = DBL_MAX;
+    double min = DBL_MAX;
     double threshold = min;
     double dist2; /* square distance */	
-    double diff;
 
-    int i  = -1;
+    long double diff;
 
     double* v_elems = v->elements;
     double* w_elems = w->elements;
 
     /* highly optimized search. Will only measure euclidean distance */    
-    while ( ++i < w->rows ) {
-        int w_index = (v->size + i * w->row_stride) - 1;
-        int v_index = (v->zero + v->size - 1);
+    size_t i;
+    for (i = 0; i < w->rows; i++) {
+        size_t w_index = (v->size + i * w->row_stride) - 1;
+        size_t v_index = (v->zero + v->size - 1);
 
         diff = v_elems[ v_index ] - w_elems[ w_index ];
         dist2 = (diff * diff); 
@@ -80,12 +76,12 @@ void bm_brute_force_search( SV* vector, SV* weights ) {
             if (dist2 > threshold)
             break;
             diff   = v_elems[ v_index ] - w_elems[ w_index ];
-            dist2  += (diff * diff);
+            dist2 += (diff * diff);
         }
 
         if ( dist2 < min ) {
              min = dist2;
-             bm  = i;
+             bm  = (IV) i;
              threshold = dist2;
         }
     }
@@ -215,6 +211,9 @@ END_OF_C_CODE
 package Anorman::ESOM::BMSearch::Simple;
 
 use parent -norequire,'Anorman::ESOM::BMSearch';
+use POSIX qw(DBL_MAX);
+
+use Data::Dumper;
 
 sub new { return shift->SUPER::new() };
 
@@ -222,6 +221,31 @@ sub find_bestmatch {
 	my $self = shift;
 	return Anorman::ESOM::BMSearch::bm_brute_force_search( $_[1], $_[2] );
 } 
+
+sub slow_find_bestmatch {
+	my $self = shift;
+	my ($func, $vector, $neurons) = @_;
+
+	my $neuron = $neurons->view_row( 0 );
+	my $dim    = $vector->size;
+
+	my ($bm, $dist);
+	my $min = DBL_MAX;
+
+	my $i = -1;
+	while ( ++$i < $neurons->rows ) {
+		$dist = $func->( $vector, $neuron, $min );
+
+		if ($dist < $min) {
+			$min        = $dist;
+			$bm         = $i;
+		}
+
+		$neuron->_setup( $neuron->size, $neuron->_zero + $dim, 1 );
+	}
+
+	return ($bm, $dist);
+}
 
 1;
 

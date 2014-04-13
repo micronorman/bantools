@@ -10,8 +10,6 @@ use Anorman::Data::Matrix::DensePacked;
 use Anorman::Data::Vector::SelectedDensePacked;
 use Anorman::Data::LinAlg::Property qw(is_packed);
 
-use Data::Dumper;
-
 sub new {
 	my $that  = shift;
 	my $class = ref $that || $that;

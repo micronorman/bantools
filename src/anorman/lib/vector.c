@@ -264,7 +264,7 @@ c_vv_dot_product ( Vector *a, Vector *b, const size_t from, const size_t length 
 
 
 
-/* quick unary vector functions */
+/* optimized unary vector functions */
 double
 c_v_sum( Vector *v ) {
     double sum = 0.0;

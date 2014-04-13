@@ -105,10 +105,12 @@ sub new {
 sub init {
 	my $self   = shift;
 
+	$self->{'_init_method'} = $_[0] if defined $_[0];
+	
 	trace_error("Cannot initialize trainer with no grid loaded") unless $self->{'_grid'};
 
 	if ($VERBOSE) {	
-		printf STDERR ("Initializing [ %d x %d ] grid...\n", $self->grid->rows, $self->grid->columns );
+		printf STDERR ("Initializing [ %d x %d ] grid with $self->{'_init_method'}...\n", $self->grid->rows, $self->grid->columns );
 	}
 
 	# Initialize the grid using the selected method
@@ -231,10 +233,12 @@ sub update_neighborhood {
 	my $self = shift;
 	my ($vector, $bm) = @_;
 
+	my $grid = $self->grid;
+
 	&_fast_update_neighborhood( $vector,                    # the data vector to use
-				    $self->grid->neighbors( $bm, $self->radius ),
+				    $grid->neighbors( $bm, $self->radius ),
 				    $self->neighborhood->get,
-				    $self->grid->get_weights    # the neurons 
+				    $grid->get_weights          # the neurons 
 			          );                
 }
 
@@ -409,6 +413,54 @@ use Inline C => <<'END_OF_C_CODE';
 #include "perl2c.h"
 #include "vector.h"
 
+void update_neuron
+  ( 
+    const size_t size,
+    double* A_elems,
+    const double* B_elems,
+    const double weight
+  ) 
+{
+    /*printf("Update Neuron. Size: %lu, A_elems: %p, A_stride: %lu, B_elems: %p B_stride: %lu, Weight: %g\n",
+           size, A_elems, A_stride, B_elems, B_stride, weight);*/
+
+    size_t k;
+    for(k = 0; k < size; k++ ) {
+        const double diff = *B_elems - *A_elems;
+
+		if (diff != 0) {
+			*A_elems += (weight * diff);
+		}
+
+                A_elems++;
+                B_elems++;
+	}
+}
+
+void _fast_update_neighborhood ( SV* vector, SV* neighborhood, SV* weights, SV* neurons ) {
+    SV_2STRUCT( vector, Vector, v );
+    SV_2STRUCT( weights, Vector, w );
+    SV_2STRUCT( neurons, Matrix, grid );
+
+    size_t* const n = INT2PTR( size_t*, SvUV( neighborhood ) );
+
+    const double*      v_elems = (v->elements + v->zero);
+    const size_t          size = v->size;
+
+    size_t i;
+    for (i = 0; i < w->size; i++) {
+        const double weight = w->elements[i];
+        
+        if (weight != 0) {
+            double* neuron_elems = grid->elements + (n[i] * grid->row_stride);
+            update_neuron( size, neuron_elems, v_elems, weight );
+        }
+    }
+
+    Safefree( n );
+}
+
+/* OLD ROUTINES 
 void update_neuron( size_t size, double weight, Vector* vector, Vector* neuron ) {
 	double* v_elems = vector->elements;
 	double* n_elems = neuron->elements;
@@ -460,7 +512,7 @@ void _fast_update_neighborhood ( SV* vector, SV* neighbors, SV* weights, SV* neu
     c_v_free( neuron );
     Safefree( n );
 }
-
+*/
 END_OF_C_CODE
 
 1;

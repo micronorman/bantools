@@ -1,17 +1,20 @@
 package Anorman::Data::Vector::SelectedDensePacked;
 
 use strict;
+use warnings;
 
 use parent qw(Anorman::Data::Vector::Abstract Anorman::Data::Vector);
+
 use Anorman::Data::Vector::DensePacked;
 use Anorman::Data::LinAlg::Property qw( :vector );
+use Anorman::Common;
 
 sub new {
 	my $that  = shift;
 	my $class = ref $that || $that;
 
 	if (@_ != 2 && @_ != 6) {
-		$class->_error("Wrong number of arguments");
+		trace_error("Wrong number of arguments");
 	}
 	
 	my $self = $class->_bless_vector_struct();
@@ -68,10 +71,17 @@ sub _like_vector {
 
 sub _have_shared_cells_raw {
 	my ($self, $other) = @_;
-
+	trace_error("BREAK");
 	return undef unless (is_vector($other) && is_packed($other));
-	return $self->_get_elements_addr == $other->_get_elements_addr;
+	return $self->_elements == $other->_elements;
 }
+
+#TODO: These methods should be called from Vector class. Invesitage why methods are always overwritten by Abstract Data Class
+sub _add_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]+$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]+$v })} 
+#sub _sub_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]-$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]-$v })} 
+sub _sub_assign { $_[0]->_assign_Vector_from_OBJECT_and_CODE($_[1], sub{$_[0]-$_[1]}) } 
+sub _mul_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]*$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]*$v })}
+sub _div_assign { is_vector($_[1]) ? $_[0]->assign($_[1], sub{$_[0]/$_[1]}) : my $v=$_[1]; $_[0]->assign( sub {$_[0]/$v })}
 
 use Inline (C => Config =>
 		DIRECTORY => $Anorman::Common::AN_TMP_DIR,
@@ -240,6 +250,8 @@ void DESTROY(SV* self) {
 
 NV get_quick(SV* self, IV index) {
     SV_2STRUCT( self, Vector, v );
+
+    if (index < 0) return NAN;
    
     size_t* offs  = v->offsets->offsets;
     double* elems = v->elements;

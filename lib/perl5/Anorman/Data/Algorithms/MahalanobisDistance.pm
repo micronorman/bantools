@@ -13,14 +13,14 @@ use warnings;
 use Anorman::Common;
 
 use Anorman::Math::Common qw(quiet_sqrt);
+use Anorman::Math::VectorFunctions;
 use Anorman::Data::Algorithms::Statistic;
-use Anorman::Data::Functions::Vector;
 use Anorman::Data::LinAlg::CholeskyDecomposition;
 use Anorman::Data::LinAlg::LUDecomposition;
 use Anorman::Data::LinAlg::QRDecomposition;
 use Anorman::Data::LinAlg::Property qw( :matrix check_vector );
 
-my $VF = Anorman::Data::Functions::Vector->new;
+my $VF = Anorman::Math::VectorFunctions->new;
 
 sub new {
 	my $that  = shift;
@@ -30,9 +30,9 @@ sub new {
 	if (defined $_[0]) {
 		check_matrix( $_[0] );
 
-		my $M     = $_[0];
-		my $m     = $M->rows;
-		my $n     = $M->columns;
+		my $A     = $_[0];
+		my $m     = $A->rows;
+		my $n     = $A->columns;
 		my @means = ();
 
 		$self->{'_m'} = $m;
@@ -42,13 +42,13 @@ sub new {
 
 		my $j = $n;
 		while ( --$j >= 0 ) {
-			$means[ $j ] = $M->view_column( $j )->sum / $m;
+			$means[ $j ] = $A->view_column( $j )->sum / $m;
 		}
 	
-		$self->means( $M->like_vector($n)->assign( \@means ) );
+		$self->means( $A->like_vector($n)->assign( \@means ) );
 
-		warn "Calculating covariance matrix from " . $M->_to_short_string . " data set...\n" if $VERBOSE;
-		my $cov  = Anorman::Data::Algorithms::Statistic::covariance($M);
+		warn "Calculating covariance matrix from " . $A->_to_short_string . " data set...\n" if $VERBOSE;
+		my $cov  = Anorman::Data::Algorithms::Statistic::covariance($A);
 
 		$self->covariance( $cov );	
 	};
@@ -68,26 +68,30 @@ sub covariance {
 	check_square( $C );
 
 	if (defined $self->{'_n'}) {
-		trace_error("Covariance matrix has wrong size") if ($C->rows != $self->{'_n'});
+		trace_error("Covariance matrix has the wrong size: " . $C->_to_short_string . " vs " . $self->{'_n'} ) if ($C->rows != $self->{'_n'});
 	} else {
 		$self->{'_n'} = $C->rows;
 	}
 
-	warn "Performing Cholesky decomposition...\n" if $VERBOSE;
-	my $chol = Anorman::Data::LinAlg::CholeskyDecomposition->new( $C );
+	if (is_identity( $C )) {
+		$self->{'_func'} = $VF->EUCLID;
+	} else {	
+		warn "Performing Cholesky decomposition...\n" if $VERBOSE;
+		my $chol = Anorman::Data::LinAlg::CholeskyDecomposition->new( $C );
 
-	if ($chol->is_symmetric_positive_definite) {
-		$self->{'_decomp'} = $chol;
-	} else {
-		warn "Matrix was not positive-definite. Trying LU decomposition...\n" if $VERBOSE;
-		my $lu = Anorman::Data::LinAlg::LUDecomposition->new( $C );
+		if ($chol->is_symmetric_positive_definite) {
+			$self->{'_func'} = $VF->MAHALANOBIS( $chol );
+		} else {
+			warn "Matrix was not positive-definite. Trying LU decomposition...\n" if $VERBOSE;
+			my $lu = Anorman::Data::LinAlg::LUDecomposition->new( $C );
 
-		if (!$lu->singular) {
-			$self->{'_decomp'} = $lu;
-		}  else {
-			warn "Matrix was singular. Trying QR decomposition...\n" if $VERBOSE;
-			my $qr = Anorman::Data::LinAlg::QRDecomposition->new( $C );
-			$self->{'_decomp'} = $qr;
+			if (!$lu->singular) {
+				$self->{'_func'} = $VF->MAHALANOBIS( $lu );
+			}  else {
+				warn "Matrix was singular. Trying QR decomposition...\n" if $VERBOSE;
+				my $qr = Anorman::Data::LinAlg::QRDecomposition->new( $C );
+				$self->{'_func'} = $VF->MAHALANOBIS( $qr );
+			}
 		}
 	}
 
@@ -120,34 +124,16 @@ sub means {
 
 }
 
-sub MAHAL {
-	# Mahalanobis Distance
-	my ($self, $vector) = @_;
+sub distance {
+	my $self = shift;
 
-	return quiet_sqrt( $self->GSID( $vector ) );	
+	my ($v, $u) = @_;
+
+	return $self->{'_func'}->($v, $u);
 }
 
-sub GSID {
-	# Generalized squared interpoint distance
-	my ($self, $v) = @_;
-
-	check_vector($v);
-
-	trace_error("Input vector has wrong length") if $v->size != $self->{'_n'};
-	
-	my $diff = $v - $self->{'means'};
-
-	return $self->{'_decomp'}->solve( $diff )->dot_product( $diff );
-}
-
-sub EUCLID {
-	my ($self, $v) = @_;
-
-	check_vector($v);
-
-	trace_error("Input vector has wrong length") if $v->size != $self->{'_n'};
-
-	return $VF->EUCLID->($v, $self->{'means'});
+sub get_function {
+	return $_[0]->{'_func'};
 }
 
 1;

@@ -3,14 +3,12 @@ package Anorman::ESOM::Grid;
 use strict;
 
 use Anorman::Common;
-use Anorman::Math::DistanceFactory;
+use Anorman::Math::VectorFunctions;
 use Anorman::Data::LinAlg::Property qw(is_matrix);
 
 # Random number generators
 use Math::Random::MT::Auto qw(gaussian);
 use Math::Random::MT::Auto::Range;
-
-use Data::Dumper;
 
 sub new {
 	my $class = shift;
@@ -26,7 +24,7 @@ sub new {
 		$self->{'_dim'}  = $_[1];
 	}
 	
-	$self->{'_distance_function'} = Anorman::Math::DistanceFactory->get_function( SPACE => 'euclidean', PACKED => 1 );
+	$self->{'_distance_function'} = Anorman::Math::VectorFunctions->EUCLID;
 
 	return $self;
 }
@@ -56,7 +54,6 @@ sub distance_function {
 	my $func = shift;
 
 	if (defined $func) {
-		#$self->_error("Not a valid distance function") unless (ref $func) =~ m/::Math::Distance::/;
 		$self->{'_distance_function'} = $func;
 	}
 
@@ -135,17 +132,12 @@ sub init {
 	} elsif ($method eq 'zero') {
 		$self->get_weights->assign(0);
 	} else {
-		die "No method\n";
+		trace_error("No such method\n");
 	}
 }
 
 sub transform_radius {
 	return $_[1];
-}
-
-sub _error {
-	shift;
-	trace_error(@_);
 }
 
 1;
@@ -167,7 +159,7 @@ use Anorman::Data::LinAlg::Property qw( is_matrix );
 sub new {
 	my $class       = shift;
 
-	$class->error("Wrong number of arguments") if (@_ != 0 && @_ != 2);
+	trace_error("Wrong number of arguments") if (@_ != 0 && @_ != 2);
 
 	my $self; 
 
@@ -244,10 +236,9 @@ use parent -norequire, 'Anorman::ESOM::Grid::Matrix';
 use Anorman::Common;
 use Anorman::ESOM::File;
 
-use Data::Dumper;
 sub new {
 	my $class = shift;
-	$class->_error("Wrong number of arguments") if (@_ != 0 && @_ != 3);
+	trace_error("Wrong number of arguments") if (@_ != 0 && @_ != 3);
 
 	my $self;
 
@@ -301,7 +292,7 @@ sub init {
 	my ($desc, $method) = @_;
 	
 	if (defined $method && $method eq 'pca') {
-		warn "Initializing grid using the pca method\n";
+		warn "Initializing grid using the pca method\n" if $VERBOSE;
 		my $i = 0;
 		while ( ++$i <= $self->rows ) {
 			my $row_factor = ( $i - ($self->rows / 2) - 0.5) / (($self->rows / 2) - 0.5);

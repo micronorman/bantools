@@ -24,12 +24,13 @@ my $EPOCHS       = 20;
 my $BMSEARCH     = 'standard';
 my $BMCONSTANT   = 8;
 my $GRID         = 'toroid';
-my $SCALE        = 6;
-my $METHOD       = 'kbatch';
+my $SCALE        = 6.5;
+my $METHOD       = 'online';
 my $NEIGHBORHOOD = 'gauss';
 my $dk           = 0.15;
 my $COOL_RADIUS  = 'lin';
 my $COOL_LEARN   = 'lin';
+my $INIT 	 = 'norm_mean_2std';
 my $OUTPUT       = 'out';
 my $RATIO;
 my $optimize_ratio;
@@ -45,10 +46,12 @@ my ($ROWS,$COLS);
 	'rows|r=i'		=> \$ROWS,
 	'lrn|l=s'		=> \$LRN_FILE,
 	'epochs|e=i'		=> \$EPOCHS,
-	'scale|s=i'		=> \$SCALE,
+	'scale|s=f'		=> \$SCALE,
 	'algorithm|a=s'		=> \$METHOD,
 	'bmconstant|bmc=i'	=> \$BMCONSTANT,
+	'init|i=s'		=> \$INIT,
 	'bmsearch|bms=s'	=> \$BMSEARCH,
+	'bmconstant|bmc=i'	=> \$BMCONSTANT,
 	'cool-radius|rc=s'	=> \$COOL_RADIUS,
 	'cool-learn|lc=s'	=> \$COOL_LEARN,
 	'grid|g=s'		=> \$GRID,
@@ -58,7 +61,7 @@ my ($ROWS,$COLS);
 	'K|k=f'			=> \$dk,
 	'output|o=s'		=> \$OUTPUT,
 	'verbose'		=> \$VERBOSE,
-	'help'			=> sub { pod2usage( verbose => 1 ) },
+	'help|h'		=> sub { pod2usage( verbose => 1 ) },
 	'manual'		=> sub { pod2usage( verbose => 2 ) }
 ) or pod2usage( msg => "\nuse --help for more information\n", verbose => 0 );
 
@@ -138,6 +141,7 @@ if ($GRID eq 'toroid') {
 }
 
 warn "Grid: $GRID\n";
+warn "Init method: $INIT\n";
 
 # set epochs
 $som->epochs( $EPOCHS );
@@ -184,7 +188,7 @@ if ($PRE_WEIGHTS ne '') {
 } else {
 
 	# Otherwise initialize randomized grid from input data
-	$som->init;
+	$som->init( $INIT );
 }
 
 # run training
@@ -212,12 +216,16 @@ esom_train.pl - ESOM training tool
 
 -l I<file>
 [-w I<file>]
-[-g I<STR>]
 [-a I<STR>]
-[-e I<NUM>]
-[-rc I<NUM>]
-[-lc I<NUM>]
+[-g I<STR>]
+[-r]
+[-s I<FLOAT>]
+[-i I<STR>]
+[-e I<INT>]
+[-rc I<STR>]
+[-lc I<STR>]
 [-bms I<STR>]
+[-bmc I<INT>]
 
 =back
 
@@ -247,6 +255,23 @@ C<toroid> (default),
 C<toroid_man>,
 C<toroid_max>
 
+=item B<-i, --init>
+
+Grid initialization method. Possible choices are:
+C<zero>,
+C<uni_min_max>,
+C<uni_mean_2std>,
+C<norm_mean_2std> (default),
+C<pca>
+
+=item B<-r, --ratio>
+
+Optimize the ratio between number of rows and columns (based on eigenvalues). Otherwise a default 5/3 ratio is used
+
+=item B<-s, --scale>
+
+Scaling factor. Sets the number of grid neurons per data pattern (from the lrn-file). Default: 6
+
 =item B<-e, --epochs>
 
 The number of training epochs (default: 20)
@@ -262,7 +287,7 @@ C<mexhat>
 
 =item B<-rc, --cool-radius>
 
-Cooling strategy for kernel radius. Choose between C<lin> (linear) or C<exp> (exponential)
+Cooling strategy for kernel radius. Choose between C<lin> (linear) or C<exp> (exponential) cooling
 
 =item B<-lc, --cool-learn>
 
@@ -278,8 +303,16 @@ C<faster>
 
 =item B<-o, --output>
 
-The output prefix. Will be used to generate names for the output wts-, umx- and bm-files. Default is C<out>
+The output prefix. Will be used to generate names for the output wts-, umx- and bm-files. Default: C<out>
 
 =back
+
+=head1 AUTHOR
+
+Anders Norman E<lt>lordnorman@gmail.comE<gt>
+
+=head1 SEE ALSO
+
+L<https://github.com/micronorman/bantools>
 
 =cut

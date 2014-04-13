@@ -117,7 +117,7 @@ sub check_shape {
 sub _v_dice {
 	my $self = shift;
 
-	# Flip rows and columns internally to produce dice view
+	# Flip row- and column-dimension internally to produce dice view
 	($self->{'rows'},$self->{'columns'})    = ($self->{'columns'},$self->{'rows'});
 	($self->{'r0'},$self->{'c0'})           = ($self->{'c0'},$self->{'r0'});
 	($self->{'rstride'},$self->{'cstride'}) = ($self->{'cstride'},$self->{'rstride'});
@@ -138,6 +138,27 @@ sub _v_part {
 	$self->{'columns'} = $width;
 
 	return $self;
+}
+
+sub _dump {
+	my $elems = defined $_[0]->{'_ELEMS'} ? $_[0]->{'_ELEMS'} : 'NULL';
+	my ($type)  = ref ($_[0]) =~ /\:\:(\w+)$/;
+	printf STDERR ("%s Matrix dump: HASH(0x%p)\n", $type, $_[0]);
+	printf STDERR ("\trows\t\t: %lu\n",    $_[0]->{'rows'}     );
+    	printf STDERR ("\tcols\t\t: %lu\n",    $_[0]->{'columns'}  );
+    	printf STDERR ("\tr0\t\t: %lu\n",      $_[0]->{'r0'}       );
+    	printf STDERR ("\tc0\t\t: %lu\n",      $_[0]->{'c0'}       );
+    	printf STDERR ("\trstride\t\t: %lu\n", $_[0]->{'rstride'}  );
+    	printf STDERR ("\tcstride\t\t: %lu\n", $_[0]->{'cstride'}  );
+
+	if ($elems ne 'NULL') {
+		printf STDERR ("\telements[%lu]\t: %s\n",  scalar @{ $elems }, $elems );
+	} else {
+		printf STDERR ("\telements[%lu]\t: %s\n",  0,$elems );
+
+	}
+    	printf STDERR ("\tview\t\t: %i\n\n",   $_[0]->{'_VIEW'}    );
+
 }
 
 1;

@@ -1,5 +1,8 @@
 package Anorman::Math::LSH;
 
+# Implementation of Local Sensitivity Hashing function
+# For selecting subsets of data
+
 use strict;
 use warnings;
 
@@ -10,6 +13,7 @@ use Anorman::Data::List;
 use Anorman::Data::LinAlg::Property qw( :matrix );
 use Anorman::Math::DistanceFactory;
 use Anorman::ESOM::BMSearch qw(bm_brute_force_search bm_indexed_search);
+
 use List::Util qw(min);
 use POSIX qw(floor);
 
@@ -67,7 +71,7 @@ sub init {
 	my $matrix  = $self->{'matrix'};
 	my $lrndata = $self->{'lrndata'};
 
-	my $temp_data = Anorman::Data->packed_matrix( $matrix->rows + $lrndata->rows, $matrix->columns );
+	my $temp_data = Anorman::Data->matrix( $matrix->rows + $lrndata->rows, $matrix->columns );
 
 	$temp_data->view_part(0,0,$matrix->rows,$matrix->columns)->assign($matrix);
 	$temp_data->view_part($matrix->rows,0, $temp_data->rows - $matrix->rows, $matrix->columns)->assign($lrndata);
@@ -135,7 +139,7 @@ sub unary2hash {
 	while ( ++$k < $self->{'bits_for_hash'} ) {
 		my $i = $self->{'randoms'}->[ ($j * $self->{'bits_for_hash'}) + $k ];
 		if ($hash_unary->[ $i ]) {
-			$hash += 2**$k;
+			$hash += (2 ** $k);
 		}
 	}
 
@@ -152,7 +156,7 @@ sub neuron2unary {
 	
 	my $k = $dim * $max_mapping - 1;
 
-	while ( ++$k < $max_mapping * $dim + $map) {
+	while ( ++$k < $max_mapping * $dim + $map ) {
 		$unary->[ $k ] = 1;
 	}
 
@@ -207,7 +211,7 @@ sub hash_data {
 					$hitmap{ $indexes->[ $m ] } = 1;
 				}
 			} else {
-				die "Shouldn't happen";
+				trace_error("WTF? This shouldn't happen");
 			}
 		}
 	}

@@ -53,6 +53,11 @@ sub new {
 	return $self;
 }
 
+sub like {
+	my $self = shift;
+	return Anorman::Data::Vector::Dense->new($self->{'size'});
+}
+
 sub _offset {
 	my $self = shift;
 	return $self->{'offsets'}->[ $_[0] ];

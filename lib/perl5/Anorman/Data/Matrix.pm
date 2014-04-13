@@ -9,6 +9,8 @@ use Anorman::Data::LinAlg::BLAS;
 use Anorman::Data::LinAlg::Property qw( :all );
 use Anorman::Math::Functions;
 
+use Math::Random::MT::Auto::Range;
+
 use Scalar::Util qw(refaddr blessed looks_like_number);
 use List::Util qw(min);
 
@@ -101,6 +103,19 @@ sub view_part {
 	my ($row,$column,$height,$width) = @_;
 
 	return $self->_view->_v_part( $row, $column, $height, $width );
+}
+
+sub view_sample {
+	my $self = shift;
+	my $n    = shift;
+
+	return $self if ( $n > $self->rows );
+
+	my $r = Math::Random::MT::Auto::Range->new( LO => 0, HI => $self->rows - 1, TYPE => 'INTEGER' );
+
+	my @sample = sort { $a <=> $b } map { $r->rrand } (1 .. $n);
+
+	return $self->view_selection( \@sample, undef );
 }
 
 sub swap_rows {
@@ -216,7 +231,7 @@ sub equals {
 	# will check if all values of the matrix equals a given value
 	} else {
 		my $value = shift;
-
+		return undef unless defined $value;
 		return matrix_equals_value( $self, $value );
 	}
 }

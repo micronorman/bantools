@@ -6,8 +6,6 @@ use warnings;
 use Anorman::Common;
 use Anorman::Common::Color;
 
-use Data::Dumper;
-
 sub new {
 	my $that  = shift;
 	my $class = ref $that || $that;

@@ -561,8 +561,6 @@ void _assign_DensePackedMatrix_from_CODE( SV* self, SV* code ) {
             call_sv((SV*)cv, G_SCALAR);
             elems[ i ] =  SvNV( *PL_stack_sp );
 
-            FREETMPS;
-
             i += cs;
         }
 
@@ -571,6 +569,7 @@ void _assign_DensePackedMatrix_from_CODE( SV* self, SV* code ) {
 }
 
 void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* code ) {
+    /*
     HV *stash;
     GV *gv;
     CV* cv = sv_2cv( code, &stash, &gv, 0);
@@ -578,6 +577,7 @@ void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* c
     if (cv == Nullcv) {
          C_ERROR_VOID("Not a subroutine reference", C_EINVAL );
     }
+    */
 
     SV_2STRUCT(  self, Matrix, A );
     SV_2STRUCT( other, Matrix, B );
@@ -604,11 +604,11 @@ void _assign_DensePackedMatrix_from_OBJECT_and_CODE ( SV* self, SV* other, SV* c
             XPUSHs( sv_2mortal( newSVnv( A_elems[ i ])));
             XPUSHs( sv_2mortal( newSVnv( B_elems[ j ])));
             PUTBACK;
-
+            /*
             call_sv((SV*)cv, G_SCALAR);
+            */
+            call_sv( code, G_SCALAR);
             A_elems[ i ] =  SvNV( *PL_stack_sp );
-
-            FREETMPS;
 
             i += A_cs;
             j += B_cs;

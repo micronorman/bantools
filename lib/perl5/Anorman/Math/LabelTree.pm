@@ -3,6 +3,8 @@ package Anorman::Math::LabelTree;
 use warnings;
 use strict;
 
+# Labeltree is a datastructure that is useful for the floodfill algorithm
+
 use Anorman::Common;
 
 sub new {

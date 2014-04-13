@@ -4,21 +4,22 @@ use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Exporter;
 
-@EXPORT_OK = qw(log10 log2 hypot quiet_sqrt);
+@EXPORT_OK = qw(log10 log2 hypot quiet_sqrt round trmean multi_quantiles quantile);
 
 @ISA = qw(Exporter);
 
-use List::Util qw(sum min);
+use List::Util;
 use Anorman::Math::Algorithm qw(golden_section_search);
 use Anorman::Common;
+use POSIX;
 
 #====== COMMON MATHS FUNCTIONS ====
 
-sub log10 ($) { return (log $_[0] / log 10) }
+#sub log10 { return (log $_[0] / log 10) };
 
-sub log2  ($) { return (log $_[0] / log 2) };
+sub log2  { return (log $_[0] / log 2) };
 
-sub hypot ($$) {
+sub hypot {
 	my ($a,$b) = @_;
 	my $r;
 
@@ -35,7 +36,11 @@ sub hypot ($$) {
 	return $r;
 }
 
-sub quiet_sqrt ($) {
+sub round {
+	return $_[0] >= 0 ? POSIX::floor( $_[0] + 0.5 ) : POSIX::ceil( $_[0] - 0.5 );
+}
+
+sub quiet_sqrt {
 	return $_[0] >= 0 ? sqrt ($_[0]) : 'NAN'
 }
 
@@ -52,7 +57,7 @@ sub trmean {
 	$s += $_;
 	$c++;
     }
-    return na unless $c;
+    return 'nan' unless $c;
     return ($s/$c);
 }
 
@@ -194,7 +199,7 @@ sub stats_robust {
 
 	$r->{'_MAD'}      = &quantile( 0.5, [ sort { $a <=> $b } @abs_dev ]);
 	$r->{'_trmean'}   = &trmean(@_);
-        $r->{'_rstdev'}   = min( $r->{'_IQR'} / 1.349, $r->{'_stdev'} );
+        $r->{'_rstdev'}   = List::Util::min( $r->{'_IQR'} / 1.349, $r->{'_stdev'} );
                        
 	return $r;
 }
@@ -203,7 +208,7 @@ sub stats_robust {
 
 sub normalize_sum ($;$) {
 	my $ref   = shift;
-	my $sum   = defined $_[0] ? shift : sum( derefify ( $ref ) );
+	my $sum   = defined $_[0] ? shift : List::Util::sum( derefify ( $ref ) );
 
 	return if $sum == 0;
 	foreach (@{ $ref }) { $$_ /= $sum };

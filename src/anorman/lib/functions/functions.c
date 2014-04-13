@@ -24,12 +24,12 @@ double c_abs_diff( double a, double b ) {
 }
 
 double c_square_diff( double a, double b ) {
-    long double diff = a - b;
+    const long double diff = a - b;
     return (diff * diff);
 }
 
 double c_p_diff( double a, double b, double p ) {
-    long double diff = fabs( a - b );
+    const long double diff = fabs( a - b );
     return pow( diff, p );
 }
 

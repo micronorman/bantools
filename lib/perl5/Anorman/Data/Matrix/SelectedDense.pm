@@ -95,7 +95,7 @@ sub _setup {
 	if (@_ == 2) {
 		$self->SUPER::_setup( $_[0], $_[1] );
 		$self->{'rstride'} = 1;
-		$self->{'cstride'} = 0;
+		$self->{'cstride'} = 1;
 		$self->{'offset'}  = 0;
 	} else {
 		$self->SUPER::_setup(@_);

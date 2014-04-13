@@ -5,6 +5,8 @@ use warnings;
 
 use Anorman::Common;
 
+use Data::Dumper;
+
 use overload
 	'""'  => '_to_string',
 	'@{}' => '_to_array',
@@ -53,7 +55,6 @@ sub _clone_self {
 	return bless ( $clone, $class );
 }
 
-
 sub _set_view  { $_[0]->{'_VIEW'} = 1 }
 
 # Overloaded operations
@@ -63,8 +64,8 @@ sub _mul { my $r = $_[0]->copy; $r->_mul_assign($_[1],$_[2]);$r }
 sub _div { my $r = $_[0]->copy; $r->_div_assign($_[1],$_[2]);$r }
 
 # Dummies. Must be overwritten
-sub _add_assign {...}
-sub _sub_assign {...}
+sub _add_assign { trace_error("Not Implemented") }
+sub _sub_assign { trace_error("Not Implemented") }
 sub _mul_assign {...}
 sub _div_assign {...}
 

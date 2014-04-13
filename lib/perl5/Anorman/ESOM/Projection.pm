@@ -31,12 +31,11 @@ sub project {
 	my $neurons = $wts->data; 
 	my $size    = $lrn->size;
 	my $bm      = &_new_bm_file( $rows, $columns, $lrn->datapoints );
-	my $dist    = Anorman::Data->packed_vector( $size );
+	my $dist    = Anorman::Data->vector( $size );
 	my $grid    = Anorman::ESOM::Grid::Rectangular->new;
 	
 	$grid->rows( $rows );
 	$grid->columns( $columns );
-
 
 	warn "Projecting data onto weights...\n" if $VERBOSE;
 

@@ -5,10 +5,11 @@ use warnings;
 
 use Anorman::Common qw(sniff_scalar trace_error);
 use Anorman::Data::Config qw( :string_rules );
-use Scalar::Util qw(blessed looks_like_number refaddr);
 use Anorman::Data::LinAlg::Property qw( :vector );
 use Anorman::Math::Functions;
-use Anorman::Data::Functions::Vector;
+use Anorman::Math::VectorFunctions;
+
+use Scalar::Util qw(blessed looks_like_number refaddr);
 
 my %ASSIGN_DISPATCH = (
 	'NUMBER'      => \&_assign_Vector_from_NUMBER,
@@ -34,6 +35,7 @@ sub set {
 
 sub aggregate {
 	my $self = shift;
+
 	$self->aggregate( $_[0], Anorman::Math::Functions::identity ) if @_ == 1;
 
 	my $a;
@@ -65,6 +67,22 @@ sub aggregate {
 	return $a;
 }
 
+sub aggregate_upto {
+	my ($self, $other, $aggr, $f, $th) = @_;
+	$self->_check_size($other);
+
+	return undef if ($self->size == 0);
+
+	my $i = 0;
+	my $a = $f->( $self->get_quick( $i ), $other->get_quick( $i ) );
+
+	while( $a <= $th && ++$i < $self->size ) {
+		$a = $aggr->( $a, $f->( $self->get_quick( $i ), $other->get_quick( $i ) ) );
+	}
+
+	return $a;
+}
+
 sub normalize {
 	my $self = shift;
 	my $F = Anorman::Math::Functions->new();
@@ -78,13 +96,47 @@ sub normalize {
 }
 
 sub ztrans {
+	my $self = shift;
 
+	my $F  = Anorman::Math::Functions->new;
+	my $VF = Anorman::Math::VectorFunctions->new;
+
+	my $mean = $VF->mean->( $self );
+	my $std  = $VF->stdev->( $self );
+
+	$self->assign( $F->minus( $mean ) );
+	$self->assign( $F->div( $std ) );
 }
 
+sub rztrans {
+	my $self = shift;
+
+	my $F  = Anorman::Math::Functions->new;
+	my $VF = Anorman::Math::VectorFunctions->new();
+
+	my $mean = $VF->robust_mean->( $self );
+	my $std  = $VF->robust_stdev->( $self );
+
+	$self->assign( $F->minus( $mean ) );
+	$self->assign( $F->div( $std ) );
+}
 
 sub view_part {
 	my $self = shift;
 	return $self->_view->_v_part(@_);
+}
+
+sub view_selection {
+	my $self    = shift;
+	my $indexes = shift;
+
+	if (!defined $indexes) {
+		$indexes = [ 0 .. $self->size - 1 ];
+	}
+
+	my $offsets = [ map { $self->_index($_) } @{ $indexes } ];
+
+	return $self->_view_selection_like( $offsets );
 }
 
 sub assign {
